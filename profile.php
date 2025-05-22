@@ -470,7 +470,7 @@ ORDER BY date DESC
                                             }
 
                                             echo '<tr class="bg-light" style="border-top: solid white 20px;">';
-                                            echo '<td style="width:50%;">';
+                                            echo '<td style="width:40%;">';
                                             for ($i = 0; $i < $maxItems; $i++) {
                                                 $image = isset($images[$i]) ? trim($images[$i]) : trim($images[0]);
                                                 echo '<img class="image-fluid border rounded m-2" height="80px" width="80px" src="' . htmlspecialchars($image) . '" alt="Product Image">';
@@ -483,12 +483,13 @@ ORDER BY date DESC
                                                 echo '<h6>' . htmlspecialchars($prodName) . ' (Qty: ' . htmlspecialchars($quantity) . ')</h6>';
                                             }
                                             echo '</td>';
-                                            echo '<td class="fw-bold align-middle" style="line-height:10px;width:20%;">';
+                                            echo '<td class="fw-bold align-middle" style="line-height:10px;width:30%;">';
                                             echo '<p class="text-dark my-2 ">' . htmlspecialchars($row['status']) . ' <br><br><span style="font-size:12px;">' . $reject . '</span></p><br>';
                                             echo '<p class="text-dark my-2">Balance: ₱' . number_format($balance, 2, '.', ',') . '</p>';
                                             echo '<p class="text-dark my-2">Total: ₱' . number_format($row['totalCost'], 2, '.', ',') . '</p>';
                                             if ($balance > 0) {
                                                 echo '<button class="btn btn-success pay-balance-btn" 
+                                                    style="font-size:13px; color:white;" 
                                                     data-balance="' . htmlspecialchars($balance) . '" 
                                                     data-source="' . htmlspecialchars($row['source']) . '" 
                                                     data-prodname="' . htmlspecialchars($row['prodName']) . '" 
@@ -500,7 +501,7 @@ ORDER BY date DESC
                                             }
 
                                             echo '<button 
-                                                class="btn btn-primary see-payment-images-btn" 
+                                                class="btn btn-primary see-payment-images-btn mt-2" 
                                                 style="font-size:13px; color:white;" 
                                                 data-orderid="' . htmlspecialchars($row['orderID']) . '" 
                                                 data-source="' . htmlspecialchars($row['source']) . '">

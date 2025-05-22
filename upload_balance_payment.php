@@ -20,7 +20,7 @@ if (isset($_FILES['paymentImage']) && $_FILES['paymentImage']['error'] == 0) {
         $stmt->bind_param("iisssss", $orderID, $userID, $source, $prodName, $balanceAmount, $targetFile, $date);
         $stmt->execute();
 
-        echo "<script>alert('Payment uploaded successfully!'); window.location.href='customizecart.php';</script>";
+        echo "<script>alert('Payment uploaded successfully!'); window.location.href='profile.php';</script>";
     } else {
         echo "<script>alert('Error uploading image.'); history.back();</script>";
     }

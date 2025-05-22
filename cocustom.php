@@ -41,6 +41,15 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
     $stmt->bind_param('ssssssssssssss', $userID, $productDetails, $products, $totalCost, $fullName, $address, $cpNum, $quantities, $images, $payment, $qrImagePath, $width, $length, $height);
 
     if ($stmt->execute()) {
+        $orderID = $conn->insert_id; // Get the inserted order ID
+        $source = 'checkoutcustom'; // Table source
+        $paymentDate = date("Y-m-d H:i:s");
+
+        $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $receiptStmt->bind_param("iisssss", $orderID, $userID, $source, $products, $totalCost, $qrImagePath, $paymentDate);
+        $receiptStmt->execute();
+        $receiptStmt->close();
+
         $cartIdsArray = explode(',', $cartIds);
         $placeholders = implode(',', array_fill(0, count($cartIdsArray), '?'));
 

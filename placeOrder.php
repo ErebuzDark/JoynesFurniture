@@ -50,6 +50,16 @@ if (isset($_POST['place'])) {
                     // Fix: Use correct temp file path and destination
                     move_uploaded_file($tempname, $folder);
 
+                    // NEW: Insert proof into payment_receipts
+                    $orderID = $conn->insert_id;
+                    $source = 'checkout';
+                    $paymentDate = date("Y-m-d H:i:s");
+
+                    $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    $receiptStmt->bind_param("iisssss", $orderID, $userID, $source, $prodName, $cost, $filename, $paymentDate);
+                    $receiptStmt->execute();
+                    $receiptStmt->close();
+
                     $minusQuantitySql = "SELECT * FROM furnituretbl WHERE fID = '$orderID'";
                     $minusQuantityResult = mysqli_query($conn, $minusQuantitySql);
                     $minusQuantityRow = mysqli_fetch_assoc($minusQuantityResult);

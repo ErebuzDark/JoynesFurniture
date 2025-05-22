@@ -205,6 +205,18 @@ if (isset($_POST['checkout'])) {
     $stmt->bind_param("ssssssssssssss", $userID, $pName, $image, $prodDetails, $totalCost, $fullName, $address, $cpNum, $quantity, $qrImagePath, $width, $length, $height, $payment);
 
     if ($stmt->execute()) {
+
+         // Get the last inserted order ID
+        $orderID = $conn->insert_id;
+        // Save payment receipt in payment_receipts table
+        $paymentSource = 'checkoutcustom'; // or whatever label you want
+        $paymentDate = date("Y-m-d H:i:s");
+
+        $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $receiptStmt->bind_param("iisssss", $orderID, $userID, $paymentSource, $pName, $payment, $qrImagePath, $paymentDate);
+        $receiptStmt->execute();
+        $receiptStmt->close();
+
         echo "<script>
                 alert('Order successfully placed!');
                 window.location.href = 'profile.php';

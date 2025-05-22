@@ -10,10 +10,16 @@ $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
+        $imagePath = htmlspecialchars($row['proofImage']);
+        $fileName = basename($imagePath); // This will be the default name when downloaded
         echo '<div class="mb-3">';
         echo '<img src="' . htmlspecialchars($row['proofImage']) . '" class="img-fluid border rounded mb-1" style="max-width: 100%;">';
-        echo '<p class="text-muted" style="font-size:13px;">Uploaded on: ' . date("F j, Y, g:i a", strtotime($row['paymentDate'])) . '</p>';
+        echo '<div class="d-flex gap-2 align-items-center mb-2">';
+        echo '<p class="text-muted mb-0" style="font-size:13px;">Uploaded on: ' . date("F j, Y, g:i a", strtotime($row['paymentDate'])) . '</p>';
+        echo '<a href="' . $imagePath . '" download="' . $fileName . '" class="btn btn-sm btn-outline-primary ms-3">Download Receipt</a>';
         echo '</div>';
+        echo '</div>';
+        echo '<hr></hr>';
     }
 } else {
     echo '<p class="text-muted">No receipts uploaded for this order yet.</p>';
