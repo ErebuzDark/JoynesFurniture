@@ -4,9 +4,9 @@ include("database.php");
 if (isset($_POST['orderID'], $_POST['pay'], $_POST['downPayment'], $_POST['source'], $_POST['totalCost'])) {
     $orderID = $_POST['orderID'];
     $payment = $_POST['pay'];
-    $downPayment = isset($_POST['downPayment']) ? $_POST['downPayment'] : 0;  // Default to 0 if not set
+    $downPayment = isset($_POST['downPayment']) ? (float) $_POST['downPayment'] : 0;  // Cast to float
     $source = $_POST['source'];
-    $totalCost = $_POST['totalCost'];
+    $totalCost = (float) $_POST['totalCost'];  // Cast to float
 
     if ($payment == 'Down Payment') {
         $balance = $totalCost - $downPayment;
@@ -16,32 +16,19 @@ if (isset($_POST['orderID'], $_POST['pay'], $_POST['downPayment'], $_POST['sourc
 
     // Update the database based on the source (either checkout or checkoutcustom)
     if ($source == "checkout") {
-        if ($payment == 'Full Payment') {
-            $sql = "UPDATE checkout SET payment = 'Full Payment', balance = ? WHERE orderID = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("di", $balance, $orderID);
-        } else {
-            $sql = "UPDATE checkout SET payment = 'Down Payment', balance = ? WHERE orderID = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("di", $balance, $orderID);
-        }
+        $sql = "UPDATE checkout SET payment = ?, balance = ? WHERE orderID = ?";
     } else {
-        if ($payment == 'Full Payment') {
-            $sql = "UPDATE checkoutcustom SET payment = 'Full Payment', balance = ? WHERE orderID = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("di", $balance, $orderID);
-        } else {
-            $sql = "UPDATE checkoutcustom SET payment = 'Down Payment', balance = ? WHERE orderID = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("di", $balance, $orderID);
-        }
+        $sql = "UPDATE checkoutcustom SET payment = ?, balance = ? WHERE orderID = ?";
     }
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sdi", $payment, $balance, $orderID);
 
     // Execute the statement
     if ($stmt->execute()) {
         echo "<script>
                 alert('Payment Updated!');
-                window.location.href = 'admin.php';
+                window.location.href = 'adminOrder.php';
               </script>";
     } else {
         echo "Error updating payment: " . $conn->error;

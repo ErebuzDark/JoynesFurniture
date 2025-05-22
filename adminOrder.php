@@ -184,17 +184,21 @@ $ordersData = json_encode(array_values($ordersPerMonth));
         }
 
         /* Smooth and pleasing button styles with animation */
-        .btn, .btn-sm {
+        .btn,
+        .btn-sm {
             transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
             border-radius: 8px;
             font-weight: 600;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        .btn:hover, .btn:focus, .btn-sm:hover, .btn-sm:focus {
+        .btn:hover,
+        .btn:focus,
+        .btn-sm:hover,
+        .btn-sm:focus {
             background-color: #6c757d !important;
             color: #fff !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             transform: scale(1.05);
             outline: none;
             text-decoration: none;
@@ -206,7 +210,8 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             background-color: transparent;
         }
 
-        .btn-outline-primary:hover, .btn-outline-primary:focus {
+        .btn-outline-primary:hover,
+        .btn-outline-primary:focus {
             background-color: #6c757d;
             color: #fff;
             border-color: #6c757d;
@@ -391,61 +396,63 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                 </nav>
                 <!-- End of Topbar -->
 
-                    <!-- DataTales Example -->
-                    <div class="container px-0">
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
+                <!-- DataTales Example -->
+                <div class="container px-0">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
 
-                                <!-- Form to select the period (Weekly, Monthly, Yearly) -->
-                                <div id="reportForm">
-                                    <form id="reportForm" action="report.php" method="get" target="reportFrame"
-                                        onsubmit="return printReport();">
-                                        <label for="period">Select Period:</label>
-                                        <select name="period" id="period" onchange="toggleMonthPicker()">
-                                            <option value="weekly">Weekly</option>
-                                            <option value="monthly" selected>Monthly</option>
-                                            <option value="yearly">Yearly</option>
-                                        </select>
-                                        <input type="month" name="month" id="monthPicker" style="display:none; margin-left:10px;">
-                                        <button type="submit" class="btn btn-primary">Generate Report</button>
-                                    </form>
-                                </div>
-
-                                <!-- Hidden iframe to load the report -->
-                                <iframe id="reportFrame" name="reportFrame" style="display:none;"></iframe>
-
-
-                                <!-- <h2 class="m-0 font-weight-bold text-primary d-sm-flex align-items-center justify-content-between ">Orders <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" onclick="printTable()"><i
-                                    class="fas fa-download fa-sm text-white-50"></i> Generate Report</a></h2> -->
+                            <!-- Form to select the period (Weekly, Monthly, Yearly) -->
+                            <div id="reportForm">
+                                <form id="reportForm" action="report.php" method="get" target="reportFrame"
+                                    onsubmit="return printReport();">
+                                    <label for="period">Select Period:</label>
+                                    <select name="period" id="period" onchange="toggleMonthPicker()">
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly" selected>Monthly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
+                                    <input type="month" name="month" id="monthPicker"
+                                        style="display:none; margin-left:10px;">
+                                    <button type="submit" class="btn btn-primary">Generate Report</button>
+                                </form>
                             </div>
 
+                            <!-- Hidden iframe to load the report -->
+                            <iframe id="reportFrame" name="reportFrame" style="display:none;"></iframe>
 
 
-<div class="card-body">
-    <!-- Filter container for order statuses -->
-    <div class="mb-3">
-    <div class="btn-group" role="group" aria-label="Order Status Filter">
-        <button type="button" class="btn btn-outline-primary active" onclick="filterOrders('All')">All</button>
-    <button type="button" class="btn btn-outline-primary" onclick="filterOrders('Pending Approval')">Pending Approval</button>
-    <button type="button" class="btn btn-outline-primary" onclick="filterOrders('In Progress')">In Progress</button>
-        <button type="button" class="btn btn-outline-primary" onclick="filterOrders('Cancelled')">Cancelled</button>
-        <button type="button" class="btn btn-outline-primary" onclick="filterOrders('Delivered')">Delivered</button>
-        <button type="button" class="btn btn-outline-primary" onclick="filterOrders('Completed')">Completed</button>
-    </div>
-    </div>
-    <div class="table-responsive">
-        <?php
-        $sql = "
-            (SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, cost AS totalCost, date, status, orderID, width, length, height FROM checkout)
-            UNION
-            (SELECT 'checkoutcustom' AS source, payment, proofPay, balance, fullName, address, cpNum, pName AS prodName, image, quantity, totalCost, date, status, orderID, width, length, height FROM checkoutcustom)
-            ORDER BY date DESC
-        ";
+                            <!-- <h2 class="m-0 font-weight-bold text-primary d-sm-flex align-items-center justify-content-between ">Orders <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" onclick="printTable()"><i
+                                    class="fas fa-download fa-sm text-white-50"></i> Generate Report</a></h2> -->
+                        </div>
 
-        $result = $conn->query($sql);
 
-        if ($result->num_rows > 0) {
-            echo '<table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+
+                        <div class="card-body">
+                            <!-- Filter container for order statuses -->
+                            <div class="mb-3">
+                                <div class="btn-group" role="group" aria-label="Order Status Filter">
+                                    <button type="button" class="btn btn-outline-primary active"
+                                        onclick="filterOrders('All')">All</button>
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="filterOrders('Pending Approval')">Pending Approval</button>
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="filterOrders('In Progress')">In Progress</button>
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="filterOrders('Cancelled')">Cancelled</button>
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="filterOrders('Delivered')">Delivered</button>
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="filterOrders('Completed')">Completed</button>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <?php $sql = " SELECT main.source, main.payment, main.proofPay, pr.proofImage AS receipt_image_url, pr.amountPaid, main.balance, main.fullName, main.address, main.cpNum, main.prodName, main.image, main.quantity, main.totalCost, main.date, main.status, main.orderID, main.width, main.length, main.height FROM ( SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, cost AS totalCost, date, status, orderID, width, length, height FROM checkout UNION SELECT 'checkoutcustom' AS source, payment, proofPay, balance, fullName, address, cpNum, pName AS prodName, image, quantity, totalCost, date, status, orderID, width, length, height FROM checkoutcustom ) AS main LEFT JOIN payment_receipts AS pr ON pr.orderID = main.orderID ORDER BY main.date DESC ";
+
+
+                                $result = $conn->query($sql);
+
+                                if ($result->num_rows > 0) {
+                                    echo '<table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -463,103 +470,104 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             </thead>
             ';
 
-            while ($row = $result->fetch_assoc()) {
-                $prodNames = explode(',', $row['prodName']);
-                $images = explode(',', $row['image']);
-                $maxItems = count($prodNames);
+                                    while ($row = $result->fetch_assoc()) {
+                                        $prodNames = explode(',', $row['prodName']);
+                                        $images = explode(',', $row['image']);
+                                        $maxItems = count($prodNames);
 
-                echo '<tr class="bg-light">';
-                echo '<td>' . $row['fullName'] . '</td>';
-                echo '<td>' . $row['address'] . '</td>';
-                echo '<td>' . $row['cpNum'] . '</td>';
-                echo '<td>';
-                foreach ($images as $image):
-                    echo '<img src="' . trim($image) . '" class="img-fluid rounded-circle" style="width: 70px; height: 70px; object-fit:cover;" alt="">';
-                endforeach;
-                echo '</td>';
-                echo '<td class="align-middle">';
-                for ($i = 0; $i < $maxItems; $i++) {
-                    $prodName = isset($prodNames[$i]) ? trim($prodNames[$i]) : trim($prodNames[0]);
-                    echo '<h6>' . htmlspecialchars($prodName) . '</h6>';
-                }
-                echo '</td>';
+                                        echo '<tr class="bg-light">';
+                                        echo '<td>' . $row['fullName'] . '</td>';
+                                        echo '<td>' . $row['address'] . '</td>';
+                                        echo '<td>' . $row['cpNum'] . '</td>';
+                                        echo '<td>';
+                                        foreach ($images as $image):
+                                            echo '<img src="' . trim($image) . '" class="img-fluid rounded-circle" style="width: 70px; height: 70px; object-fit:cover;" alt="">';
+                                        endforeach;
+                                        echo '</td>';
+                                        echo '<td class="align-middle">';
+                                        for ($i = 0; $i < $maxItems; $i++) {
+                                            $prodName = isset($prodNames[$i]) ? trim($prodNames[$i]) : trim($prodNames[0]);
+                                            echo '<h6>' . htmlspecialchars($prodName) . '</h6>';
+                                        }
+                                        echo '</td>';
 
-                echo '<td class="align-middle">';
-                // Dimension column
-                // Try to get width, length, height from the row (comma-separated if multiple)
-                $widths = isset($row['width']) ? explode(',', $row['width']) : array();
-                $lengths = isset($row['length']) ? explode(',', $row['length']) : array();
-                $heights = isset($row['height']) ? explode(',', $row['height']) : array();
-                $maxDim = max(count($widths), count($lengths), count($heights), $maxItems);
+                                        echo '<td class="align-middle">';
+                                        // Dimension column
+                                        // Try to get width, length, height from the row (comma-separated if multiple)
+                                        $widths = isset($row['width']) ? explode(',', $row['width']) : array();
+                                        $lengths = isset($row['length']) ? explode(',', $row['length']) : array();
+                                        $heights = isset($row['height']) ? explode(',', $row['height']) : array();
+                                        $maxDim = max(count($widths), count($lengths), count($heights), $maxItems);
 
-                for ($i = 0; $i < $maxDim; $i++) {
-                    $w = isset($widths[$i]) ? trim($widths[$i]) : (isset($widths[0]) ? trim($widths[0]) : '');
-                    $l = isset($lengths[$i]) ? trim($lengths[$i]) : (isset($lengths[0]) ? trim($lengths[0]) : '');
-                    $h = isset($heights[$i]) ? trim($heights[$i]) : (isset($heights[0]) ? trim($heights[0]) : '');
-                    if ($w !== '' || $l !== '' || $h !== '') {
-                        echo '<div style="line-height:1.2;">';
-                        echo 'W: ' . htmlspecialchars($w) . '<br>';
-                        echo 'L: ' . htmlspecialchars($l) . '<br>';
-                        echo 'H: ' . htmlspecialchars($h);
-                        echo '</div>';
-                    } else {
-                        echo '<div style="line-height:1.2;">N/A</div>';
-                    }
-                    if ($i < $maxDim - 1) echo '<hr style="margin:2px 0;">';
-                }
-                echo '</td>';
+                                        for ($i = 0; $i < $maxDim; $i++) {
+                                            $w = isset($widths[$i]) ? trim($widths[$i]) : (isset($widths[0]) ? trim($widths[0]) : '');
+                                            $l = isset($lengths[$i]) ? trim($lengths[$i]) : (isset($lengths[0]) ? trim($lengths[0]) : '');
+                                            $h = isset($heights[$i]) ? trim($heights[$i]) : (isset($heights[0]) ? trim($heights[0]) : '');
+                                            if ($w !== '' || $l !== '' || $h !== '') {
+                                                echo '<div style="line-height:1.2;">';
+                                                echo 'W: ' . htmlspecialchars($w) . '<br>';
+                                                echo 'L: ' . htmlspecialchars($l) . '<br>';
+                                                echo 'H: ' . htmlspecialchars($h);
+                                                echo '</div>';
+                                            } else {
+                                                echo '<div style="line-height:1.2;">N/A</div>';
+                                            }
+                                            if ($i < $maxDim - 1)
+                                                echo '<hr style="margin:2px 0;">';
+                                        }
+                                        echo '</td>';
 
-                // Display quantity column
-                $quantities = isset($row['quantity']) ? explode(',', $row['quantity']) : array();
-                echo '<td class="align-middle">';
-                for ($i = 0; $i < $maxItems; $i++) {
-                    $qty = isset($quantities[$i]) ? trim($quantities[$i]) : '1';
-                    echo '<h6>' . htmlspecialchars($qty) . '</h6>';
-                }
-                echo '</td>';
+                                        // Display quantity column
+                                        $quantities = isset($row['quantity']) ? explode(',', $row['quantity']) : array();
+                                        echo '<td class="align-middle">';
+                                        for ($i = 0; $i < $maxItems; $i++) {
+                                            $qty = isset($quantities[$i]) ? trim($quantities[$i]) : '1';
+                                            echo '<h6>' . htmlspecialchars($qty) . '</h6>';
+                                        }
+                                        echo '</td>';
 
-                echo '<td class="align-middle">'.'&#8369;' . number_format($row['totalCost'], 0, '.', ',') . '</td>';
-                echo '<td class="align-middle">' . $row['date'] . '</td>';
+                                        echo '<td class="align-middle">' . '&#8369;' . number_format($row['totalCost'], 0, '.', ',') . '</td>';
+                                        echo '<td class="align-middle">' . $row['date'] . '</td>';
 
-                if ($row['payment'] != 'Full Payment') {
-                    $notcom = 'hidden';
-                } else {
-                    $notcom = '';
-                }
+                                        if ($row['payment'] != 'Full Payment') {
+                                            $notcom = 'hidden';
+                                        } else {
+                                            $notcom = '';
+                                        }
 
-echo '<td class="align-middle"><span id="st_' . $row['orderID'] . '">' . $row['status'] . '</span><hr>';
-    if ($row['status'] != 'Completed' && $row['status'] != 'Delivered') {
-        echo '<select name="stats" id="stats_' . $row['orderID'] . '" class="btn btn-sm btn-primary px-0" onchange="updateStatus(' . $row['orderID'] . ', \'' . $row['source'] . '\')">
+                                        echo '<td class="align-middle"><span id="st_' . $row['orderID'] . '">' . $row['status'] . '</span><hr>';
+                                        if ($row['status'] != 'Completed' && $row['status'] != 'Delivered') {
+                                            echo '<select name="stats" id="stats_' . $row['orderID'] . '" class="btn btn-sm btn-primary px-0" onchange="updateStatus(' . $row['orderID'] . ', \'' . $row['source'] . '\')">
             <option value="" hidden>Edit Status</option>
             <option value="In Progress" class="bg-white text-dark">IN PROGRESS</option>
             <option value="Completed" ' . $notcom . ' class="bg-white text-dark">COMPLETED</option>';
-        echo '<option value="Cancelled" class="bg-white text-dark">CANCELLED</option>';
-        echo '<option value="Rejected" class="bg-white text-dark">REJECT</option>';
-        echo '</select>';
-    }
-echo '</td>';
-                if ($row['payment'] == 'Full Payment') {
-                    $selectedFullPayment = 'selected';
-                    $selectedDownPayment = '';
-                } else if ($row['payment'] == 'Down Payment') {
-                    $selectedFullPayment = '';
-                    $selectedDownPayment = 'selected';
-                } else {
-                    $selectedFullPayment = '';
-                    $selectedDownPayment = '';
-                }
-                echo '<td class="align-middle text-center">';
-                if ($row['status'] == 'Completed' || $row['status'] == 'Delivered') {
-                    $action = 'hidden';
-                } else {
-                    $action = '';
-                }
-                if ($row['status'] == 'Cancelled' || $row['status'] == 'Rejected' || $row['status'] == 'Completed' || $row['status'] == 'Delivered') {
-                    $action2 = 'd-none';
-                } else {
-                    $action2 = '';
-                }
-                echo '<form action="updatePayment.php" method="POST">
+                                            echo '<option value="Cancelled" class="bg-white text-dark">CANCELLED</option>';
+                                            echo '<option value="Rejected" class="bg-white text-dark">REJECT</option>';
+                                            echo '</select>';
+                                        }
+                                        echo '</td>';
+                                        if ($row['payment'] == 'Full Payment') {
+                                            $selectedFullPayment = 'selected';
+                                            $selectedDownPayment = '';
+                                        } else if ($row['payment'] == 'Down Payment') {
+                                            $selectedFullPayment = '';
+                                            $selectedDownPayment = 'selected';
+                                        } else {
+                                            $selectedFullPayment = '';
+                                            $selectedDownPayment = '';
+                                        }
+                                        echo '<td class="align-middle text-center">';
+                                        if ($row['status'] == 'Completed' || $row['status'] == 'Delivered') {
+                                            $action = 'hidden';
+                                        } else {
+                                            $action = '';
+                                        }
+                                        if ($row['status'] == 'Cancelled' || $row['status'] == 'Rejected' || $row['status'] == 'Completed' || $row['status'] == 'Delivered') {
+                                            $action2 = 'd-none';
+                                        } else {
+                                            $action2 = '';
+                                        }
+                                        echo '<form action="updatePayment.php" method="POST">
                             <input type="hidden" name="orderID" value="' . $row['orderID'] . '">
                             <input type="hidden" name="source" value="' . $row['source'] . '">
 
@@ -574,336 +582,480 @@ echo '</td>';
                             <input type="hidden" name="totalCost" value="' . $row['totalCost'] . '">
                             <p class="my-1" style="font-size:14px;">Balance: ' . $row['balance'] . '</p>
                             <button type="submit" class="btn btn-sm btn-success mt-1 ' . $action2 . '"  style="font-size:12px;">Update Payment</button>
-                            <p id="view" class="btn btn-sm btn-primary py-0 mt-2" style="font-size:12px;" onclick="viewProofPay(\'' . $row['proofPay'] . '\')">View Payment</p>
-
+<button
+    type="button"
+    class="btn btn-sm btn-primary py-0 mt-2"
+    style="font-size:12px;"
+    onclick="viewProofPay(
+        \'' . $row['proofPay'] . '\',
+        \'' . $row['orderID'] . '\',
+        \'' . $row['date'] . '\',
+        \'Gcash\', 
+        \'' . $row['fullName'] . '\',
+        \'PHP ' . number_format($row['amountPaid'], 2, ) . '\'
+    )">
+    View Payment
+</button>
                         </form>';
-                echo '</td>';
+                                        echo '</td>';
 
-                echo '</tr>';
-            }
+                                        echo '</tr>';
+                                    }
 
-            echo '</table>';
-        } else {
-            echo "No orders.";
-        }
-        ?>
+                                    echo '</table>';
+                                } else {
+                                    echo "No orders.";
+                                }
+                                ?>
+                            </div>
+                        </div>
+
+                        <script>
+                            function filterOrders(status) {
+                                var table = document.getElementById("dataTable");
+                                var buttons = document.querySelectorAll(".btn-group button");
+                                buttons.forEach(function (btn) {
+                                    btn.classList.remove("active");
+                                });
+                                // Fix: Use event parameter to get the clicked button
+                                // If event is not passed, fallback to find by text
+                                var eventBtn = null;
+                                if (window.event && window.event.target) {
+                                    eventBtn = window.event.target;
+                                } else if (filterOrders.caller && filterOrders.caller.arguments[0]) {
+                                    eventBtn = filterOrders.caller.arguments[0].target;
+                                }
+                                if (eventBtn) {
+                                    eventBtn.classList.add("active");
+                                } else {
+                                    // fallback: activate the button with matching text
+                                    buttons.forEach(function (btn) {
+                                        if (btn.textContent.trim() === status) btn.classList.add("active");
+                                    });
+                                }
+
+                                // Fix: Status column is now 10th (not 9th) because of added columns
+                                // Find the correct index for "Status" column
+                                // Table header: Name, Address, Cellphone Number, Image, Product Name, Dimension, Quantity, Price, Date, Status, Payment
+                                // So Status is 10th column (index 10)
+                                var statusColIdx = 10; // 1-based
+                                for (var i = 1, row; row = table.rows[i]; i++) {
+                                    var statusSpan = row.querySelector("td:nth-child(" + statusColIdx + ") span");
+                                    if (status === "All") {
+                                        row.style.display = "";
+                                    } else if (statusSpan && (statusSpan.textContent.trim().toLowerCase() === status.toLowerCase() ||
+                                        (status === "Pending Approval" && statusSpan.textContent.trim().toLowerCase() === "pending approval") ||
+                                        (status === "In Progress" && statusSpan.textContent.trim().toLowerCase() === "in progress"))) {
+                                        row.style.display = "";
+                                    } else {
+                                        row.style.display = "none";
+                                    }
+                                }
+                            }
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <!-- /.container-fluid -->
+
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; Your Website 2020</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
     </div>
-</div>
+    <!-- End of Page Wrapper -->
 
-<script>
-        function filterOrders(status) {
-            var table = document.getElementById("dataTable");
-            var buttons = document.querySelectorAll(".btn-group button");
-            buttons.forEach(function(btn) {
-                btn.classList.remove("active");
-            });
-            // Fix: Use event parameter to get the clicked button
-            // If event is not passed, fallback to find by text
-            var eventBtn = null;
-            if (window.event && window.event.target) {
-                eventBtn = window.event.target;
-            } else if (filterOrders.caller && filterOrders.caller.arguments[0]) {
-                eventBtn = filterOrders.caller.arguments[0].target;
-            }
-            if (eventBtn) {
-                eventBtn.classList.add("active");
-            } else {
-                // fallback: activate the button with matching text
-                buttons.forEach(function(btn) {
-                    if (btn.textContent.trim() === status) btn.classList.add("active");
-                });
-            }
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+    <!-- The Popup form -->
 
-            // Fix: Status column is now 10th (not 9th) because of added columns
-            // Find the correct index for "Status" column
-            // Table header: Name, Address, Cellphone Number, Image, Product Name, Dimension, Quantity, Price, Date, Status, Payment
-            // So Status is 10th column (index 10)
-            var statusColIdx = 10; // 1-based
-            for (var i = 1, row; row = table.rows[i]; i++) {
-                var statusSpan = row.querySelector("td:nth-child(" + statusColIdx + ") span");
-                if (status === "All") {
-                    row.style.display = "";
-                } else if (statusSpan && (statusSpan.textContent.trim().toLowerCase() === status.toLowerCase() || 
-                    (status === "Pending Approval" && statusSpan.textContent.trim().toLowerCase() === "pending approval") ||
-                    (status === "In Progress" && statusSpan.textContent.trim().toLowerCase() === "in progress"))) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
-            }
-        }
-</script>
-                        </div>
-                    </div>
+    <!-- Logout Modal-->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
                 </div>
-                <!-- /.container-fluid -->
-
-                <!-- End of Main Content -->
-
-                <!-- Footer -->
-                <footer class="sticky-footer bg-white">
-                    <div class="container my-auto">
-                        <div class="copyright text-center my-auto">
-                            <span>Copyright &copy; Your Website 2020</span>
-                        </div>
-                    </div>
-                </footer>
-                <!-- End of Footer -->
-
-            </div>
-            <!-- End of Content Wrapper -->
-
-        </div>
-        <!-- End of Page Wrapper -->
-
-        <!-- Scroll to Top Button-->
-        <a class="scroll-to-top rounded" href="#page-top">
-            <i class="fas fa-angle-up"></i>
-        </a>
-        <!-- The Popup form -->
-
-        <!-- Logout Modal-->
-        <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                        <a class="btn btn-primary" href="logout.php">Logout</a>
-                    </div>
+                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-primary" href="logout.php">Logout</a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Bootstrap core JavaScript-->
-        <script src="vendor/jquery/jquery.min.js"></script>
-        <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-        <script src="js/demo/chart-area-demo.js"></script>
+    <!-- Bootstrap core JavaScript-->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/demo/chart-area-demo.js"></script>
 
-        <!-- Core plugin JavaScript-->
-        <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <!-- Core plugin JavaScript-->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
 
-        <!-- Custom scripts for all pages-->
-        <script src="js/sb-admin-2.min.js"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin-2.min.js"></script>
 
-        <!-- Page level plugins -->
-        <script src="vendor/datatables/jquery.dataTables.min.js"></script>
-        <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <!-- Page level plugins -->
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
-        <!-- Page level custom scripts -->
-        <script src="js/demo/datatables-demo.js"></script>
+    <!-- Page level custom scripts -->
+    <script src="js/demo/datatables-demo.js"></script>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 
-        <script>
-            // Line chart (Monthly Sales)
-            const ctxLine = document.getElementById('monthlySalesChart').getContext('2d');
-            const monthlySalesData = <?php echo json_encode($monthlySales); ?>;
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const barColors = [
-                '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#D4A5A5',
-                '#FFADAD', '#FFD6A5', '#FDFFB6', '#C7F9CC', '#A2C2E1', '#FFB8D1'
-            ];
+    <script>
+        // Line chart (Monthly Sales)
+        const ctxLine = document.getElementById('monthlySalesChart').getContext('2d');
+        const monthlySalesData = <?php echo json_encode($monthlySales); ?>;
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const barColors = [
+            '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#D4A5A5',
+            '#FFADAD', '#FFD6A5', '#FDFFB6', '#C7F9CC', '#A2C2E1', '#FFB8D1'
+        ];
 
-            const monthlySalesChart = new Chart(ctxLine, {
-                type: 'line',
-                data: {
-                    labels: months,
-                    datasets: [{
-                        label: 'Monthly Sales',
-                        data: monthlySalesData,
-                        borderColor: '#343a40',
-                        fill: false,
-                        tension: 0.1,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Sales (₱)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Months'
-                            }
+        const monthlySalesChart = new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Monthly Sales',
+                    data: monthlySalesData,
+                    borderColor: '#343a40',
+                    fill: false,
+                    tension: 0.1,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Sales (₱)'
                         }
                     },
-                    plugins: {
-                        legend: {
+                    x: {
+                        title: {
                             display: true,
-                            position: 'top'
+                            text: 'Months'
                         }
                     }
-                }
-            });
-
-            // Bar chart (Total Orders)
-            const ctxBar = document.getElementById('totalOrdersChart').getContext('2d');
-            const totalOrdersData = <?php echo $ordersData; ?>;
-
-            const totalOrdersChart = new Chart(ctxBar, {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [{
-                        label: 'Total Orders',
-                        data: totalOrdersData,
-                        backgroundColor: barColors,
-                        borderColor: '#343a40',
-                        borderWidth: 1
-                    }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Orders'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Months'
-                            }
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+
+        // Bar chart (Total Orders)
+        const ctxBar = document.getElementById('totalOrdersChart').getContext('2d');
+        const totalOrdersData = <?php echo $ordersData; ?>;
+
+        const totalOrdersChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Total Orders',
+                    data: totalOrdersData,
+                    backgroundColor: barColors,
+                    borderColor: '#343a40',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Orders'
                         }
                     },
-                    plugins: {
-                        legend: {
+                    x: {
+                        title: {
                             display: true,
-                            position: 'top'
+                            text: 'Months'
                         }
                     }
-                }
-            });
-
-
-
-            function updateStatus(orderID, source) {
-                var status = document.getElementById("stats_" + orderID).value;
-                if (status === "") return;
-
-                var xhr = new XMLHttpRequest();
-
-                xhr.open("POST", "editstatus.php", true);
-
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState == 4 && xhr.status == 200) {
-                        if (xhr.responseText === "Status updated successfully.") {
-                            document.getElementById("st_" + orderID).innerHTML = status;
-                        } else {
-                            alert("Error updating status.");
-                        }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
                     }
-                };
-
-                xhr.send("orderID=" + orderID + "&status=" + encodeURIComponent(status) + "&source=" + source);
-            }
-
-
-
-            function toggleDownPayment(orderID) {
-                var paymentType = document.getElementById('pay_' + orderID).value;
-                var downPaymentInput = document.getElementById('pd_' + orderID);
-                var balanceField = document.getElementById('balance_' + orderID);
-
-                if (paymentType === 'Down Payment') {
-                    downPaymentInput.style.display = 'block';
-                } else {
-                    downPaymentInput.style.display = 'none';
-                    balanceField.innerText = '0';
                 }
             }
+        });
 
 
-            function toggleMonthPicker() {
-                var period = document.getElementById('period').value;
-                var monthPicker = document.getElementById('monthPicker');
-                if (period === 'monthly') {
-                    monthPicker.style.display = 'inline-block';
-                } else {
-                    monthPicker.style.display = 'none';
-                    monthPicker.value = '';
+
+        function updateStatus(orderID, source) {
+            var status = document.getElementById("stats_" + orderID).value;
+            if (status === "") return;
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("POST", "editstatus.php", true);
+
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    if (xhr.responseText === "Status updated successfully.") {
+                        document.getElementById("st_" + orderID).innerHTML = status;
+                    } else {
+                        alert("Error updating status.");
+                    }
                 }
-            }
-
-            // Call toggleMonthPicker on page load to set initial state
-            window.onload = function() {
-                toggleMonthPicker();
             };
 
-            function printReport() {
-                var period = document.getElementById('period').value;
-                var iframe = document.getElementById('reportFrame');
-                var url = 'report.php?period=' + period;
+            xhr.send("orderID=" + orderID + "&status=" + encodeURIComponent(status) + "&source=" + source);
+        }
 
-                if (period === 'monthly') {
-                    var month = document.getElementById('monthPicker').value;
-                    if (month) {
-                        url += '&month=' + month;
-                    }
+
+
+        function toggleDownPayment(orderID) {
+            var paymentType = document.getElementById('pay_' + orderID).value;
+            var downPaymentInput = document.getElementById('pd_' + orderID);
+            var balanceField = document.getElementById('balance_' + orderID);
+
+            if (paymentType === 'Down Payment') {
+                downPaymentInput.style.display = 'block';
+            } else {
+                downPaymentInput.style.display = 'none';
+                balanceField.innerText = '0';
+            }
+        }
+
+
+        function toggleMonthPicker() {
+            var period = document.getElementById('period').value;
+            var monthPicker = document.getElementById('monthPicker');
+            if (period === 'monthly') {
+                monthPicker.style.display = 'inline-block';
+            } else {
+                monthPicker.style.display = 'none';
+                monthPicker.value = '';
+            }
+        }
+
+        // Call toggleMonthPicker on page load to set initial state
+        window.onload = function () {
+            toggleMonthPicker();
+        };
+
+        function printReport() {
+            var period = document.getElementById('period').value;
+            var iframe = document.getElementById('reportFrame');
+            var url = 'report.php?period=' + period;
+
+            if (period === 'monthly') {
+                var month = document.getElementById('monthPicker').value;
+                if (month) {
+                    url += '&month=' + month;
                 }
-
-                iframe.src = url;
-
-                iframe.onload = function () {
-                    iframe.contentWindow.focus();
-                    iframe.contentWindow.print();
-                };
-
-                return false;
             }
 
-            // Modal for viewing payment proof image
-            // Add modal HTML at the end of body before </body>
-        </script>
+            iframe.src = url;
 
-        <!-- Payment Proof Modal -->
-        <div class="modal fade" id="paymentProofModal" tabindex="-1" role="dialog" aria-labelledby="paymentProofModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 600px;">
+            iframe.onload = function () {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            };
+
+            return false;
+        }
+
+        // Modal for viewing payment proof image
+        // Add modal HTML at the end of body before </body>
+    </script>
+
+  <style>
+    /* Modal content tweaks */
+    #paymentProofModal .modal-content {
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 123, 255, 0.2);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #ffffff;
+        border: none;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    /* Modal header with clean style */
+    #paymentProofModal .modal-header {
+        background: #007bff;
+        color: #fff;
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #paymentProofModal .modal-title {
+        font-weight: 600;
+        font-size: 1.5rem;
+        letter-spacing: 0.02em;
+        margin: 0;
+    }
+
+    #paymentProofModal .close {
+        font-size: 1.5rem;
+        color: #fff;
+        opacity: 0.8;
+        border: none;
+        background: transparent;
+        transition: opacity 0.3s ease;
+        cursor: pointer;
+    }
+
+    #paymentProofModal .close:hover {
+        opacity: 1;
+    }
+
+    /* Modal body styling */
+    #paymentProofModal .modal-body {
+        padding: 1.5rem 2rem 2rem;
+        background: #f5f8ff;
+        text-align: center;
+    }
+
+    /* Image styling */
+    #paymentProofImage {
+        display: block;
+        max-width: 240px;
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+        margin: 0 auto 1.75rem;
+        object-fit: contain;
+    }
+
+    /* Receipt details styling */
+    .receipt-details {
+        background: #fff;
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+        max-width: 360px;
+        margin: 0 auto;
+        text-align: left;
+    }
+
+    .receipt-details p {
+        margin: 0.6rem 0;
+        font-size: 1rem;
+        color: #222;
+        line-height: 1.4;
+    }
+
+    .receipt-details strong {
+        color: #007bff;
+        width: 140px;
+        display: inline-block;
+        font-weight: 600;
+    }
+
+    /* Responsive tweak */
+    @media (max-width: 480px) {
+        #paymentProofModal .modal-body {
+            padding: 1.25rem 1rem 1.5rem;
+        }
+
+        .receipt-details {
+            max-width: 100%;
+            padding: 1rem 1rem;
+        }
+
+        #paymentProofImage {
+            max-width: 180px;
+            margin-bottom: 1.25rem;
+        }
+    }
+</style>
+
+<!-- Modal HTML remains the same -->
+
+
+    <div class="modal fade" id="paymentProofModal" tabindex="-1" role="dialog" aria-labelledby="paymentProofModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 480px;">
             <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="paymentProofModalLabel">Payment Proof</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size: 1.5rem;">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body text-center">
-                <img id="paymentProofImage" src="" alt="Payment Proof" style="max-width: 100%; height: auto; border-radius: 8px;">
-              </div>
-            </div>
-          </div>
-        </div>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentProofModalLabel">Payment Receipt</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" title="Close receipt">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
 
-        <script>
-            function viewProofPay(proofPayUrl) {
-                // Set the image src in the modal and show the modal
-                var img = document.getElementById('paymentProofImage');
-                img.src = proofPayUrl;
-                $('#paymentProofModal').modal('show');
-            }
-        </script>
+                    <img id="paymentProofImage" src="" alt="Payment Proof Receipt">
+
+                    <div class="receipt-details" aria-live="polite" aria-atomic="true">
+                        <p><strong>Order No:</strong> <span id="modalOrderID"></span></p>
+                        <p><strong>Payment Date:</strong> <span id="modalPaymentTime"></span></p>
+                        <p><strong>Payment Method:</strong> <span id="modalPaymentMethod"></span></p>
+                        <p><strong>Sender Name:</strong> <span id="modalSenderName"></span></p>
+                        <p><strong>Amount:</strong> <span id="modalAmount"></span></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <script>
+        function viewProofPay(proofPayUrl, orderID, paymentTime, paymentMethod, senderName, amount) {
+            // Set image src
+            var img = document.getElementById('paymentProofImage');
+            img.src = proofPayUrl;
+
+            // Set text details
+            document.getElementById('modalOrderID').textContent = orderID;
+            document.getElementById('modalPaymentTime').textContent = paymentTime;
+            document.getElementById('modalPaymentMethod').textContent = paymentMethod;
+            document.getElementById('modalSenderName').textContent = senderName;
+            document.getElementById('modalAmount').textContent = amount;
+
+            // Show modal (using jQuery and Bootstrap 4 syntax)
+            $('#paymentProofModal').modal('show');
+        }
+
+    </script>
 
 
 </body>
