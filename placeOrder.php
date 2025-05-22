@@ -9,7 +9,7 @@ if (isset($_POST['place'])) {
     $address = $_POST['address'];
     $cpNum = $_POST['cpNum'];
     $prodName = $_POST['prodName'];
-    $prodImage = "up/".$_POST['prodImage'];
+    $prodImage = "up/" . $_POST['prodImage'];
     $date = $_POST['date'];
     $status = $_POST['status'];
     $quantity = $_POST['quantity'];
@@ -40,11 +40,28 @@ if (isset($_POST['place'])) {
         if ($stmt_select->fetch()) {
             $stmt_select->close();
 
-            $sql_insert = "INSERT INTO checkout (fID, userID, fullName, address, cpNum, image, prodName, cost, date, status, proofPay, quantity, width, length, height) 
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
+            $sql_insert = "INSERT INTO checkout (userID, fullName, address, cpNum, image, prodName, cost, date, status, balance, proofPay, quantity, width, length, height) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             if ($stmt_insert = $conn->prepare($sql_insert)) {
-                $stmt_insert->bind_param("iisssssdsssisss", $orderID, $userID, $fullName, $address, $cpNum, $prodImage, $prodName, $cost, $date, $status, $filename, $quantity, $width, $length, $height);
+                $stmt_insert->bind_param(
+                "issssssdssdisss", // Corrected type string: 15 types
+                $userID,
+                $fullName,
+                $address,
+                $cpNum,
+                $prodImage,
+                $prodName,
+                $cost,
+                $date,
+                $status,
+                $cost,          // balance
+                $filename,      // proofPay
+                $quantity,
+                $width,
+                $length,
+                $height
+            );
 
                 if ($stmt_insert->execute()) {
                     // Fix: Use correct temp file path and destination
@@ -63,10 +80,10 @@ if (isset($_POST['place'])) {
                     $minusQuantitySql = "SELECT * FROM furnituretbl WHERE fID = '$orderID'";
                     $minusQuantityResult = mysqli_query($conn, $minusQuantitySql);
                     $minusQuantityRow = mysqli_fetch_assoc($minusQuantityResult);
-                    
+
                     $qty2 = $minusQuantityRow['fQuantity'];
 
-                    $totQty = (int) $qty2-1;
+                    $totQty = (int) $qty2 - 1;
 
                     $updateQuantitySql = "UPDATE furnituretbl SET fQuantity = '$totQty' WHERE fID = '$orderID'";
 
@@ -96,4 +113,3 @@ if (isset($_POST['place'])) {
 if (isset($_POST['cancel'])) {
     echo "<script>window.location.href='./shop.php';</script>";
 }
-?>

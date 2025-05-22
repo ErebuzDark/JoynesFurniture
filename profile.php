@@ -461,7 +461,7 @@ ORDER BY date DESC
                                             $images = explode(',', $row['image']);
                                             $quantities = explode(',', $row['quantity']);
                                             $maxItems = max(count($prodNames), count($images), count($quantities));
-                                            $balance = $row['totalCost'] - $row['balance'];
+                                            $balance = $row['balance'];
 
                                             if ($row['status'] == 'Rejected') {
                                                 $reject = "Invalid Payment";

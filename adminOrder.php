@@ -446,31 +446,50 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 </div>
                             </div>
                             <div class="table-responsive">
-                                <?php $sql = " SELECT main.source, main.payment, main.proofPay, pr.proofImage AS receipt_image_url, pr.amountPaid, main.balance, main.fullName, main.address, main.cpNum, main.prodName, main.image, main.quantity, main.totalCost, main.date, main.status, main.orderID, main.width, main.length, main.height FROM ( SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, cost AS totalCost, date, status, orderID, width, length, height FROM checkout UNION SELECT 'checkoutcustom' AS source, payment, proofPay, balance, fullName, address, cpNum, pName AS prodName, image, quantity, totalCost, date, status, orderID, width, length, height FROM checkoutcustom ) AS main LEFT JOIN payment_receipts AS pr ON pr.orderID = main.orderID ORDER BY main.date DESC ";
+                                <?php 
+                                $sql = "SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, 
+                                cost AS totalCost, date, status, orderID, width, length, height 
+                                FROM checkout
+                                UNION 
+                                SELECT 'checkoutcustom' AS source, payment, proofPay, balance, fullName, address, cpNum, pName AS prodName, image, 
+                                quantity, totalCost, date, status, orderID, width, length, height 
+                                FROM checkoutcustom
+                                ORDER BY date DESC";
 
+                                $receiptQuery = "SELECT orderID, proofImage, amountPaid, paymentDate FROM payment_receipts";
+                                $receiptResult = $conn->query($receiptQuery);
+
+                                $receiptsByOrder = [];
+                                while ($row = $receiptResult->fetch_assoc()) {
+                                    $receiptsByOrder[$row['orderID']][] = $row;
+                                }
 
                                 $result = $conn->query($sql);
 
                                 if ($result->num_rows > 0) {
                                     echo '<table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Address</th>
-                    <th>Cellphone Number</th>
-                    <th>Image</th>
-                    <th>Product Name</th>
-                    <th>Dimension</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Payment</th>
-                </tr>
-            </thead>
-            ';
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Address</th>
+                                            <th>Cellphone Number</th>
+                                            <th>Image</th>
+                                            <th>Product Name</th>
+                                            <th>Dimension</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Payment</th>
+                                        </tr>
+                                    </thead>
+                                    ';
 
                                     while ($row = $result->fetch_assoc()) {
+                                        $orderID = $row['orderID'];
+                                        $receipts = isset($receiptsByOrder[$orderID]) ? $receiptsByOrder[$orderID] : [];
+                                        $receiptsJson = htmlspecialchars(json_encode($receipts), ENT_QUOTES, 'UTF-8');
+
                                         $prodNames = explode(',', $row['prodName']);
                                         $images = explode(',', $row['image']);
                                         $maxItems = count($prodNames);
@@ -570,6 +589,8 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         echo '<form action="updatePayment.php" method="POST">
                             <input type="hidden" name="orderID" value="' . $row['orderID'] . '">
                             <input type="hidden" name="source" value="' . $row['source'] . '">
+                            <input type="hidden" name="currentBalance" value="' . $row['balance'] . '">
+
 
 
                             <select name="pay" id="pay_' . $row['orderID'] . '" class="btn btn-sm border border-dark px-0 ' . $action2 . '" onchange="toggleDownPayment(' . $row['orderID'] . ')"  style="font-size:12px;">
@@ -581,22 +602,16 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             <input type="number" name="downPayment" id="pd_' . $row['orderID'] . '" style="display:none;" class="form-control form-control-sm my-1" placeholder="Down Payment" min="0" oninput="updateBalance(' . $row['orderID'] . ')">
                             <input type="hidden" name="totalCost" value="' . $row['totalCost'] . '">
                             <p class="my-1" style="font-size:14px;">Balance: ' . $row['balance'] . '</p>
-                            <button type="submit" class="btn btn-sm btn-success mt-1 ' . $action2 . '"  style="font-size:12px;">Update Payment</button>
-<button
-    type="button"
-    class="btn btn-sm btn-primary py-0 mt-2"
-    style="font-size:12px;"
-    onclick="viewProofPay(
-        \'' . $row['proofPay'] . '\',
-        \'' . $row['orderID'] . '\',
-        \'' . $row['date'] . '\',
-        \'Gcash\', 
-        \'' . $row['fullName'] . '\',
-        \'PHP ' . number_format($row['amountPaid'], 2, ) . '\'
-    )">
-    View Payment
-</button>
-                        </form>';
+                            <button type="submit" class="btn btn-sm btn-success mt-1 ' . $action2 . '"  style="font-size:12px;">Update Payment</button>'?>;
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-primary py-0 mt-2"
+                                style="font-size:12px;"
+                                onclick='viewProofPayAll(`<?php echo $receiptsJson; ?>`, "<?php echo $orderID; ?>", "<?php echo htmlspecialchars($row["fullName"]); ?>")'>
+                                View Payment
+                            </button>
+                        <?php
+                        echo '</form>';
                                         echo '</td>';
 
                                         echo '</tr>';
@@ -1020,7 +1035,9 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                 </div>
                 <div class="modal-body">
 
-                    <img id="paymentProofImage" src="" alt="Payment Proof Receipt">
+                    <!-- Replace single image -->
+                <div id="paymentProofImage"></div>
+
 
                     <div class="receipt-details" aria-live="polite" aria-atomic="true">
                         <p><strong>Order No:</strong> <span id="modalOrderID"></span></p>
@@ -1035,6 +1052,46 @@ $ordersData = json_encode(array_values($ordersPerMonth));
         </div>
     </div>
 
+    <script>
+function viewProofPayAll(receiptsJson, orderID, senderName) {
+    const receipts = JSON.parse(receiptsJson);
+
+    const modal = document.getElementById('paymentProofModal');
+    const imgContainer = document.getElementById('paymentProofImage');
+    const details = document.querySelector('.receipt-details');
+
+    // Clear previous data
+    imgContainer.innerHTML = '';
+    details.innerHTML = `<p><strong>Order No:</strong> ${orderID}</p>`;
+
+    if (receipts.length === 0) {
+        details.innerHTML += '<p>No receipts found.</p>';
+    } else {
+        receipts.forEach(r => {
+            const img = document.createElement('img');
+            img.src = r.proofImage;
+            img.alt = 'Receipt Image';
+            img.style = "max-width:100%; margin-bottom:10px;";
+
+            const info = document.createElement('div');
+            info.innerHTML = `
+                <p><strong>Payment Date:</strong> ${r.paymentDate}</p>
+                
+                <p><strong>Sender Name:</strong> ${senderName}</p>
+                <hr>
+            `;
+
+            imgContainer.appendChild(img);
+            details.appendChild(info);
+        });
+    }
+
+    $('#paymentProofModal').modal('show');
+}
+</script>
+
+<!-- <p><strong>Payment Method:</strong> Gcash</p> -->
+<!-- <p><strong>Amount:</strong> PHP ${parseFloat(r.amountPaid).toFixed(2)}</p> -->
 
 
 
