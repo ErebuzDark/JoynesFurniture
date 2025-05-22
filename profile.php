@@ -372,7 +372,7 @@ $userRow = mysqli_fetch_assoc($userResult);
                                                 letter-spacing: 1px;
                                                 display: inline-block;
                                                 margin: 15px 0;">
-                                                '.$rand.'
+                                                ' . $rand . '
                                             </p>
                                         </div>
                                         <br>
@@ -444,9 +444,9 @@ $userRow = mysqli_fetch_assoc($userResult);
                                 <div class="tab-pane fade show active" id="overview">
                                     <?php
                                     $sql = "
-(SELECT 'checkout' AS source, prodName, image, proofPay, cost AS totalCost, quantity, date, status, balance FROM checkout WHERE userID = '$userID')
+(SELECT 'checkout' AS source, prodName, image, proofPay, cost AS totalCost, orderID, quantity, date, status, balance FROM checkout WHERE userID = '$userID')
 UNION
-(SELECT 'checkoutcustom' AS source, pName AS prodName, image, proofPay, totalCost, quantity, date, status, balance FROM checkoutcustom WHERE userID = '$userID')
+(SELECT 'checkoutcustom' AS source, pName AS prodName, image, proofPay, totalCost, orderID, quantity, date, status, balance FROM checkoutcustom WHERE userID = '$userID')
 ORDER BY date DESC
                                             ";
 
@@ -487,7 +487,27 @@ ORDER BY date DESC
                                             echo '<p class="text-dark my-2 ">' . htmlspecialchars($row['status']) . ' <br><br><span style="font-size:12px;">' . $reject . '</span></p><br>';
                                             echo '<p class="text-dark my-2">Balance: ₱' . number_format($balance, 2, '.', ',') . '</p>';
                                             echo '<p class="text-dark my-2">Total: ₱' . number_format($row['totalCost'], 2, '.', ',') . '</p>';
-echo '<button class="btn btn-primary see-payment-image-btn" style="font-size:13px; color:white;" data-image="'.htmlspecialchars($row['proofPay']).'">See Payment Image</button>';
+                                            if ($balance > 0) {
+                                                echo '<button class="btn btn-success pay-balance-btn" 
+                                                    data-balance="' . htmlspecialchars($balance) . '" 
+                                                    data-source="' . htmlspecialchars($row['source']) . '" 
+                                                    data-prodname="' . htmlspecialchars($row['prodName']) . '" 
+                                                    data-orderid="' . htmlspecialchars($row['orderID']) . '" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#balancePaymentModal">
+                                                    Upload Another Payment
+                                                </button>';
+                                            }
+
+                                            echo '<button 
+                                                class="btn btn-primary see-payment-images-btn" 
+                                                style="font-size:13px; color:white;" 
+                                                data-orderid="' . htmlspecialchars($row['orderID']) . '" 
+                                                data-source="' . htmlspecialchars($row['source']) . '">
+                                                See All Payment Images
+                                            </button>';
+
+                                            // echo '<button class="btn btn-primary see-payment-image-btn" style="font-size:13px; color:white;" data-image="' . htmlspecialchars($row['proofPay']) . '">See Payment Image</button>';
                                             echo '</td>';
                                             echo '</tr>';
                                         }
@@ -642,7 +662,6 @@ ORDER BY date DESC
                                                         data-status="Delivered"
                                                         data-orderid="' . $row['orderID'] . '" 
                                                         data-source="' . $row['source'] . '">Order Complete</button>';
-
                                             }
                                             echo '<p class="text-dark my-3">Total: ₱' . htmlspecialchars(number_format((float) $row['totalCost'], 2, '.', ',')) . '</p>';
                                             echo '</td>';
@@ -745,8 +764,8 @@ ORDER BY date DESC
     <script src="js/main.js"></script>
 
     <script>
-        $(document).ready(function () {
-            $("button[name='complete']").click(function () {
+        $(document).ready(function() {
+            $("button[name='complete']").click(function() {
                 var orderID = $(this).data("orderid");
                 var source = $(this).data("source");
                 var status = $(this).data("status");
@@ -756,8 +775,12 @@ ORDER BY date DESC
                 $.ajax({
                     url: 'profileUpdateOrder.php',
                     type: 'POST',
-                    data: { orderID: orderID, source: source, status: status },
-                    success: function (response) {
+                    data: {
+                        orderID: orderID,
+                        source: source,
+                        status: status
+                    },
+                    success: function(response) {
                         if (response === 'success') {
                             alert("Order status updated to Delivered!");
                             button.text('Delivered').prop('disabled', true);
@@ -765,13 +788,13 @@ ORDER BY date DESC
                             alert("Error updating order status.");
                         }
                     },
-                    error: function () {
+                    error: function() {
                         alert("Error with AJAX request.");
                     }
                 });
             });
 
-            $("button[name='cancel']").click(function () {
+            $("button[name='cancel']").click(function() {
                 var orderID = $(this).data("orderid");
                 var source = $(this).data("source");
                 var status = $(this).data("status");
@@ -781,8 +804,12 @@ ORDER BY date DESC
                 $.ajax({
                     url: 'profileUpdateOrder.php',
                     type: 'POST',
-                    data: { orderID: orderID, source: source, status: status },
-                    success: function (response) {
+                    data: {
+                        orderID: orderID,
+                        source: source,
+                        status: status
+                    },
+                    success: function(response) {
                         if (response === 'success') {
                             alert("Order cancelled!");
                             button.text('Cancelled').prop('disabled', true);
@@ -791,7 +818,7 @@ ORDER BY date DESC
                             alert("Error updating order status.");
                         }
                     },
-                    error: function () {
+                    error: function() {
                         alert("Error with AJAX request.");
                     }
                 });
@@ -803,11 +830,11 @@ ORDER BY date DESC
         const imageText = document.getElementById('image-text');
         const imageSizeText = document.getElementById('image-size-text');
 
-        dropArea.addEventListener('click', function () {
+        dropArea.addEventListener('click', function() {
             inputFile.click();
         });
 
-        inputFile.addEventListener('change', function () {
+        inputFile.addEventListener('change', function() {
             const file = this.files[0];
 
             if (file.type.startsWith('image/')) {
@@ -822,14 +849,14 @@ ORDER BY date DESC
             }
         });
 
-        dropArea.addEventListener('dragover', function (e) {
+        dropArea.addEventListener('dragover', function(e) {
             e.preventDefault();
             this.style.borderStyle = 'solid';
             const h3 = this.querySelector('h3');
             h3.textContent = 'Release here to upload image';
         });
 
-        dropArea.addEventListener('drop', function (e) {
+        dropArea.addEventListener('drop', function(e) {
             e.preventDefault();
             inputFile.files = e.dataTransfer.files;
             const file = e.dataTransfer.files[0];
@@ -848,7 +875,7 @@ ORDER BY date DESC
 
         const command = ['dragleave', 'dragend'];
         command.forEach(item => {
-            dropArea.addEventListener(item, function () {
+            dropArea.addEventListener(item, function() {
                 this.style.borderStyle = 'dashed';
                 const h3 = this.querySelector('h3');
                 h3.textContent = 'Drag and drop or click here to select image';
@@ -857,7 +884,7 @@ ORDER BY date DESC
 
         function updatePreview(file) {
             const reader = new FileReader();
-            reader.onload = function () {
+            reader.onload = function() {
                 const url = reader.result;
                 const preview = document.getElementById('image-preview');
                 preview.src = url;
@@ -876,14 +903,14 @@ ORDER BY date DESC
         }
 
 
-        document.getElementById('updateImageBtn').addEventListener('click', function () {
+        document.getElementById('updateImageBtn').addEventListener('click', function() {
             const formData = new FormData(document.getElementById('updateProfileForm'));
             formData.append('updateType', 'image');
 
             fetch('profileUpdate.php', {
-                method: 'POST',
-                body: formData
-            })
+                    method: 'POST',
+                    body: formData
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -898,14 +925,14 @@ ORDER BY date DESC
                 });
         });
 
-        document.getElementById('updateDetailsBtn').addEventListener('click', function () {
+        document.getElementById('updateDetailsBtn').addEventListener('click', function() {
             const formData = new FormData(document.getElementById('updateProfileForm'));
             formData.append('updateType', 'details');
 
             fetch('profileUpdate.php', {
-                method: 'POST',
-                body: formData
-            })
+                    method: 'POST',
+                    body: formData
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -919,7 +946,6 @@ ORDER BY date DESC
                     alert('Error: ' + error);
                 });
         });
-
     </script>
 
     <!-- Payment Image Modal -->
@@ -936,20 +962,134 @@ ORDER BY date DESC
             </div>
         </div>
     </div>
+    <!-- new images for resibo -->
+     <!-- Modal to display all receipts for an order -->
+    <div class="modal fade" id="paymentImagesModal" tabindex="-1" aria-labelledby="paymentImagesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content bg-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="paymentImagesModalLabel">Payment Receipts</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="paymentImagesContainer">
+                    <!-- Images will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Balance Payment Modal -->
+    <div class="modal fade" id="balancePaymentModal" tabindex="-1" aria-labelledby="balancePaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-white">
+            <div class="modal-header">
+                <h5 class="modal-title" id="balancePaymentModalLabel">Upload Payment Receipt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="upload_balance_payment.php" enctype="multipart/form-data">
+                <div class="modal-body">
+                <p><strong>Remaining Balance:</strong> ₱<span id="balanceAmountDisplay"></span></p>
+
+                <label for="paymentImage">Upload Payment Receipt</label>
+                <input type="file" name="paymentImage" class="form-control" required>
+
+                <input type="hidden" name="orderID" id="orderid">
+                <input type="hidden" name="userID" value="<?php echo $userID; ?>">
+                <input type="hidden" name="source" id="paymentSource">
+                <input type="hidden" name="prodName" id="paymentProdName">
+                <input type="hidden" name="balanceAmount" id="balanceAmountField">
+                </div>
+                <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Submit Payment</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+            </div>
+        </div>
+    </div>
 
     <script>
         $(document).ready(function () {
+            $('.pay-balance-btn').click(function () {
+                var balance = $(this).data('balance');
+                var orderid = $(this).data('orderid');
+                var source = $(this).data('source');
+                var prodName = $(this).data('prodname');
+
+                $('#balanceAmountDisplay').text(balance);
+                $('#balanceAmountField').val(balance);
+                $('#orderid').val(orderid); // ✅ Set this!
+                $('#paymentSource').val(source);
+                $('#paymentProdName').val(prodName);
+            });
+        });
+    </script>
+
+
+
+    <!-- new script for displaying resibo -->
+    <script>
+    $(document).ready(function () {
+        // See all payment images for an order
+        $('.see-payment-images-btn').click(function () {
+            var orderID = $(this).data('orderid');
+            var source = $(this).data('source');
+
+            $.ajax({
+                url: 'get_payment_images.php',
+                type: 'POST',
+                data: {
+                    orderID: orderID,
+                    source: source
+                },
+                success: function (response) {
+                    $('#paymentImagesContainer').html(response);
+                    var modal = new bootstrap.Modal(document.getElementById('paymentImagesModal'));
+                    modal.show();
+                },
+                error: function () {
+                    $('#paymentImagesContainer').html('<p class="text-danger">Failed to load payment images.</p>');
+                }
+            });
+        });
+    });
+</script>
+
+
+    <!-- <script>
+        $(document).ready(function() {
             // Existing JS code...
 
             // Show payment image in modal
-            $('.see-payment-image-btn').click(function () {
+            $('.see-payment-image-btn').click(function() {
                 var imageUrl = $(this).data('image');
                 $('#paymentImageModalImg').attr('src', imageUrl);
                 var modal = new bootstrap.Modal(document.getElementById('paymentImageModal'));
                 modal.show();
             });
         });
+    </script> -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const payBtns = document.querySelectorAll('.pay-balance-btn');
+
+            payBtns.forEach(button => {
+                button.addEventListener('click', () => {
+                    const balance = button.getAttribute('data-balance');
+                    const source = button.getAttribute('data-source');
+                    const prodName = button.getAttribute('data-prodname');
+
+                    document.getElementById('balanceAmountDisplay').innerText = parseFloat(balance).toLocaleString();
+                    document.getElementById('balanceAmountField').value = balance;
+                    document.getElementById('paymentProdName').value = prodName;
+                    document.getElementById('paymentSource').value = source;
+                });
+            });
+        });
     </script>
+
+
 </body>
 
 </html>

@@ -273,7 +273,7 @@ if ($userresult->num_rows > 0) {
                         <div class="col-8"></div>
                         <div class="col-3">
                             <p class=" fw-bolder px-4 py-3 text-primary text-uppercase mb-4 ms-4" style="font-size: 21px;">
-                                <span>Total:</span> &#8369;<?php echo number_format($cost, 0, '.', ','); ?></p>
+                               <span>Total:</span> &#8369;<?php echo number_format(is_numeric($cost) ? $cost : 0, 0, '.', ','); ?>
                         </div>
                     </div>
                 </form>

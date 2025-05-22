@@ -72,7 +72,7 @@ if (isset($_POST['selected_products'])) {
             <img src="img/qr.jpg" width="150px" height="150px" alt="QR Code">
         </div>';
 
-  echo '<label for="qrImage" class="mt-4">Upload Proof of Payment (JPG/PNG only): <br>*Minimum required downpayment is ₱1,000*</label>';
+  echo '<label for="qrImage" class="mt-4">Upload Proof of Payment (JPG/PNG only): <br>Pay the exact amount of  &#8369;' . number_format($totalCost) . ':</label>';
   echo '<input type="file" name="qrImage" class="form-control form-control-sm" id="qrImage" accept=".jpg,.jpeg,.png" required>';
 
   echo '<div id="imagePreviewContainer" style="margin-top: 10px;">
