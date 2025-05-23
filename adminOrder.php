@@ -397,7 +397,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                 <!-- End of Topbar -->
 
                 <!-- DataTales Example -->
-                <div class="container px-0">
+                <div class=" px-0">
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
 
@@ -927,11 +927,16 @@ $ordersData = json_encode(array_values($ordersPerMonth));
         .receipt-line:last-child {
             border-bottom: none;
         }
+
+        hr.border-dashed {
+            border-style: dashed !important;
+        }
     </style>
     <!-- Modal HTML remains the same -->
+    <!-- Payment Proof Modal -->
     <div class="modal fade" id="paymentProofModal" tabindex="-1" role="dialog" aria-labelledby="paymentProofModalLabel"
         aria-hidden="true" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 600px;">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content rounded shadow">
                 <div class="modal-header bg-light border-bottom-0">
                     <h5 class="modal-title font-weight-bold" id="paymentProofModalLabel">Payment Receipt</h5>
@@ -940,91 +945,99 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                     </button>
                 </div>
                 <div class="modal-body p-4">
+                    <!-- Flex container for image and details -->
+                    <div class="d-flex flex-column flex-lg-row gap-4 align-items-start">
+                        <!-- Left: Image(s) -->
+                        <div id="paymentProofImage" class="d-flex flex-column align-items-start">
+                            <!-- Dynamic images inserted here by JS -->
+                        </div>
 
-                    <!-- Thumbnail Image -->
-                    <div id="paymentProofImage" class="d-flex mb-4 p-2" style="max-width: auto; height: auto;">
-                        <img src="thumbnail.jpg" alt="Payment Proof" style="max-width: 100px; cursor: pointer;"
-                            onclick="openImageModal('fullsize-image.jpg')" />
-                    </div>
-
-                    <!-- Full Image Modal -->
-                    <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog"
-                        aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered" role="document">
-                            <div class="modal-content bg-dark border-0">
-                                <div class="modal-body p-0 text-center">
-                                    <img id="modalImage" src="" alt="Full Size" class="img-fluid rounded" />
-                                </div>
-                            </div>
+                        <!-- Right: Details -->
+                        <div class="receipt-details w-100" aria-live="polite" aria-atomic="true">
+                            <!-- Dynamic content inserted here by JS -->
                         </div>
                     </div>
-
-                    
-
-                    <div class="dashed-line my-3"></div>
-
-                    <!-- Receipt Details -->
-                    <div class="receipt-details" aria-live="polite" aria-atomic="true">
-                        <p><strong>Order No:</strong> <span id="modalOrderID" class="text-muted text-end"></span></p>
-                        <p><strong>Payment Date(s):</strong> <span id="modalPaymentTime"
-                                class="text-muted text-end"></span></p>
-
-                        <p><strong>Payment Method:</strong> <span id="modalPaymentMethod" class="text-muted"></span></p>
-                        <p><strong>Sender Name:</strong> <span id="modalSenderName" class="text-muted text-end"></span>
-                        </p>
-                        <p><strong>Amount:</strong> <span id="modalAmount" class="text-success font-weight-bold"></span>
-                        </p>
-                    </div>
-
-                    <div class="dashed-line my-3"></div>
-
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Full Image Modal -->
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content bg-dark border-0">
+                <div class="modal-body p-0 text-center">
+                    <img id="modalImage" src="" alt="Full Size" class="img-fluid rounded" />
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         function viewProofPayAll(receiptsJson, orderID, senderName) {
             const receipts = JSON.parse(receiptsJson);
-
             const imgContainer = document.getElementById('paymentProofImage');
             const details = document.querySelector('.receipt-details');
 
-            // Clear previous data
+            // Clear previous content
             imgContainer.innerHTML = '';
-            details.innerHTML = `<p><strong>Order No:</strong> ${orderID}</p>`;
+            details.innerHTML = `
+        <div class="mb-4">
+            <h6 class="text-uppercase text-muted">Order Details</h6>
+            <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
+        </div>
+        <hr class="border border-1 border-dark border-dashed">
+    `;
 
-            if (receipts.length === 0 || imgContainer === "") {
-                imgContainer.innerHTML = `
-                <div class="text-muted">
-                    <p class="mt-3 mb-0">No receipt image found.</p>
-                </div>
-            `;
+            if (receipts.length === 0) {
+                imgContainer.innerHTML = `<div class="text-muted"><p class="mt-3 mb-0">No receipt image found.</p></div>`;
                 details.innerHTML += '<p class="text-muted">No receipts found.</p>';
             } else {
-                receipts.forEach(r => {
+                receipts.forEach((r, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'row mb-4 align-items-center';
+
+                    // Image column
+                    const colImg = document.createElement('div');
+                    colImg.className = 'col-md-4 text-center';
                     const img = document.createElement('img');
                     img.src = r.proofImage;
                     img.alt = 'Receipt Image';
-                    img.style = "margin-bottom:10px; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15); max-width: 300px; max-height: 300px; cursor: pointer;";
-                    img.className = 'img-thumbnail mr-2';
+                    img.style = "box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15); max-width: 100%; max-height: 200px; cursor: pointer;";
+                    img.className = 'img-thumbnail mb-2';
 
-                    // 🔁 Show image in modal instead of opening a new tab
                     img.addEventListener('click', () => {
                         document.getElementById('modalImage').src = r.proofImage;
                         $('#imagePreviewModal').modal('show');
                     });
 
-                    imgContainer.appendChild(img);
+                    colImg.appendChild(img);
+                    row.appendChild(colImg);
 
-                    const info = document.createElement('div');
-                    info.innerHTML = `
-                    <p><strong>Payment Date:</strong> ${r.paymentDate}</p>
-                    <p><strong>Sender Name:</strong> ${senderName}</p>
-                    <hr>
-                `;
-                    details.appendChild(info);
+                    // Details column
+                    const colDetails = document.createElement('div');
+                    colDetails.className = 'col-md-8';
+
+                    colDetails.innerHTML = `
+                <div class="p-3 bg-light rounded shadow-sm">
+                    <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
+                    <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate}</span></p>
+                    <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName}</span></p>
+                    <p class="mb-2"><strong>Payment Method:</strong> <span class="text-muted">Gcash</span></p>
+                    <p class="mb-0"><strong>Amount:</strong> PHP  <span class="text-success fw-bold">${r.amountPaid || ''}</span></p>
+                </div>
+            `;
+
+                    row.appendChild(colDetails);
+                    details.appendChild(row);
+
+                    // Dashed divider
+                    if (index < receipts.length - 1) {
+                        const divider = document.createElement('hr');
+                        divider.className = 'border border-1 border-dark border-dashed my-4';
+                        details.appendChild(divider);
+                    }
                 });
             }
 
