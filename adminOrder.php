@@ -471,9 +471,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 $row = $result->fetch_assoc();
                                 $officialReceiptID = $row ? (int) $row['lastID'] : 0;
 
-                                if ($officialReceiptID === 0) {
-                                    die("No official receipts found.");
-                                }
+                               
 
                                 $receiptQuery = "
     SELECT 
