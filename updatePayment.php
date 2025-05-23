@@ -39,10 +39,21 @@ if (isset($_POST['orderID'], $_POST['pay'], $_POST['source'], $_POST['totalCost'
     $amountPaid = min($downPayment, $currentBalance);
     $balance = $currentBalance - $amountPaid;
 
-    if ($balance <= 0) {
-        $newPayment = "Full Payment";
+    // Check if Full Payment is selected manually or balance will become zero
+    if ($newPayment === "Full Payment") {
+        $amountPaid = $currentBalance; // Pay the full remaining balance
         $balance = 0;
+    } else {
+        $amountPaid = min($downPayment, $currentBalance);
+        $balance = $currentBalance - $amountPaid;
+
+        // If payment completes the balance, mark as full
+        if ($balance <= 0) {
+            $newPayment = "Full Payment";
+            $balance = 0;
+        }
     }
+
 
     $referenceNo = strtoupper(uniqid('REF-'));
     $updateSQL = ($source === "checkout") ?
