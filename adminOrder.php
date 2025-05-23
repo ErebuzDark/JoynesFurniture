@@ -446,7 +446,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 </div>
                             </div>
                             <div class="table-responsive">
-                                <?php 
+                                <?php
                                 $sql = "SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, 
                                 cost AS totalCost, date, status, orderID, width, length, height 
                                 FROM checkout
@@ -470,6 +470,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                     echo '<table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
                                         <tr>
+                                            <th>Order ID</th>
                                             <th>Name</th>
                                             <th>Address</th>
                                             <th>Cellphone Number</th>
@@ -495,6 +496,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         $maxItems = count($prodNames);
 
                                         echo '<tr class="bg-light">';
+                                        echo '<td>' . $row['orderID'] . '</td>';
                                         echo '<td>' . $row['fullName'] . '</td>';
                                         echo '<td>' . $row['address'] . '</td>';
                                         echo '<td>' . $row['cpNum'] . '</td>';
@@ -602,16 +604,13 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             <input type="number" name="downPayment" id="pd_' . $row['orderID'] . '" style="display:none;" class="form-control form-control-sm my-1" placeholder="Down Payment" min="0" oninput="updateBalance(' . $row['orderID'] . ')">
                             <input type="hidden" name="totalCost" value="' . $row['totalCost'] . '">
                             <p class="my-1" style="font-size:14px;">Balance: ' . $row['balance'] . '</p>
-                            <button type="submit" class="btn btn-sm btn-success mt-1 ' . $action2 . '"  style="font-size:12px;">Update Payment</button>'?>;
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-primary py-0 mt-2"
-                                style="font-size:12px;"
-                                onclick='viewProofPayAll(`<?php echo $receiptsJson; ?>`, "<?php echo $orderID; ?>", "<?php echo htmlspecialchars($row["fullName"]); ?>")'>
-                                View Payment
-                            </button>
-                        <?php
-                        echo '</form>';
+                            <button type="submit" class="btn btn-sm btn-success mt-1 ' . $action2 . '"  style="font-size:12px;">Update Payment</button>' ?>
+                                        <button type="button" class="btn btn-sm btn-primary py-0 mt-2" style="font-size:12px;"
+                                            onclick='viewProofPayAll(`<?php echo $receiptsJson; ?>`, "<?php echo $orderID; ?>", "<?php echo htmlspecialchars($row["fullName"]); ?>")'>
+                                            View Payment
+                                        </button>
+                                        <?php
+                                        echo '</form>';
                                         echo '</td>';
 
                                         echo '</tr>';
@@ -914,184 +913,129 @@ $ordersData = json_encode(array_values($ordersPerMonth));
         // Add modal HTML at the end of body before </body>
     </script>
 
-  <style>
-    /* Modal content tweaks */
-    #paymentProofModal .modal-content {
-        border-radius: 12px;
-        box-shadow: 0 8px 24px rgba(0, 123, 255, 0.2);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: #ffffff;
-        border: none;
-        padding: 0;
-        overflow: hidden;
-    }
-
-    /* Modal header with clean style */
-    #paymentProofModal .modal-header {
-        background: #007bff;
-        color: #fff;
-        padding: 1.25rem 1.5rem;
-        border-bottom: none;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    #paymentProofModal .modal-title {
-        font-weight: 600;
-        font-size: 1.5rem;
-        letter-spacing: 0.02em;
-        margin: 0;
-    }
-
-    #paymentProofModal .close {
-        font-size: 1.5rem;
-        color: #fff;
-        opacity: 0.8;
-        border: none;
-        background: transparent;
-        transition: opacity 0.3s ease;
-        cursor: pointer;
-    }
-
-    #paymentProofModal .close:hover {
-        opacity: 1;
-    }
-
-    /* Modal body styling */
-    #paymentProofModal .modal-body {
-        padding: 1.5rem 2rem 2rem;
-        background: #f5f8ff;
-        text-align: center;
-    }
-
-    /* Image styling */
-    #paymentProofImage {
-        display: block;
-        max-width: 240px;
-        width: 100%;
-        height: auto;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
-        margin: 0 auto 1.75rem;
-        object-fit: contain;
-    }
-
-    /* Receipt details styling */
-    .receipt-details {
-        background: #fff;
-        border-radius: 10px;
-        padding: 1.25rem 1.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-        max-width: 360px;
-        margin: 0 auto;
-        text-align: left;
-    }
-
-    .receipt-details p {
-        margin: 0.6rem 0;
-        font-size: 1rem;
-        color: #222;
-        line-height: 1.4;
-    }
-
-    .receipt-details strong {
-        color: #007bff;
-        width: 140px;
-        display: inline-block;
-        font-weight: 600;
-    }
-
-    /* Responsive tweak */
-    @media (max-width: 480px) {
-        #paymentProofModal .modal-body {
-            padding: 1.25rem 1rem 1.5rem;
+    <style>
+        .dashed-line {
+            border-top: 2px dashed #ccc;
         }
 
-        .receipt-details {
-            max-width: 100%;
-            padding: 1rem 1rem;
+        .receipt-line {
+            padding: 8px 0;
+            border-bottom: 1px dashed #ddd;
+            margin: 0;
         }
 
-        #paymentProofImage {
-            max-width: 180px;
-            margin-bottom: 1.25rem;
+        .receipt-line:last-child {
+            border-bottom: none;
         }
-    }
-</style>
-
-<!-- Modal HTML remains the same -->
-
-
+    </style>
+    <!-- Modal HTML remains the same -->
     <div class="modal fade" id="paymentProofModal" tabindex="-1" role="dialog" aria-labelledby="paymentProofModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 480px;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="paymentProofModalLabel">Payment Receipt</h5>
+        aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 600px;">
+            <div class="modal-content rounded shadow">
+                <div class="modal-header bg-light border-bottom-0">
+                    <h5 class="modal-title font-weight-bold" id="paymentProofModalLabel">Payment Receipt</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close" title="Close receipt">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
 
-                    <!-- Replace single image -->
-                <div id="paymentProofImage"></div>
-
-
-                    <div class="receipt-details" aria-live="polite" aria-atomic="true">
-                        <p><strong>Order No:</strong> <span id="modalOrderID"></span></p>
-                        <p><strong>Payment Date:</strong> <span id="modalPaymentTime"></span></p>
-                        <p><strong>Payment Method:</strong> <span id="modalPaymentMethod"></span></p>
-                        <p><strong>Sender Name:</strong> <span id="modalSenderName"></span></p>
-                        <p><strong>Amount:</strong> <span id="modalAmount"></span></p>
+                    <!-- Thumbnail Image -->
+                    <div id="paymentProofImage" class="d-flex mb-4 p-2" style="max-width: auto; height: auto;">
+                        <img src="thumbnail.jpg" alt="Payment Proof" style="max-width: 100px; cursor: pointer;"
+                            onclick="openImageModal('fullsize-image.jpg')" />
                     </div>
+
+                    <!-- Full Image Modal -->
+                    <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog"
+                        aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content bg-dark border-0">
+                                <div class="modal-body p-0 text-center">
+                                    <img id="modalImage" src="" alt="Full Size" class="img-fluid rounded" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+
+                    <div class="dashed-line my-3"></div>
+
+                    <!-- Receipt Details -->
+                    <div class="receipt-details" aria-live="polite" aria-atomic="true">
+                        <p><strong>Order No:</strong> <span id="modalOrderID" class="text-muted text-end"></span></p>
+                        <p><strong>Payment Date(s):</strong> <span id="modalPaymentTime"
+                                class="text-muted text-end"></span></p>
+
+                        <p><strong>Payment Method:</strong> <span id="modalPaymentMethod" class="text-muted"></span></p>
+                        <p><strong>Sender Name:</strong> <span id="modalSenderName" class="text-muted text-end"></span>
+                        </p>
+                        <p><strong>Amount:</strong> <span id="modalAmount" class="text-success font-weight-bold"></span>
+                        </p>
+                    </div>
+
+                    <div class="dashed-line my-3"></div>
 
                 </div>
             </div>
         </div>
     </div>
 
+
     <script>
-function viewProofPayAll(receiptsJson, orderID, senderName) {
-    const receipts = JSON.parse(receiptsJson);
+        function viewProofPayAll(receiptsJson, orderID, senderName) {
+            const receipts = JSON.parse(receiptsJson);
 
-    const modal = document.getElementById('paymentProofModal');
-    const imgContainer = document.getElementById('paymentProofImage');
-    const details = document.querySelector('.receipt-details');
+            const imgContainer = document.getElementById('paymentProofImage');
+            const details = document.querySelector('.receipt-details');
 
-    // Clear previous data
-    imgContainer.innerHTML = '';
-    details.innerHTML = `<p><strong>Order No:</strong> ${orderID}</p>`;
+            // Clear previous data
+            imgContainer.innerHTML = '';
+            details.innerHTML = `<p><strong>Order No:</strong> ${orderID}</p>`;
 
-    if (receipts.length === 0) {
-        details.innerHTML += '<p>No receipts found.</p>';
-    } else {
-        receipts.forEach(r => {
-            const img = document.createElement('img');
-            img.src = r.proofImage;
-            img.alt = 'Receipt Image';
-            img.style = "max-width:100%; margin-bottom:10px;";
-
-            const info = document.createElement('div');
-            info.innerHTML = `
-                <p><strong>Payment Date:</strong> ${r.paymentDate}</p>
-                
-                <p><strong>Sender Name:</strong> ${senderName}</p>
-                <hr>
+            if (receipts.length === 0 || imgContainer === "") {
+                imgContainer.innerHTML = `
+                <div class="text-muted">
+                    <p class="mt-3 mb-0">No receipt image found.</p>
+                </div>
             `;
+                details.innerHTML += '<p class="text-muted">No receipts found.</p>';
+            } else {
+                receipts.forEach(r => {
+                    const img = document.createElement('img');
+                    img.src = r.proofImage;
+                    img.alt = 'Receipt Image';
+                    img.style = "margin-bottom:10px; box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15); max-width: 300px; max-height: 300px; cursor: pointer;";
+                    img.className = 'img-thumbnail mr-2';
 
-            imgContainer.appendChild(img);
-            details.appendChild(info);
-        });
-    }
+                    // 🔁 Show image in modal instead of opening a new tab
+                    img.addEventListener('click', () => {
+                        document.getElementById('modalImage').src = r.proofImage;
+                        $('#imagePreviewModal').modal('show');
+                    });
 
-    $('#paymentProofModal').modal('show');
-}
-</script>
+                    imgContainer.appendChild(img);
 
-<!-- <p><strong>Payment Method:</strong> Gcash</p> -->
-<!-- <p><strong>Amount:</strong> PHP ${parseFloat(r.amountPaid).toFixed(2)}</p> -->
+                    const info = document.createElement('div');
+                    info.innerHTML = `
+                    <p><strong>Payment Date:</strong> ${r.paymentDate}</p>
+                    <p><strong>Sender Name:</strong> ${senderName}</p>
+                    <hr>
+                `;
+                    details.appendChild(info);
+                });
+            }
+
+            $('#paymentProofModal').modal('show');
+        }
+    </script>
+
+
+
+    <!-- <p><strong>Payment Method:</strong> Gcash</p> -->
+    <!-- <p><strong>Amount:</strong> PHP ${parseFloat(r.amountPaid).toFixed(2)}</p> -->
 
 
 

@@ -45,7 +45,7 @@ if (isset($_POST['place'])) {
 
             if ($stmt_insert = $conn->prepare($sql_insert)) {
                 $stmt_insert->bind_param(
-                "issssssdssdisss", // Corrected type string: 15 types
+                "isssssssssdisss", // Corrected type string: 15 types
                 $userID,
                 $fullName,
                 $address,
