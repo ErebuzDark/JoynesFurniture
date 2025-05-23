@@ -1064,7 +1064,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                     colDetails.className = 'col-md-8';
 
                     colDetails.innerHTML = `
-                    <div class="p-3 bg-light rounded shadow-sm">
+                    <div class="p-3 bg-light rounded shadow-sm"> 
                         <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
                         <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate || 'N/A'}</span></p>
                         <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName || 'N/A'}</span></p>
