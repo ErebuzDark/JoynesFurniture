@@ -550,12 +550,15 @@ ORDER BY date DESC
                                                 See All Payment Images
                                             </button>';
                                             echo '<button 
-                                                class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#invoiceModal" 
+                                                class="btn btn-primary mt-2 view-invoice-btn" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#invoiceModal" 
                                                 style="font-size:13px; color:white;" 
                                                 data-orderid="' . htmlspecialchars($row['orderID']) . '" 
                                                 data-source="' . htmlspecialchars($row['source']) . '">
                                                 View All Invoice
                                             </button>';
+
 
                                             // echo '<button class="btn btn-primary see-payment-image-btn" style="font-size:13px; color:white;" data-image="' . htmlspecialchars($row['proofPay']) . '">See Payment Image</button>';
                                             echo '</td>';
@@ -1067,36 +1070,21 @@ ORDER BY date DESC
             <h5 class="modal-title" id="invoiceModalLabel">All Invoices</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" id="invoices-container">
 
             <!-- Invoices -->
-            <div class="invoice" id="invoice1">
+            <!-- <div class="invoice" id="invoice1">
                 <h3 class="text-center fw-bold">PAYMENT RECEIPT</h3>
                 <h5 class="text-center">Joynes Furniture</h5>
-                <h4>Ref. Number: </h4>
+                <h4 id="ref-number">Ref. Number: </h4>
                 <hr>
-                <p>Order ID: </p>
-                <p>Payment Method: </p>
-                <p>Total Cost: </p>
-                <p>Amount Paid: </p>
-                <p>Balance: </p>
+                <p id="date-confirmed">Date: </p>
+                <p id="order-id">Order ID: </p>
+                <p id="amount-paid">Amount Paid: </p>
                 <hr>
                 <button class="btn btn-sm btn-outline-secondary" onclick="downloadInvoice('invoice1')">Download</button>
-            </div>
+            </div> -->
 
-            <div class="invoice" id="invoice1">
-                <h3 class="text-center fw-bold">PAYMENT RECEIPT</h3>
-                <h5 class="text-center">Joynes Furniture</h5>
-                <h4>Ref. No.: </h4>
-                <hr>
-                <p>Order ID: </p>
-                <p>Payment Method: </p>
-                <p>Total Cost: </p>
-                <p>Amount Paid: </p>
-                <p>Balance: </p>
-                <hr>
-                <button class="btn btn-sm btn-outline-secondary" onclick="downloadInvoice('invoice1')">Download</button>
-            </div>
 
             </div>
             <div class="modal-footer">
@@ -1135,6 +1123,54 @@ ORDER BY date DESC
     });
   }
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll('.view-invoice-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const orderId = this.getAttribute('data-orderid');
+
+      fetch('fetch_invoice.php?orderID=' + encodeURIComponent(orderId))
+        .then(response => response.json())
+        .then(data => {
+          const container = document.getElementById('invoices-container');
+          container.innerHTML = ''; // Clear previous invoices
+
+          if (data.success) {
+            data.invoices.forEach((invoice, index) => {
+              // Create a unique ID for each invoice for download
+              const invoiceId = 'invoice' + index;
+
+              // Create invoice HTML
+              const invoiceHTML = `
+                <div class="invoice mb-4 p-3 border" id="${invoiceId}">
+                  <h3 class="text-center fw-bold">PAYMENT RECEIPT</h3>
+                  <h5 class="text-center">Joynes Furniture</h5>
+                  <h4>Ref. Number: ${invoice.reference_number}</h4>
+                  <hr>
+                  <p>Date: ${invoice.created_at}</p>
+                  <p>Order ID: ${invoice.orderID}</p>
+                  <p>Amount Paid: ${invoice.totalPaid}</p>
+                  <hr>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="downloadInvoice('${invoiceId}')">Download</button>
+                </div>
+              `;
+              container.insertAdjacentHTML('beforeend', invoiceHTML);
+            });
+          } else {
+            container.innerHTML = '<p>No invoices found.</p>';
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching invoice:", error);
+        });
+    });
+  });
+});
+
+</script>
+
+
 
 
     <script>
