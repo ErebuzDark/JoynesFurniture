@@ -140,7 +140,7 @@ $userRow = mysqli_fetch_assoc($userResult);
             line-height: 1.4;
             color: #000;
             width: 100%;
-            min-height: 110mm;
+            min-height: 80mm;
             background: #fff;
             border: 1px solid #ccc;
             padding: 10mm;

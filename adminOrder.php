@@ -1,15 +1,5 @@
 <?php
-session_start();
-if (isset($_SESSION['toast'])) {
-    $toastType = $_SESSION['toast']['type']; // success or error
-    $toastMessage = $_SESSION['toast']['message'];
-    echo "<script>
-        window.onload = function() {
-            alert('$toastMessage'); // You can replace this with a custom toast UI
-        };
-    </script>";
-    unset($_SESSION['toast']);
-}
+
 include("database.php");
 
 $currentMonth = date('m');
@@ -465,45 +455,13 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 quantity, totalCost, date, status, orderID, width, length, height 
                                 FROM checkoutcustom
                                 ORDER BY date DESC";
-                                $officialReceiptID = "";
 
-                                $result = $conn->query("SELECT MAX(ofc_id) as lastID FROM official_receipts");
-                                $row = $result->fetch_assoc();
-                                $officialReceiptID = $row ? (int) $row['lastID'] : 0;
-
-                               
-
-                                $receiptQuery = "
-    SELECT 
-        pr.id AS payment_receipt_id,
-        pr.orderID, 
-        pr.proofImage, 
-        pr.amountPaid, 
-        pr.paymentDate, 
-        orc.OFC_id AS official_receipt_id,
-        orc.totalPaid, 
-        orc.reference_number
-    FROM payment_receipts pr
-    INNER JOIN official_receipts orc ON pr.id = orc.payment_receipt_id
-    ORDER BY pr.orderID
-";
-
-                                $stmt = $conn->prepare($receiptQuery);
-                                $stmt->execute();
-                                $receiptResult = $stmt->get_result();
+                                $receiptQuery = "SELECT orderID, proofImage, amountPaid, paymentDate FROM payment_receipts";
+                                $receiptResult = $conn->query($receiptQuery);
 
                                 $receiptsByOrder = [];
                                 while ($row = $receiptResult->fetch_assoc()) {
                                     $receiptsByOrder[$row['orderID']][] = $row;
-                                }
-
-
-
-                                $ofcReceipt = "SELECT * FROM official_receipts";
-                                $receiptResult = $conn->query($ofcReceipt);
-
-                                while ($row = $receiptResult->fetch_assoc()) {
-                                    $receiptOFC[$row['orderID']][] = $row;
                                 }
 
                                 $result = $conn->query($sql);
@@ -1015,6 +973,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             </div>
         </div>
     </div>
+
     <script>
         function viewProofPayAll(receiptsJson, orderID, senderName) {
             const receipts = JSON.parse(receiptsJson);
@@ -1024,12 +983,12 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             // Clear previous content
             imgContainer.innerHTML = '';
             details.innerHTML = `
-            <div class="mb-4">
-                <h6 class="text-uppercase text-muted">Order Details</h6>
-                <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
-            </div>
-            <hr class="border border-1 border-dark border-dashed">
-        `;
+        <div class="mb-4">
+            <h6 class="text-uppercase text-muted">Order Details</h6>
+            <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
+        </div>
+        <hr class="border border-1 border-dark border-dashed">
+    `;
 
             if (receipts.length === 0) {
                 imgContainer.innerHTML = `<div class="text-muted"><p class="mt-3 mb-0">No receipt image found.</p></div>`;
@@ -1039,10 +998,9 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                     const row = document.createElement('div');
                     row.className = 'row mb-4 align-items-center';
 
-                    // === Image Column ===
+                    // Image column
                     const colImg = document.createElement('div');
                     colImg.className = 'col-md-4 text-center';
-
                     const img = document.createElement('img');
                     img.src = r.proofImage;
                     img.alt = 'Receipt Image';
@@ -1057,21 +1015,18 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                     colImg.appendChild(img);
                     row.appendChild(colImg);
 
-                    // === Details Column ===
+                    // Details column
                     const colDetails = document.createElement('div');
                     colDetails.className = 'col-md-8';
 
                     colDetails.innerHTML = `
-                    <div class="p-3 bg-light rounded shadow-sm"> 
-                        <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
-                        <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate || 'N/A'}</span></p>
-                        <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName || 'N/A'}</span></p>
-                        <p class="mb-2"><strong>Reference Number:</strong> <span class="text-muted">${r.reference_number || 'N/A'}</span></p>
-                        <p class="mb-2"><strong>Payment Method:</strong> <span class="text-muted">${r.paymentMethod || 'Gcash'}</span></p>
-                        <p class="mb-2"><strong>Total Cost:</strong> PHP <span class="text-success fw-bold">${r.amountPaid || '0.00'}</span></p>
-                        <p class="mb-0"><strong>Amount Paid:</strong> PHP <span class="text-success fw-bold">${r.totalPaid || '0.00'}</span></p>
-                    </div>
-                `;
+                <div class="p-3 bg-light rounded shadow-sm">
+                    <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
+                    <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate}</span></p>
+                    <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName}</span></p>
+
+                </div>
+            `;
 
                     row.appendChild(colDetails);
                     details.appendChild(row);
@@ -1089,13 +1044,8 @@ $ordersData = json_encode(array_values($ordersPerMonth));
         }
     </script>
 
-
-
-
-    <!-- <p><strong>Payment Method:</strong> Gcash</p> -->
-    <!-- <p><strong>Amount:</strong> PHP ${parseFloat(r.amountPaid).toFixed(2)}</p> -->
-
-
+    <!-- <p class="mb-2"><strong>Payment Method:</strong> <span class="text-muted">Gcash</span></p>
+    <p class="mb-0"><strong>Amount:</strong> PHP  <span class="text-success fw-bold">${r.amountPaid || ''}</span></p> -->
 
     <script>
         function viewProofPay(proofPayUrl, orderID, paymentTime, paymentMethod, senderName, amount) {
