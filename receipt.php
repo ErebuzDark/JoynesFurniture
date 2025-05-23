@@ -10,9 +10,8 @@ if (!isset($_SESSION['receipt'])) {
 $receipt = $_SESSION['receipt'];
 $orderID = $receipt['orderID'];
 $source = $receipt['source'] ?? 'checkout';
-$totalCost = (float) $receipt['totalCost']; // Now treated as amountPaid
+$totalCost = (float) $receipt['totalCost']; 
 
-// 1. Get totalPaid from payment_receipts
 $sqlPaid = "SELECT COALESCE(SUM(totalPaid), 0) FROM payment_receipts WHERE orderID = ?";
 $stmtPaid = $conn->prepare($sqlPaid);
 $stmtPaid->bind_param("s", $orderID);
@@ -21,7 +20,6 @@ $stmtPaid->bind_result($totalPaid);
 $stmtPaid->fetch();
 $stmtPaid->close();
 
-// 2. Compute balance
 $balance = $totalCost - $totalPaid;
 ?>
 
@@ -112,5 +110,5 @@ $balance = $totalCost - $totalPaid;
 </html>
 
 <?php
-unset($_SESSION['receipt']); // Clear after display
+unset($_SESSION['receipt']); 
 ?>
