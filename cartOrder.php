@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prodWidth = $_POST['prodWidth'];
     $prodLength = $_POST['prodLength'];
     $prodHeight = $_POST['prodHeight'];
-
+    $variant = "full";
 
     $totalCost = array_sum($prodCosts);
     $imagesString = 'up/' . implode(', up/', $images);
@@ -49,15 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     mysqli_begin_transaction($conn);
 
     try {
-        $query = "INSERT INTO checkout (userID, image, fID, fullName, prodName, address, cpNum, cost, status, proofPay, payment, balance, quantity, width, length, height) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?)";
+        $query = "INSERT INTO checkout (userID, image, fID, fullName, prodName, address, cpNum, cost, status, proofPay, payment, balance, quantity, variant, width, length, height) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?)";
 
         $stmt = mysqli_prepare($conn, $query);
         if ($stmt === false) {
             throw new Exception("Error preparing statement: " . mysqli_error($conn));
         }
 
-        mysqli_stmt_bind_param($stmt, 'sssssssssssiisss', $userID, $imagesString, $prodIDsString, $fullName, $prodNamesString, $address, $cpNum, $totalCost, $status, $qrImagePath, $payment, $balance, $quantity, $prodWidthString, $prodLengthString, $prodHeightString);
+        mysqli_stmt_bind_param($stmt, 'sssssssssssiissss', $userID, $imagesString, $prodIDsString, $fullName, $prodNamesString, $address, $cpNum, $totalCost, $status, $qrImagePath, $payment, $balance, $quantity, $variant, $prodWidthString, $prodLengthString, $prodHeightString);
         mysqli_stmt_execute($stmt);
 
          // NEW: Insert proof into payment_receipts
