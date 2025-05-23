@@ -1,5 +1,15 @@
 <?php
-
+session_start();
+if (isset($_SESSION['toast'])) {
+    $toastType = $_SESSION['toast']['type']; // success or error
+    $toastMessage = $_SESSION['toast']['message'];
+    echo "<script>
+        window.onload = function() {
+            alert('$toastMessage'); // You can replace this with a custom toast UI
+        };
+    </script>";
+    unset($_SESSION['toast']);
+}
 include("database.php");
 
 $currentMonth = date('m');
@@ -455,20 +465,47 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 quantity, totalCost, date, status, orderID, width, length, height 
                                 FROM checkoutcustom
                                 ORDER BY date DESC";
+                                $officialReceiptID = "";
 
-                                $query = "
-  SELECT p.*, o.* 
-  FROM payment_receipts p
-  LEFT JOIN official_receipts o ON p.orderID = o.orderID
+                                $result = $conn->query("SELECT MAX(ofc_id) as lastID FROM official_receipts");
+                                $row = $result->fetch_assoc();
+                                $officialReceiptID = $row ? (int) $row['lastID'] : 0;
+
+                                if ($officialReceiptID === 0) {
+                                    die("No official receipts found.");
+                                }
+
+                                $receiptQuery = "
+    SELECT 
+        pr.id AS payment_receipt_id,
+        pr.orderID, 
+        pr.proofImage, 
+        pr.amountPaid, 
+        pr.paymentDate, 
+        orc.OFC_id AS official_receipt_id,
+        orc.totalPaid, 
+        orc.reference_number
+    FROM payment_receipts pr
+    INNER JOIN official_receipts orc ON pr.id = orc.payment_receipt_id
+    ORDER BY pr.orderID
 ";
 
-                                $result = $conn->query($query);
+                                $stmt = $conn->prepare($receiptQuery);
+                                $stmt->execute();
+                                $receiptResult = $stmt->get_result();
 
                                 $receiptsByOrder = [];
-                                while ($row = $result->fetch_assoc()) {
-                                    $orderID = $row['orderID'];
-                                    // Store the full row; but note columns from both tables may overlap in keys
-                                    $receiptsByOrder[$orderID][] = $row;
+                                while ($row = $receiptResult->fetch_assoc()) {
+                                    $receiptsByOrder[$row['orderID']][] = $row;
+                                }
+
+
+
+                                $ofcReceipt = "SELECT * FROM official_receipts";
+                                $receiptResult = $conn->query($ofcReceipt);
+
+                                while ($row = $receiptResult->fetch_assoc()) {
+                                    $receiptOFC[$row['orderID']][] = $row;
                                 }
 
                                 $result = $conn->query($sql);
