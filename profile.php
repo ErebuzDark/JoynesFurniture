@@ -486,9 +486,9 @@ $userRow = mysqli_fetch_assoc($userResult);
                                 <div class="tab-pane fade show active" id="overview">
                                     <?php
                                     $sql = "
-(SELECT 'checkout' AS source, prodName, image, proofPay, cost AS totalCost, orderID, quantity, date, status, balance FROM checkout WHERE userID = '$userID')
+(SELECT 'checkout' AS source, prodName, image, proofPay, cost AS totalCost, orderID, quantity, date, status, balance, variant FROM checkout WHERE userID = '$userID')
 UNION
-(SELECT 'checkoutcustom' AS source, pName AS prodName, image, proofPay, totalCost, orderID, quantity, date, status, balance FROM checkoutcustom WHERE userID = '$userID')
+(SELECT 'checkoutcustom' AS source, pName AS prodName, image, proofPay, totalCost, orderID, quantity, date, status, balance, variant FROM checkoutcustom WHERE userID = '$userID')
 ORDER BY date DESC
                                             ";
 
@@ -529,7 +529,7 @@ ORDER BY date DESC
                                             echo '<p class="text-dark my-2 ">' . htmlspecialchars($row['status']) . ' <br><br><span style="font-size:12px;">' . $reject . '</span></p><br>';
                                             echo '<p class="text-dark my-2">Balance: ₱' . number_format($balance, 2, '.', ',') . '</p>';
                                             echo '<p class="text-dark my-2">Total: ₱' . number_format($row['totalCost'], 2, '.', ',') . '</p>';
-                                            if ($balance > 0) {
+                                            if ($balance > 0 && $row['variant'] !== "full") {
                                                 echo '<button class="btn btn-success pay-balance-btn" 
                                                     style="font-size:13px; color:white;" 
                                                     data-balance="' . htmlspecialchars($balance) . '" 

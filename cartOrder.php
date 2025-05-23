@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prodIDs = $_POST['prodIDs'];
     $prodNames = $_POST['prodNames'];
     $prodCosts = $_POST['prodCosts'];
+    $balance = $_POST['balance'];
     $status = 'On Queue';
     $userID = $_POST['userID'];
     $images = $_POST['tblImage'];
@@ -48,16 +49,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     mysqli_begin_transaction($conn);
 
     try {
-        $query = "INSERT INTO checkout (userID, image, fID, fullName, prodName, address, cpNum, cost, status, proofPay, payment, quantity, width, length, height) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
+        $query = "INSERT INTO checkout (userID, image, fID, fullName, prodName, address, cpNum, cost, status, proofPay, payment, balance, quantity, width, length, height) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?)";
 
         $stmt = mysqli_prepare($conn, $query);
         if ($stmt === false) {
             throw new Exception("Error preparing statement: " . mysqli_error($conn));
         }
 
-        mysqli_stmt_bind_param($stmt, 'sssssssssssisss', $userID, $imagesString, $prodIDsString, $fullName, $prodNamesString, $address, $cpNum, $totalCost, $status, $qrImagePath, $payment, $quantity, $prodWidthString, $prodLengthString, $prodHeightString);
+        mysqli_stmt_bind_param($stmt, 'sssssssssssiisss', $userID, $imagesString, $prodIDsString, $fullName, $prodNamesString, $address, $cpNum, $totalCost, $status, $qrImagePath, $payment, $balance, $quantity, $prodWidthString, $prodLengthString, $prodHeightString);
         mysqli_stmt_execute($stmt);
+
+         // NEW: Insert proof into payment_receipts
+        $orderID = $conn->insert_id;
+        $source = 'checkout';
+        $paymentDate = date("Y-m-d H:i:s");
+
+        $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $receiptStmt->bind_param("iisssss", $orderID, $userID, $source, $prodName, $cost, $qrImagePath, $paymentDate);
+        $receiptStmt->execute();
+        $receiptStmt->close();
 
         $deleteQuery = "DELETE FROM addcart WHERE ID = ?";
         $deleteStmt = mysqli_prepare($conn, $deleteQuery);

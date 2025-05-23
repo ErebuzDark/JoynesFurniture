@@ -29,6 +29,7 @@ if (isset($_POST['place'])) {
     $result2 = $stmt_selectimg->get_result();
     $row = $result2->fetch_assoc();
     $img = "up/" . $row['image']; // Keeping for reference, but not used in the insert statement
+    $variant = "full";
 
     $sql_select = "SELECT cost FROM furnituretbl WHERE fID = ?";
 
@@ -40,12 +41,12 @@ if (isset($_POST['place'])) {
         if ($stmt_select->fetch()) {
             $stmt_select->close();
 
-            $sql_insert = "INSERT INTO checkout (userID, fullName, address, cpNum, image, prodName, cost, date, status, balance, proofPay, quantity, width, length, height) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql_insert = "INSERT INTO checkout (userID, fullName, address, cpNum, image, prodName, cost, date, status, balance, proofPay, quantity, variant, width, length, height) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             if ($stmt_insert = $conn->prepare($sql_insert)) {
                 $stmt_insert->bind_param(
-                "isssssssssdisss", // Corrected type string: 15 types
+                "isssssssssdissss", // Corrected type string: 15 types
                 $userID,
                 $fullName,
                 $address,
@@ -58,6 +59,7 @@ if (isset($_POST['place'])) {
                 $cost,          // balance
                 $filename,      // proofPay
                 $quantity,
+                $variant,
                 $width,
                 $length,
                 $height

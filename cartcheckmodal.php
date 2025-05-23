@@ -41,6 +41,7 @@ if (isset($_POST['selected_products'])) {
     echo '<input type="hidden" name="prodIDs[]" value="' . $row['ID'] . '">';
     echo '<input type="hidden" name="prodNames[]" value="' . $row['prodName'] . '">';
     echo '<input type="hidden" name="prodCosts[]" value="' . $row['cost'] . '">';
+    echo '<input type="hidden" name="balance" value="' . $row['cost'] . '">';
     echo '<input type="hidden" name="userID" value="' . $_SESSION['userID'] . '"> ';
     echo '<input type="hidden" name="fullName" value="' . $_SESSION['fullName'] . '"> ';
     echo '<input type="hidden" name="quantity" value="' . $row['quantity'] . '"> ';
