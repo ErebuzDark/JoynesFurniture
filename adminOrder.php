@@ -456,12 +456,19 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 FROM checkoutcustom
                                 ORDER BY date DESC";
 
-                                $receiptQuery = "SELECT orderID, proofImage, amountPaid, paymentDate, totalPaid, reference_number FROM payment_receipts";
-                                $receiptResult = $conn->query($receiptQuery);
+                                $query = "
+  SELECT p.*, o.* 
+  FROM payment_receipts p
+  LEFT JOIN official_receipts o ON p.orderID = o.orderID
+";
+
+                                $result = $conn->query($query);
 
                                 $receiptsByOrder = [];
-                                while ($row = $receiptResult->fetch_assoc()) {
-                                    $receiptsByOrder[$row['orderID']][] = $row;
+                                while ($row = $result->fetch_assoc()) {
+                                    $orderID = $row['orderID'];
+                                    // Store the full row; but note columns from both tables may overlap in keys
+                                    $receiptsByOrder[$orderID][] = $row;
                                 }
 
                                 $result = $conn->query($sql);

@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 include("database.php");
 
@@ -10,7 +14,6 @@ if (isset($_POST['orderID'], $_POST['pay'], $_POST['source'], $_POST['totalCost'
     $currentBalance = (float) $_POST['currentBalance'];
     $downPayment = isset($_POST['downPayment']) ? (float) $_POST['downPayment'] : 0;
 
-    // Calculate amount paid and balance
     if ($payment === 'Full Payment') {
         $amountPaid = $totalCost;
         $balance = 0;
@@ -30,30 +33,40 @@ if (isset($_POST['orderID'], $_POST['pay'], $_POST['source'], $_POST['totalCost'
     }
 
     $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        die("Prepare failed: " . $conn->error);
+    }
     $stmt->bind_param("sds", $payment, $balance, $orderID);
 
     if ($stmt->execute()) {
-        // Check if a payment_receipt already exists
-        $check = $conn->prepare("SELECT totalPaid FROM payment_receipts WHERE orderID = ?");
+        // Retrieve userID from payment_receipts or another reliable source
+        $check = $conn->prepare("SELECT userID FROM payment_receipts WHERE orderID = ?");
+        if (!$check) {
+            die("Prepare failed: " . $conn->error);
+        }
         $check->bind_param("s", $orderID);
         $check->execute();
         $check->store_result();
 
         if ($check->num_rows > 0) {
-            $check->bind_result($existingPaid);
+            $check->bind_result($userID);
             $check->fetch();
-            $newTotalPaid = $existingPaid + $amountPaid;
-
-            $update = $conn->prepare("UPDATE payment_receipts SET reference_number = ?, totalPaid = ? WHERE orderID = ?");
-            $update->bind_param("sds", $referenceNo, $newTotalPaid, $orderID);
-            $update->execute();
         } else {
-            $insert = $conn->prepare("INSERT INTO payment_receipts (orderID, reference_number, totalPaid) VALUES (?, ?, ?)");
-            $insert->bind_param("ssd", $orderID, $referenceNo, $amountPaid);
-            $insert->execute();
+            die("No payment receipt found for this orderID. Cannot retrieve userID.");
         }
+        $check->close();
 
+        // Insert a new record in official_receipts with amountPaid and reference_number
+        $insertOfficial = $conn->prepare("INSERT INTO official_receipts (userID, orderID, totalPaid, reference_number, created_at, update_at) VALUES (?, ?, ?, ?, NOW(), NOW())");
+        if (!$insertOfficial) {
+            die("Prepare failed: " . $conn->error);
+        }
+        $insertOfficial->bind_param("isds", $userID, $orderID, $amountPaid, $referenceNo);
+        $insertOfficial->execute();
+
+        // Save receipt data in session for later use
         $_SESSION['receipt'] = [
+            'userID' => $userID,
             'orderID' => $orderID,
             'payment' => $payment,
             'amountPaid' => $amountPaid,
