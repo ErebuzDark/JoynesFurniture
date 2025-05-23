@@ -10,6 +10,7 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
     $quantities = $_POST['quantities'];
     $images = $_POST['images'];
     $totalCost = $_POST['totalCost'];
+    $balance = $_POST['totalCost'];
     $fullName = $_POST['fullName'];
     $address = $_POST['address'];
     $cpNum = $_POST['cpNum'];
@@ -35,10 +36,10 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
         }
     }
 
-    $sql = "INSERT INTO checkoutcustom (userID, prodDetails, pName, totalCost, fullName, address, cpNum, quantity, image, payment, proofPay, width, length, height)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?)";
+    $sql = "INSERT INTO checkoutcustom (userID, prodDetails, pName, totalCost, fullName, address, cpNum, quantity, image, payment, balance, proofPay, width, length, height)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? , ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('ssssssssssssss', $userID, $productDetails, $products, $totalCost, $fullName, $address, $cpNum, $quantities, $images, $payment, $qrImagePath, $width, $length, $height);
+    $stmt->bind_param('sssssssssssssss', $userID, $productDetails, $products, $totalCost, $fullName, $address, $cpNum, $quantities, $images, $payment, $balance, $qrImagePath, $width, $length, $height);
 
     if ($stmt->execute()) {
         $orderID = $conn->insert_id; // Get the inserted order ID

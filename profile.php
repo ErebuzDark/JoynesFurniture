@@ -71,6 +71,11 @@ $userRow = mysqli_fetch_assoc($userResult);
     <!-- Customized Bootstrap Stylesheet -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+
+  <!-- html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <!-- Template Stylesheet -->
     <link href="css/style.css" rel="stylesheet">
     <style type="text/css">
@@ -128,6 +133,43 @@ $userRow = mysqli_fetch_assoc($userResult);
 
         .col-form-label {
             font-weight: bold;
+        }
+          .invoice {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            width: 100%;
+            min-height: 110mm;
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 10mm;
+            margin-bottom: 1rem;
+            white-space: pre-line;
+        }
+        .invoice h3 {
+            line-height: 0%;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .invoice h4, h5 {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            line-height: 0%;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .invoice p {
+            margin: 0 0 5px;
+            line-height: 0%;
+        }
+
+        .invoice hr {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -506,6 +548,13 @@ ORDER BY date DESC
                                                 data-orderid="' . htmlspecialchars($row['orderID']) . '" 
                                                 data-source="' . htmlspecialchars($row['source']) . '">
                                                 See All Payment Images
+                                            </button>';
+                                            echo '<button 
+                                                class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#invoiceModal" 
+                                                style="font-size:13px; color:white;" 
+                                                data-orderid="' . htmlspecialchars($row['orderID']) . '" 
+                                                data-source="' . htmlspecialchars($row['source']) . '">
+                                                View All Invoice
                                             </button>';
 
                                             // echo '<button class="btn btn-primary see-payment-image-btn" style="font-size:13px; color:white;" data-image="' . htmlspecialchars($row['proofPay']) . '">See Payment Image</button>';
@@ -969,7 +1018,7 @@ ORDER BY date DESC
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content bg-white">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="paymentImagesModalLabel">Payment Receipts</h5>
+                    <h5 class="modal-title" id="paymentImagesModalLabel">Payment Images</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="paymentImagesContainer">
@@ -1009,6 +1058,84 @@ ORDER BY date DESC
             </div>
         </div>
     </div>
+
+    <!-- modal for invoice -->
+    <div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-scrollable">
+        <div class="modal-content bg-white">
+            <div class="modal-header">
+            <h5 class="modal-title" id="invoiceModalLabel">All Invoices</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+            <!-- Invoices -->
+            <div class="invoice" id="invoice1">
+                <h3 class="text-center fw-bold">PAYMENT RECEIPT</h3>
+                <h5 class="text-center">Joynes Furniture</h5>
+                <h4>Ref. Number: </h4>
+                <hr>
+                <p>Order ID: </p>
+                <p>Payment Method: </p>
+                <p>Total Cost: </p>
+                <p>Amount Paid: </p>
+                <p>Balance: </p>
+                <hr>
+                <button class="btn btn-sm btn-outline-secondary" onclick="downloadInvoice('invoice1')">Download</button>
+            </div>
+
+            <div class="invoice" id="invoice1">
+                <h3 class="text-center fw-bold">PAYMENT RECEIPT</h3>
+                <h5 class="text-center">Joynes Furniture</h5>
+                <h4>Ref. No.: </h4>
+                <hr>
+                <p>Order ID: </p>
+                <p>Payment Method: </p>
+                <p>Total Cost: </p>
+                <p>Amount Paid: </p>
+                <p>Balance: </p>
+                <hr>
+                <button class="btn btn-sm btn-outline-secondary" onclick="downloadInvoice('invoice1')">Download</button>
+            </div>
+
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- JS to download invoice -->
+  <script>
+  function downloadInvoice(invoiceId) {
+    const invoice = document.getElementById(invoiceId);
+    const button = invoice.querySelector('button');
+
+    // Hide button before capture
+    button.style.visibility = 'hidden';
+
+    html2canvas(invoice, {
+      scale: 2,
+      useCORS: true
+    }).then(canvas => {
+      // Show button again
+      button.style.visibility = 'visible';
+
+      const link = document.createElement('a');
+      link.download = invoiceId + ".png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }).catch(() => {
+      // Ensure button is shown even if something goes wrong
+      button.style.visibility = 'visible';
+    });
+  }
+</script>
+
 
     <script>
         $(document).ready(function () {
