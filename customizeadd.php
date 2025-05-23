@@ -146,6 +146,7 @@ if (isset($_POST['checkout'])) {
     $pName = $_POST['products'];
     $prodDetails = $_POST['productDetails'];
     $totalCost = $_POST['totalCost'];
+    $balance = $_POST['totalCost'];
     $quantity = $_POST['quantities'];
     $width = $_POST['width'];
     $length = $_POST['length'];
@@ -200,9 +201,9 @@ if (isset($_POST['checkout'])) {
         exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO checkoutcustom (userID, pName, image, prodDetails, totalCost, fullName, address, cpNum, quantity, proofPay, width, length, height, payment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?)");
+    $stmt = $conn->prepare("INSERT INTO checkoutcustom (userID, pName, image, prodDetails, totalCost, fullName, address, cpNum, quantity, balance, proofPay, width, length, height, payment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?)");
 
-    $stmt->bind_param("ssssssssssssss", $userID, $pName, $image, $prodDetails, $totalCost, $fullName, $address, $cpNum, $quantity, $qrImagePath, $width, $length, $height, $payment);
+    $stmt->bind_param("sssssssssssssss", $userID, $pName, $image, $prodDetails, $totalCost, $fullName, $address, $cpNum, $quantity, $balance,$qrImagePath, $width, $length, $height, $payment);
 
     if ($stmt->execute()) {
 
