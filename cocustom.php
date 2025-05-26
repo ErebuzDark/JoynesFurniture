@@ -39,7 +39,7 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
     $sql = "INSERT INTO checkoutcustom (userID, prodDetails, pName, totalCost, fullName, address, cpNum, quantity, image, payment, balance, proofPay, width, length, height)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? , ?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('sssssssssssssss', $userID, $productDetails, $products, $totalCost, $fullName, $address, $cpNum, $quantities, $images, $payment, $balance, $qrImagePath, $width, $length, $height);
+    $stmt->bind_param('ssssssssssdssss', $userID, $productDetails, $products, $totalCost, $fullName, $address, $cpNum, $quantities, $images, $payment, $balance, $qrImagePath, $width, $length, $height);
 
     if ($stmt->execute()) {
         $orderID = $conn->insert_id; // Get the inserted order ID
@@ -47,7 +47,8 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
         $paymentDate = date("Y-m-d H:i:s");
 
         $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $receiptStmt->bind_param("iisssss", $orderID, $userID, $source, $products, $totalCost, $qrImagePath, $paymentDate);
+        $zeroAmount = 0.00;
+        $receiptStmt->bind_param("isssdss", $orderID, $userID, $source, $products, $zeroAmount, $qrImagePath, $paymentDate);
         $receiptStmt->execute();
         $receiptStmt->close();
 
@@ -57,7 +58,9 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
         $deleteSql = "DELETE FROM tbl_cartcus WHERE cart_ID IN ($placeholders)";
         $deleteStmt = $conn->prepare($deleteSql);
 
-        $types = str_repeat('s', count($cartIdsArray));
+        $types = str_repeat('i', count($cartIdsArray));
+
+
         $deleteStmt->bind_param($types, ...$cartIdsArray);
         $deleteStmt->execute();
 
@@ -69,4 +72,3 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
         echo "Error: " . $stmt->error;
     }
 }
-?>

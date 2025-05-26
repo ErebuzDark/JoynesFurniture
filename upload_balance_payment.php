@@ -17,7 +17,8 @@ if (isset($_FILES['paymentImage']) && $_FILES['paymentImage']['error'] == 0) {
     if (move_uploaded_file($_FILES["paymentImage"]["tmp_name"], $targetFile)) {
         // Save new payment proof in a new table (recommended) or append to existing record
         $stmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("iisssss", $orderID, $userID, $source, $prodName, $balanceAmount, $targetFile, $date);
+        $zeroPaid = 0;
+        $stmt->bind_param("iisssss", $orderID, $userID, $source, $prodName, $zeroPaid, $targetFile, $date);
         $stmt->execute();
 
         echo "<script>alert('Payment uploaded successfully!'); window.location.href='profile.php';</script>";
@@ -27,4 +28,3 @@ if (isset($_FILES['paymentImage']) && $_FILES['paymentImage']['error'] == 0) {
 } else {
     echo "<script>alert('No image uploaded.'); history.back();</script>";
 }
-?>

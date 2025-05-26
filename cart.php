@@ -193,6 +193,7 @@ $costs = number_format($totalCost, 0, '.', ',');
                                         <div class="input-group quantity mt-4" style="width: 100px;">
                                             <input type="hidden" name="ID" value="<?php echo $row['ID']; ?>">
                                             <input type="hidden" name="action" value="">
+                                            <input type="hidden" name="products" value="<?php echo $row['products']; ?>">
 
                                             <!-- Minus Button -->
                                             <div class="input-group-btn">
@@ -343,20 +344,6 @@ $costs = number_format($totalCost, 0, '.', ',');
 
     <script type='text/javascript'>
         $(document).ready(function () {
-            // $('.proc').click(function(){
-            //     var userid = $(this).data('id');
-
-            //     $.ajax({
-            //         url: 'cartcheckmodal.php',
-            //         type: 'post',
-            //         data: {userid: userid},
-            //         success: function(response){ 
-            //             $('.modal-content').html(response); 
-            //             $('#checkoutModal').modal('show'); 
-            //         }
-            //     });
-            // });
-
             // Add page pop-up animation class on page load
             $('.container-fluid.py-5').addClass('page-pop-up');
 

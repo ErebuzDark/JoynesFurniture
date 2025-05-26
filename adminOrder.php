@@ -481,24 +481,26 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             <div class="table-responsive">
                                 <?php
                                 $sql = "SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, 
-                                cost AS totalCost, date, status, orderID, width, length, height 
-                                FROM checkout
-                                UNION 
-                                SELECT 'checkoutcustom' AS source, payment, proofPay, balance, fullName, address, cpNum, pName AS prodName, image, 
-                                quantity, totalCost, date, status, orderID, width, length, height 
-                                FROM checkoutcustom
-                                ORDER BY date DESC";
+                                        cost AS totalCost, date, status, orderID, width, length, height 
+                                    FROM checkout
+                                    UNION
+                                    SELECT 'checkoutcustom' AS source, payment, proofPay, balance, fullName, address, cpNum, pName AS prodName, image, 
+                                        quantity, totalCost, date, status, orderID, width, length, height 
+                                    FROM checkoutcustom
+                                    ORDER BY date DESC
+                                    ";
 
-                                $receiptQuery = "SELECT orderID, proofImage, amountPaid, paymentDate FROM payment_receipts";
+
+                                $receiptQuery = "SELECT * FROM payment_receipts";
                                 $receiptResult = $conn->query($receiptQuery);
 
                                 $receiptsByOrder = [];
                                 while ($row = $receiptResult->fetch_assoc()) {
-                                    $orderID = $row['orderID'];
-                                    if (!isset($receiptsByOrder[$orderID])) {
-                                        $receiptsByOrder[$orderID] = [];
+                                    $key = $row['orderID'] . '|' . $row['source']; // combine orderID + source
+                                    if (!isset($receiptsByOrder[$key])) {
+                                        $receiptsByOrder[$key] = [];
                                     }
-                                    $receiptsByOrder[$orderID][] = $row;
+                                    $receiptsByOrder[$key][] = $row;
                                 }
 
                                 $result = $conn->query($sql);
@@ -624,38 +626,31 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         } else {
                                             $action2 = '';
                                         }
-                                        echo '<form action="updatePayment.php" method="POST">
-                                            <input type="hidden" name="orderID" value="' . $row['orderID'] . '">
-                                            <input type="hidden" name="source" value="' . $row['source'] . '">
-                                            <input type="hidden" name="currentBalance" value="' . $row['balance'] . '">
 
-
-
-                                            <select name="pay" id="pay_' . $row['orderID'] . '" class="btn btn-sm border border-dark px-0 ' . $action2 . '" onchange="toggleDownPayment(' . $row['orderID'] . ')"  style="font-size:12px;">
-                                                <option value="" hidden >Edit Payment</option>
-                                                <option value="Full Payment" ' . $selectedFullPayment . ' class="bg-white text-dark px-0" style="font-size:12px;">FULL PAYMENT</option>
-                                                <option value="Down Payment" ' . $action . ' ' . $selectedDownPayment . ' class="bg-white text-dark px-0" style="font-size:12px;">DOWN PAYMENT</option>
-                                            </select>
-                                            <br>
-                                            <input type="number" name="downPayment" id="pd_' . $row['orderID'] . '"class="form-control form-control-sm my-1" placeholder="Enter Payment" min="0" oninput="updateBalance(' . $row['orderID'] . ')">
-                                            <input type="hidden" name="totalCost" value="' . $row['totalCost'] . '">
-                                            <p class="my-1" style="font-size:14px;">Balance: ' . $row['balance'] . '</p>
-                                            <button type="submit" class="btn btn-sm btn-success mt-1 ' . $action2 . '"  style="font-size:12px;">Update Payment</button>' ?>
+                                        // Always show the balance
+                                        echo '<p class="my-1" style="font-size:14px;">Balance: ' . $row['balance'] . '</p>';
+                                ?>
                                         <?php
-                                        $receiptList = isset($receiptsByOrder[$orderID]) ? $receiptsByOrder[$orderID] : [];
+                                        $orderID = $row['orderID'];
+                                        $source = $row['source'];
+                                        $key = $orderID . '|' . $source;
+                                        $receiptList = isset($receiptsByOrder[$key]) ? $receiptsByOrder[$key] : [];
+
+                                        // Calculate totalPaid
+                                        $totalPaid = 0;
+                                        foreach ($receiptList as $receipt) {
+                                            $totalPaid += $receipt['amountPaid'];
+                                        }
                                         $receiptsJson = htmlspecialchars(json_encode($receiptList), ENT_QUOTES, 'UTF-8');
 
                                         ?>
                                         <button type="button" class="btn btn-sm btn-primary py-0 mt-2" style="font-size:12px;"
-                                            onclick='viewProofPayAll(`<?php echo $receiptsJson; ?>`, "<?php echo $orderID; ?>", "<?php echo htmlspecialchars($row["fullName"]); ?>")'>
+                                            onclick='viewProofPayAll(`<?php echo $receiptsJson; ?>`, "<?php echo $orderID; ?>", "<?php echo htmlspecialchars($row["fullName"]); ?>", "<?php echo $row["balance"]; ?>", "<?php echo $totalPaid; ?>", "<?php echo $row["totalCost"]; ?>")'>
                                             View Payment
                                         </button>
 
-
                                 <?php
-                                        echo '</form>';
                                         echo '</td>';
-
                                         echo '</tr>';
                                     }
 
@@ -865,23 +860,30 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             if (status === "") return;
 
             var xhr = new XMLHttpRequest();
-
             xhr.open("POST", "editstatus.php", true);
-
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
             xhr.onreadystatechange = function() {
                 if (xhr.readyState == 4 && xhr.status == 200) {
-                    if (xhr.responseText === "Status updated successfully.") {
-                        document.getElementById("st_" + orderID).innerHTML = status;
+                    if (xhr.responseText.trim() === "Status updated successfully.") {
+                        // Option 1: Refresh the entire page
+                        location.reload();
+
+                        // Option 2 (alternative): Only update the DOM without reloading
+                        // document.getElementById("st_" + orderID).innerHTML = status;
                     } else {
                         alert("Error updating status.");
                     }
                 }
             };
 
-            xhr.send("orderID=" + orderID + "&status=" + encodeURIComponent(status) + "&source=" + source);
+            xhr.send(
+                "orderID=" + encodeURIComponent(orderID) +
+                "&status=" + encodeURIComponent(status) +
+                "&source=" + encodeURIComponent(source)
+            );
         }
+
 
 
 
@@ -1003,20 +1005,36 @@ $ordersData = json_encode(array_values($ordersPerMonth));
     </div>
 
     <script>
-        function viewProofPayAll(receiptsJson, orderID, senderName) {
+        function viewProofPayAll(receiptsJson, orderID, senderName, balance, totalPaid, totalCost) {
             const receipts = JSON.parse(receiptsJson);
             const imgContainer = document.getElementById('paymentProofImage');
             const details = document.querySelector('.receipt-details');
 
             // Clear previous content
             imgContainer.innerHTML = '';
-            details.innerHTML = `
-                    <div class="mb-4">
-                        <h6 class="text-uppercase text-muted">Order Details</h6>
-                        <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
+            details.innerHTML = '';
+
+            // These variables are not defined in this scope, so set to empty or 0
+            let totalPayment = 0;
+
+            details.innerHTML += `
+                <div class="mb-4">
+                    <h6 class="text-uppercase text-muted">Order Details</h6>
+                    <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
+                    <div class="mb-2">
+                        <p><strong>Total Cost:</strong> <span class="text-muted">&#8369; ${Number(totalCost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
                     </div>
-                    <hr class="border border-1 border-dark border-dashed">
-                `;
+                    <div class="mb-2">
+                        <p><strong>Total Payment:</strong> <span class="text-muted">&#8369; ${Number(totalPaid).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
+                    </div>
+                    <div class="mb-2">
+                        <p><strong>Balance:</strong> <span class="text-muted">&#8369; ${Number(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
+                    </div>
+                </div>
+                <hr class="border border-1 border-dark border-dashed">
+            `;
+
+
 
             if (receipts.length === 0) {
                 imgContainer.innerHTML = `<div class="text-muted"><p class="mt-3 mb-0">No receipt image found.</p></div>`;
@@ -1048,13 +1066,72 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                     colDetails.className = 'col-md-8';
 
                     colDetails.innerHTML = `
-                <div class="p-3 bg-light rounded shadow-sm">
-                    <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
-                    <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate}</span></p>
-                    <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName}</span></p>
+                        <div class="p-3 bg-light rounded shadow-sm">
+                            <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
+                            <form action="updatePayment.php" method="POST" onsubmit="return validateReceiptForm(this);">
+                                <input type="hidden" name="receiptID" value="${r.id}">
+                                <input type="hidden" name="orderID" value="${orderID}">
+                                <input type="hidden" name="source" value="${r.source || ''}">
+                                <input type="hidden" name="currentBalance" value="${balance}">
+                                <input type="hidden" name="totalCost" value="${totalCost}">
 
-                </div>
-            `;
+                                <div class="mb-2">
+                                    <label for="amountPaid_${index}" class="form-label"><strong>Amount Paid:</strong></label>
+                                    <input type="number" step="0.01" min="0" id="amountPaid_${index}" name="amountPaid"
+                                        class="form-control form-control-sm" 
+                                        value="${r.amountPaid !== undefined ? parseFloat(r.amountPaid).toFixed(2) : ''}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="refNo_${index}" class="form-label"><strong>Reference No:</strong></label>
+                                    <input type="text" id="refNo_${index}" name="ref_no" class="form-control form-control-sm" placeholder="Enter Reference No." value="${r.ref_no || ''}">
+                                </div>
+                                <div class="mb-2">
+                                    <label for="paymentStatus_${index}" class="form-label"><strong>Payment Status:</strong></label>
+                                    <select id="paymentStatus_${index}" name="payment_status" class="form-select form-select-sm" required>
+                                        <option value="Pending" ${r.payment_status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Confirmed" ${r.payment_status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                                        <option value="Invalid" ${r.payment_status === 'Invalid' ? 'selected' : ''}>Invalid</option>
+                                        <option value="Refunded" ${r.payment_status === 'Refunded' ? 'selected' : ''}>Refunded</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-success mt-2">
+                                    Update Payment
+                                </button>
+                            </form>
+                            <div class="mt-2">
+                                <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate || ''}</span></p>
+                                <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName}</span></p>
+                            </div>
+                        </div>
+                    `;
+
+                    // JS validation function
+                    window.validateReceiptForm = function(form) {
+                        const amount = form.amountPaid.value;
+                        const ref = form.ref_no.value.trim();
+
+                        if (amount === "" || isNaN(amount) || Number(amount) < 0) {
+                            alert('Amount Paid is required and must not be negative.');
+                            form.amountPaid.focus();
+                            return false;
+                        }
+                        if (Number(amount) === -1) {
+                            alert('Amount Paid cannot be -1.');
+                            form.amountPaid.focus();
+                            return false;
+                        }
+                        if (ref !== "" && ref.length !== 13) {
+                            alert('Reference No. must be exactly 13 characters if provided.');
+                            form.ref_no.focus();
+                            return false;
+                        }
+                        if (!form.payment_status.value) {
+                            alert('Please select a payment status.');
+                            form.payment_status.focus();
+                            return false;
+                        }
+                        return true;
+                    };
 
                     row.appendChild(colDetails);
                     details.appendChild(row);

@@ -3,116 +3,98 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 session_start();
 include("database.php");
 
-if (isset($_POST['orderID'], $_POST['pay'], $_POST['source'], $_POST['totalCost'], $_POST['currentBalance'])) {
-    $orderID = $_POST['orderID'];
-    $newPayment = $_POST['pay'];
-    $source = $_POST['source'];
-    $totalCost = (float) $_POST['totalCost'];
-    $currentBalance = (float) $_POST['currentBalance'];
-    $downPayment = isset($_POST['downPayment']) ? (float) $_POST['downPayment'] : 0;
+try {
+    if (
+        isset(
+            $_POST['orderID'],
+            $_POST['amountPaid'],
+            $_POST['ref_no'],
+            $_POST['payment_status'],
+            $_POST['source'],
+            $_POST['totalCost'],
+            $_POST['currentBalance'],
+            $_POST['receiptID']  // <-- new required input
+        )
+    ) {
+        $orderID = $_POST['orderID'];
+        $amountPaid = (float)$_POST['amountPaid'];
+        $refNo = trim($_POST['ref_no']);
+        $paymentStatusPost = $_POST['payment_status'];
+        $source = $_POST['source'];
+        $totalCost = (float)$_POST['totalCost'];
+        $currentBalance = (float)$_POST['currentBalance'];
+        $receiptID = (int)$_POST['receiptID']; // Unique receipt to update
 
-    // Fetch existing payment status and balance
-    $fetchSQL = ($source === "checkout") ?
-        "SELECT payment, balance FROM checkout WHERE orderID = ?" :
-        "SELECT payment, balance FROM checkoutcustom WHERE orderID = ?";
-    $fetchStmt = $conn->prepare($fetchSQL);
-    $fetchStmt->bind_param("s", $orderID);
-    $fetchStmt->execute();
-    $fetchStmt->bind_result($existingPayment, $existingBalance);
-    $fetchStmt->fetch();
-    $fetchStmt->close();
-
-    // No change check
-    $isSamePayment = ($newPayment === $existingPayment);
-    $isDownPaymentZero = ($downPayment <= 0);
-
-    if ($isSamePayment && $isDownPaymentZero) {
-        $_SESSION['toast'] = ['type' => 'error', 'message' => 'No changes made. Please update payment status or enter a down payment.'];
-        header("Location: adminOrder.php");
-        exit;
-    }
-
-    // Calculate new balance and amount paid
-    $amountPaid = min($downPayment, $currentBalance);
-    $balance = $currentBalance - $amountPaid;
-
-    // Check if Full Payment is selected manually or balance will become zero
-    if ($newPayment === "Full Payment") {
-        $amountPaid = $currentBalance; // Pay the full remaining balance
-        $balance = 0;
-    } else {
-        $amountPaid = min($downPayment, $currentBalance);
         $balance = $currentBalance - $amountPaid;
 
-        // If payment completes the balance, mark as full
-        if ($balance <= 0) {
-            $newPayment = "Full Payment";
+        if ($amountPaid <= 0) {
+            $payment = "Not Paid Yet";
+            $balance = $currentBalance;
+        } elseif ($balance <= 0) {
             $balance = 0;
-        }
-    }
-
-
-    $referenceNo = strtoupper(uniqid('REF-'));
-    $updateSQL = ($source === "checkout") ?
-        "UPDATE checkout SET payment = ?, balance = ? WHERE orderID = ?" :
-        "UPDATE checkoutcustom SET payment = ?, balance = ? WHERE orderID = ?";
-
-    $stmt = $conn->prepare($updateSQL);
-    $stmt->bind_param("sds", $newPayment, $balance, $orderID);
-
-    if ($stmt->execute()) {
-        // Check if payment_receipt exists for this orderID
-        $check = $conn->prepare("SELECT id, userID FROM payment_receipts WHERE orderID = ?");
-        $check->bind_param("s", $orderID);
-        $check->execute();
-        $check->store_result();
-
-        if ($check->num_rows > 0) {
-            $check->bind_result($payment_receipt_id, $userID);
-            $check->fetch();
+            $payment = "Full Payment";
         } else {
-            // TODO: Get userID for the new payment receipt.
-            // For example, you might get it from session or another table based on orderID:
-            // $userID = $_SESSION['userID']; 
-            // or
-            // $userID = getUserIDFromOrder($orderID);
-            // Replace the following with actual userID fetch logic:
-            $userID = 0; // <-- Replace with real userID
-
-            if ($userID <= 0) {
-                die("Cannot insert payment receipt without a valid userID.");
-            }
-
-            $insertPaymentReceipt = $conn->prepare("INSERT INTO payment_receipts (userID, orderID) VALUES (?, ?)");
-            $insertPaymentReceipt->bind_param("is", $userID, $orderID);
-            $insertPaymentReceipt->execute();
-
-            if ($insertPaymentReceipt->affected_rows > 0) {
-                $payment_receipt_id = $conn->insert_id;
-            } else {
-                die("Failed to insert new payment_receipt.");
-            }
-            $insertPaymentReceipt->close();
+            $payment = "Partial Paid";
         }
-        $check->close();
 
+        // Update checkout or checkoutcustom table
+        $updateSQL = ($source === "checkout") ?
+            "UPDATE checkout SET payment = ?, balance = ? WHERE orderID = ?" :
+            "UPDATE checkoutcustom SET payment = ?, balance = ? WHERE orderID = ?";
+
+        $stmt = $conn->prepare($updateSQL);
+        $stmt->bind_param("sds", $payment, $balance, $orderID);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to update payment status and balance: " . $stmt->error);
+        }
+        $stmt->close();
+
+        // Get userID for receipt if needed
+        $getUserID = $conn->prepare("SELECT userID FROM payment_receipts WHERE id = ?");
+        $getUserID->bind_param("i", $receiptID);
+        $getUserID->execute();
+        $getUserID->bind_result($userID);
+        if (!$getUserID->fetch()) {
+            throw new Exception("Payment receipt ID not found.");
+        }
+        $getUserID->close();
+
+        // Insert official_receipts if amountPaid > 0
         if ($amountPaid > 0) {
-            $insertOfficial = $conn->prepare("INSERT INTO official_receipts (userID, orderID, payment_receipt_id, totalPaid, reference_number, created_at, update_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
-            $insertOfficial->bind_param("iiids", $userID, $orderID, $payment_receipt_id, $amountPaid, $referenceNo);
-            $insertOfficial->execute();
+            $insertOfficial = $conn->prepare(
+                "INSERT INTO official_receipts (userID, orderID, payment_receipt_id, totalPaid, reference_number, created_at, update_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())"
+            );
+            $insertOfficial->bind_param("iiids", $userID, $orderID, $receiptID, $amountPaid, $refNo);
+            if (!$insertOfficial->execute()) {
+                throw new Exception("Failed to insert official_receipt: " . $insertOfficial->error);
+            }
+            $insertOfficial->close();
         }
+
+        // Update payment_receipts using receiptID to avoid affecting others
+        $updateReceipt = $conn->prepare(
+            "UPDATE payment_receipts SET amountPaid = ?, ref_no = ?, payment_status = ?, paymentDate = NOW() WHERE id = ?"
+        );
+        $updateReceipt->bind_param("dssi", $amountPaid, $refNo, $paymentStatusPost, $receiptID);
+        if (!$updateReceipt->execute()) {
+            throw new Exception("Failed to update payment_receipts: " . $updateReceipt->error);
+        }
+        $updateReceipt->close();
 
         $_SESSION['receipt'] = [
             'userID' => $userID,
             'orderID' => $orderID,
-            'payment' => $newPayment,
+            'payment' => $payment,
             'amountPaid' => $amountPaid,
             'totalCost' => $totalCost,
             'balance' => $balance,
-            'referenceNo' => $referenceNo,
+            'referenceNo' => $refNo,
             'source' => $source
         ];
 
@@ -120,9 +102,9 @@ if (isset($_POST['orderID'], $_POST['pay'], $_POST['source'], $_POST['totalCost'
         header("Location: adminOrder.php");
         exit;
     } else {
-        $_SESSION['toast'] = ['type' => 'error', 'message' => 'Failed to update payment: ' . $conn->error];
-        header("Location: adminOrder.php");
-        exit;
+        throw new Exception("Required POST data missing.");
     }
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+    exit;
 }
-?>
