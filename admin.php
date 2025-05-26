@@ -25,7 +25,7 @@ if ($result->num_rows > 0) {
 
 $sql1 = "
         (SELECT COUNT(*) as totalQueue FROM checkout 
-        WHERE status = 'Pending Approval')
+        WHERE status = 'On Queue')
         UNION
         (SELECT COUNT(*) as totalQueue FROM checkoutcustom 
         WHERE status = 'Pending Approval')

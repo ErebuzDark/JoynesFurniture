@@ -25,7 +25,7 @@ if ($result->num_rows > 0) {
 
 $sql1 = "
         (SELECT COUNT(*) as totalQueue FROM checkout 
-        WHERE status = 'Pending Approval')
+        WHERE status = 'On Queue')
         UNION
         (SELECT COUNT(*) as totalQueue FROM checkoutcustom 
         WHERE status = 'Pending Approval')
@@ -137,6 +137,7 @@ if ($barres->num_rows > 0) {
     }
 }
 $ordersData = json_encode(array_values($ordersPerMonth));
+
 ?>
 
 <!DOCTYPE html>
@@ -253,6 +254,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                 newWin.print();
             }
         }
+
         function openForm() {
             document.getElementById("myForm").style.display = "block";
         }
@@ -369,6 +371,37 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                         </li>
 
                         <!-- Nav Item - Alerts -->
+                        <li class="nav-item dropdown no-arrow mx-1">
+                            <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-bell fa-fw"></i>
+                                <?php if ($totalQueue > 0): ?>
+                                    <span class="badge badge-danger badge-counter"><?php echo $totalQueue; ?></span>
+                                <?php endif; ?>
+                            </a>
+                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="alertsDropdown">
+                                <h6 class="dropdown-header">
+                                    Notifications
+                                </h6>
+                                <?php if ($totalQueue > 0): ?>
+                                    <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
+                                        <div class="mr-3">
+                                            <div class="icon-circle bg-primary">
+                                                <i class="fas fa-shopping-cart text-white"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                            <span class="font-weight-bold"><?php echo $totalQueue; ?> new order(s) to approve</span>
+                                        </div>
+                                    </a>
+                                <?php else: ?>
+                                    <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
+                                <?php endif; ?>
+                            </div>
+                        </li>
+
 
                         <!-- Nav Item - Messages -->
                         <div class="topbar-divider d-none d-sm-block"></div>
@@ -461,11 +494,14 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
                                 $receiptsByOrder = [];
                                 while ($row = $receiptResult->fetch_assoc()) {
-                                    $receiptsByOrder[$row['orderID']][] = $row;
+                                    $orderID = $row['orderID'];
+                                    if (!isset($receiptsByOrder[$orderID])) {
+                                        $receiptsByOrder[$orderID] = [];
+                                    }
+                                    $receiptsByOrder[$orderID][] = $row;
                                 }
 
                                 $result = $conn->query($sql);
-
                                 if ($result->num_rows > 0) {
                                     echo '<table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
@@ -559,9 +595,9 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         echo '<td class="align-middle"><span id="st_' . $row['orderID'] . '">' . $row['status'] . '</span><hr>';
                                         if ($row['status'] != 'Completed' && $row['status'] != 'Delivered') {
                                             echo '<select name="stats" id="stats_' . $row['orderID'] . '" class="btn btn-sm btn-primary px-0" onchange="updateStatus(' . $row['orderID'] . ', \'' . $row['source'] . '\')">
-            <option value="" hidden>Edit Status</option>
-            <option value="In Progress" class="bg-white text-dark">IN PROGRESS</option>
-            <option value="Completed" ' . $notcom . ' class="bg-white text-dark">COMPLETED</option>';
+                                            <option value="" hidden>Edit Status</option>
+                                            <option value="In Progress" class="bg-white text-dark">IN PROGRESS</option>
+                                            <option value="Completed" ' . $notcom . ' class="bg-white text-dark">COMPLETED</option>';
                                             echo '<option value="Cancelled" class="bg-white text-dark">CANCELLED</option>';
                                             echo '<option value="Rejected" class="bg-white text-dark">REJECT</option>';
                                             echo '</select>';
@@ -589,27 +625,34 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                             $action2 = '';
                                         }
                                         echo '<form action="updatePayment.php" method="POST">
-                            <input type="hidden" name="orderID" value="' . $row['orderID'] . '">
-                            <input type="hidden" name="source" value="' . $row['source'] . '">
-                            <input type="hidden" name="currentBalance" value="' . $row['balance'] . '">
+                                            <input type="hidden" name="orderID" value="' . $row['orderID'] . '">
+                                            <input type="hidden" name="source" value="' . $row['source'] . '">
+                                            <input type="hidden" name="currentBalance" value="' . $row['balance'] . '">
 
 
 
-                            <select name="pay" id="pay_' . $row['orderID'] . '" class="btn btn-sm border border-dark px-0 ' . $action2 . '" onchange="toggleDownPayment(' . $row['orderID'] . ')"  style="font-size:12px;">
-                                <option value="" hidden >Edit Payment</option>
-                                <option value="Full Payment" ' . $selectedFullPayment . ' class="bg-white text-dark px-0" style="font-size:12px;">FULL PAYMENT</option>
-                                <option value="Down Payment" ' . $action . ' ' . $selectedDownPayment . ' class="bg-white text-dark px-0" style="font-size:12px;">DOWN PAYMENT</option>
-                            </select>
-                            <br>
-                            <input type="number" name="downPayment" id="pd_' . $row['orderID'] . '" style="display:none;" class="form-control form-control-sm my-1" placeholder="Down Payment" min="0" oninput="updateBalance(' . $row['orderID'] . ')">
-                            <input type="hidden" name="totalCost" value="' . $row['totalCost'] . '">
-                            <p class="my-1" style="font-size:14px;">Balance: ' . $row['balance'] . '</p>
-                            <button type="submit" class="btn btn-sm btn-success mt-1 ' . $action2 . '"  style="font-size:12px;">Update Payment</button>' ?>
+                                            <select name="pay" id="pay_' . $row['orderID'] . '" class="btn btn-sm border border-dark px-0 ' . $action2 . '" onchange="toggleDownPayment(' . $row['orderID'] . ')"  style="font-size:12px;">
+                                                <option value="" hidden >Edit Payment</option>
+                                                <option value="Full Payment" ' . $selectedFullPayment . ' class="bg-white text-dark px-0" style="font-size:12px;">FULL PAYMENT</option>
+                                                <option value="Down Payment" ' . $action . ' ' . $selectedDownPayment . ' class="bg-white text-dark px-0" style="font-size:12px;">DOWN PAYMENT</option>
+                                            </select>
+                                            <br>
+                                            <input type="number" name="downPayment" id="pd_' . $row['orderID'] . '"class="form-control form-control-sm my-1" placeholder="Enter Payment" min="0" oninput="updateBalance(' . $row['orderID'] . ')">
+                                            <input type="hidden" name="totalCost" value="' . $row['totalCost'] . '">
+                                            <p class="my-1" style="font-size:14px;">Balance: ' . $row['balance'] . '</p>
+                                            <button type="submit" class="btn btn-sm btn-success mt-1 ' . $action2 . '"  style="font-size:12px;">Update Payment</button>' ?>
+                                        <?php
+                                        $receiptList = isset($receiptsByOrder[$orderID]) ? $receiptsByOrder[$orderID] : [];
+                                        $receiptsJson = htmlspecialchars(json_encode($receiptList), ENT_QUOTES, 'UTF-8');
+
+                                        ?>
                                         <button type="button" class="btn btn-sm btn-primary py-0 mt-2" style="font-size:12px;"
                                             onclick='viewProofPayAll(`<?php echo $receiptsJson; ?>`, "<?php echo $orderID; ?>", "<?php echo htmlspecialchars($row["fullName"]); ?>")'>
                                             View Payment
                                         </button>
-                                        <?php
+
+
+                                <?php
                                         echo '</form>';
                                         echo '</td>';
 
@@ -626,47 +669,32 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
                         <script>
                             function filterOrders(status) {
-                                var table = document.getElementById("dataTable");
-                                var buttons = document.querySelectorAll(".btn-group button");
-                                buttons.forEach(function (btn) {
-                                    btn.classList.remove("active");
-                                });
-                                // Fix: Use event parameter to get the clicked button
-                                // If event is not passed, fallback to find by text
-                                var eventBtn = null;
-                                if (window.event && window.event.target) {
-                                    eventBtn = window.event.target;
-                                } else if (filterOrders.caller && filterOrders.caller.arguments[0]) {
-                                    eventBtn = filterOrders.caller.arguments[0].target;
-                                }
-                                if (eventBtn) {
-                                    eventBtn.classList.add("active");
-                                } else {
-                                    // fallback: activate the button with matching text
-                                    buttons.forEach(function (btn) {
-                                        if (btn.textContent.trim() === status) btn.classList.add("active");
-                                    });
-                                }
+                                const table = document.getElementById("dataTable");
+                                const buttons = document.querySelectorAll(".btn-group button");
 
-                                // Fix: Status column is now 10th (not 9th) because of added columns
-                                // Find the correct index for "Status" column
-                                // Table header: Name, Address, Cellphone Number, Image, Product Name, Dimension, Quantity, Price, Date, Status, Payment
-                                // So Status is 10th column (index 10)
-                                var statusColIdx = 10; // 1-based
-                                for (var i = 1, row; row = table.rows[i]; i++) {
-                                    var statusSpan = row.querySelector("td:nth-child(" + statusColIdx + ") span");
-                                    if (status === "All") {
-                                        row.style.display = "";
-                                    } else if (statusSpan && (statusSpan.textContent.trim().toLowerCase() === status.toLowerCase() ||
-                                        (status === "Pending Approval" && statusSpan.textContent.trim().toLowerCase() === "pending approval") ||
-                                        (status === "In Progress" && statusSpan.textContent.trim().toLowerCase() === "in progress"))) {
+                                // Update active button style
+                                buttons.forEach(btn => btn.classList.remove("active"));
+                                buttons.forEach(btn => {
+                                    if (btn.textContent.trim().toLowerCase() === status.toLowerCase()) {
+                                        btn.classList.add("active");
+                                    }
+                                });
+
+                                // Start filtering rows
+                                const rows = table.querySelectorAll("tbody tr");
+                                rows.forEach(row => {
+                                    const statusCell = row.querySelector("td:nth-child(11) span"); // 11th column = Status
+                                    const cellStatus = statusCell ? statusCell.textContent.trim().toLowerCase() : "";
+
+                                    if (status.toLowerCase() === "all" || cellStatus === status.toLowerCase()) {
                                         row.style.display = "";
                                     } else {
                                         row.style.display = "none";
                                     }
-                                }
+                                });
                             }
                         </script>
+
                     </div>
                 </div>
             </div>
@@ -842,7 +870,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-            xhr.onreadystatechange = function () {
+            xhr.onreadystatechange = function() {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.responseText === "Status updated successfully.") {
                         document.getElementById("st_" + orderID).innerHTML = status;
@@ -865,7 +893,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             if (paymentType === 'Down Payment') {
                 downPaymentInput.style.display = 'block';
             } else {
-                downPaymentInput.style.display = 'none';
+                downPaymentInput.style.display = 'block';
                 balanceField.innerText = '0';
             }
         }
@@ -883,7 +911,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
         }
 
         // Call toggleMonthPicker on page load to set initial state
-        window.onload = function () {
+        window.onload = function() {
             toggleMonthPicker();
         };
 
@@ -901,7 +929,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
             iframe.src = url;
 
-            iframe.onload = function () {
+            iframe.onload = function() {
                 iframe.contentWindow.focus();
                 iframe.contentWindow.print();
             };
@@ -983,12 +1011,12 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             // Clear previous content
             imgContainer.innerHTML = '';
             details.innerHTML = `
-        <div class="mb-4">
-            <h6 class="text-uppercase text-muted">Order Details</h6>
-            <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
-        </div>
-        <hr class="border border-1 border-dark border-dashed">
-    `;
+                    <div class="mb-4">
+                        <h6 class="text-uppercase text-muted">Order Details</h6>
+                        <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
+                    </div>
+                    <hr class="border border-1 border-dark border-dashed">
+                `;
 
             if (receipts.length === 0) {
                 imgContainer.innerHTML = `<div class="text-muted"><p class="mt-3 mb-0">No receipt image found.</p></div>`;
@@ -1063,7 +1091,6 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             // Show modal (using jQuery and Bootstrap 4 syntax)
             $('#paymentProofModal').modal('show');
         }
-
     </script>
 
 

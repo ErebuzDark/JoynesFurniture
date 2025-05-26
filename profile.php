@@ -80,9 +80,7 @@ $userRow = mysqli_fetch_assoc($userResult);
     <link href="css/style.css" rel="stylesheet">
     <style type="text/css">
         a {
-            color: black;
-            !important;
-
+            color: black !important;
         }
 
         a:hover {
@@ -575,7 +573,7 @@ ORDER BY date DESC
                                 <div class="tab-pane fade" id="on-queue">
                                     <?php
                                     $sql = "
-(SELECT 'checkout' AS source, orderID, status, prodName, image, cost AS totalCost, quantity, date FROM checkout WHERE userID = '$userID' AND status = 'Pending Approval')
+(SELECT 'checkout' AS source, orderID, status, prodName, image, cost AS totalCost, quantity, date FROM checkout WHERE userID = '$userID' AND status = 'On Queue')
 UNION
 (SELECT 'checkoutcustom' AS source, orderID, status, pName AS prodName, image, totalCost, quantity, date FROM checkoutcustom WHERE userID = '$userID' AND status = 'Pending Approval')
 ORDER BY date DESC

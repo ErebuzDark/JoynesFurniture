@@ -87,11 +87,11 @@
                     <span>Dashboard</span>
                 </a>
             </li>
+            <!-- Divider -->
+            <hr class="sidebar-divider">
             <div class="sidebar-heading">
                 Interface
             </div>
-            <!-- Divider -->
-            <hr class="sidebar-divider">
 
             <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">

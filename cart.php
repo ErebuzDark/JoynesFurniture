@@ -53,32 +53,15 @@ $costs = number_format($totalCost, 0, '.', ',');
             color: #e47011 !important;
 
         }
-
         a:hover {
             color: white !important;
 
         }
-
         .page-header {
             background-image: url(./img/1.jpg) !important;
 
         }
 
-        /* Page pop-up animation */
-        @keyframes pagePopUp {
-            0% {
-                opacity: 0;
-                transform: scale(0.50);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .page-pop-up {
-            animation: pagePopUp 0.5s ease forwards;
-        }
     </style>
 </head>
 

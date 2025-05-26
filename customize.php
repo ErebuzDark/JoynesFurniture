@@ -738,10 +738,10 @@ $furResultnew = mysqli_query($conn, $furniturenew);
             const varnishRadios = document.querySelectorAll('input[name="vName[]"]');
             const quantityInput = document.getElementById('quantity');
 
-            prodNameInput.addEventListener('input', triggerAutoViewCost);
-            widthInput.addEventListener('input', triggerAutoViewCost);
-            lengthInput.addEventListener('input', triggerAutoViewCost);
-            heightInput.addEventListener('input', triggerAutoViewCost);
+            prodNameInput.addEventListener('change', triggerAutoViewCost);
+            widthInput.addEventListener('change', triggerAutoViewCost);
+            lengthInput.addEventListener('change', triggerAutoViewCost);
+            heightInput.addEventListener('change', triggerAutoViewCost);
 
             woodRadios.forEach(radio => {
                 radio.addEventListener('change', triggerAutoViewCost);

@@ -113,7 +113,6 @@ if (isset($_GET['page-nr'])) {
 
 }
 
-
 ?>
 
 <body id="<?php echo $id; ?>">
@@ -124,7 +123,6 @@ if (isset($_GET['page-nr'])) {
         <div class="spinner-grow text-primary" role="status"></div>
     </div>
     <!-- Spinner End -->
-
 
     <!-- Navbar start -->
     <div class="container-fluid fixed-top">
