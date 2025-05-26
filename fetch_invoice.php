@@ -4,6 +4,8 @@ header('Content-Type: application/json');
 
 if (isset($_GET['orderID'])) {
     $orderID = intval($_GET['orderID']);
+
+    // Join official_receipts, checkout, and checkoutcustom all on orderID
     $stmt = $conn->prepare("SELECT * FROM official_receipts WHERE orderID = ?");
     $stmt->bind_param("i", $orderID);
     $stmt->execute();

@@ -73,8 +73,8 @@ $userRow = mysqli_fetch_assoc($userResult);
 
     <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"> -->
 
-  <!-- html2canvas -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- Template Stylesheet -->
     <link href="css/style.css" rel="stylesheet">
@@ -132,7 +132,8 @@ $userRow = mysqli_fetch_assoc($userResult);
         .col-form-label {
             font-weight: bold;
         }
-          .invoice {
+
+        .invoice {
             font-family: 'Courier New', Courier, monospace;
             font-size: 12px;
             line-height: 1.4;
@@ -145,12 +146,14 @@ $userRow = mysqli_fetch_assoc($userResult);
             margin-bottom: 1rem;
             white-space: pre-line;
         }
+
         .invoice h3 {
             line-height: 0%;
             font-family: 'Courier New', Courier, monospace;
         }
 
-        .invoice h4, h5 {
+        .invoice h4,
+        h5 {
             font-size: 14px;
             font-weight: bold;
             text-align: center;
@@ -189,9 +192,11 @@ $userRow = mysqli_fetch_assoc($userResult);
 
         <div class="container px-0">
             <nav class="navbar navbar-light bg-white navbar-expand-xl">
-                <a href="shop.php" class="navbar-brand"><img class="logo" src="./img/logo1.png" alt="Bootstrap" style="width: 200px"></a>
+                <a href="shop.php" class="navbar-brand"><img class="logo" src="./img/logo1.png" alt="Bootstrap"
+                        style="width: 200px"></a>
 
-                <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarCollapse">
                     <span class="fa fa-bars text-primary"></span>
                 </button>
 
@@ -815,8 +820,8 @@ ORDER BY date DESC
     <script src="js/main.js"></script>
 
     <script>
-        $(document).ready(function() {
-            $("button[name='complete']").click(function() {
+        $(document).ready(function () {
+            $("button[name='complete']").click(function () {
                 var orderID = $(this).data("orderid");
                 var source = $(this).data("source");
                 var status = $(this).data("status");
@@ -831,7 +836,7 @@ ORDER BY date DESC
                         source: source,
                         status: status
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response === 'success') {
                             alert("Order status updated to Delivered!");
                             button.text('Delivered').prop('disabled', true);
@@ -839,13 +844,13 @@ ORDER BY date DESC
                             alert("Error updating order status.");
                         }
                     },
-                    error: function() {
+                    error: function () {
                         alert("Error with AJAX request.");
                     }
                 });
             });
 
-            $("button[name='cancel']").click(function() {
+            $("button[name='cancel']").click(function () {
                 var orderID = $(this).data("orderid");
                 var source = $(this).data("source");
                 var status = $(this).data("status");
@@ -860,7 +865,7 @@ ORDER BY date DESC
                         source: source,
                         status: status
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response === 'success') {
                             alert("Order cancelled!");
                             button.text('Cancelled').prop('disabled', true);
@@ -869,7 +874,7 @@ ORDER BY date DESC
                             alert("Error updating order status.");
                         }
                     },
-                    error: function() {
+                    error: function () {
                         alert("Error with AJAX request.");
                     }
                 });
@@ -881,11 +886,11 @@ ORDER BY date DESC
         const imageText = document.getElementById('image-text');
         const imageSizeText = document.getElementById('image-size-text');
 
-        dropArea.addEventListener('click', function() {
+        dropArea.addEventListener('click', function () {
             inputFile.click();
         });
 
-        inputFile.addEventListener('change', function() {
+        inputFile.addEventListener('change', function () {
             const file = this.files[0];
 
             if (file.type.startsWith('image/')) {
@@ -900,14 +905,14 @@ ORDER BY date DESC
             }
         });
 
-        dropArea.addEventListener('dragover', function(e) {
+        dropArea.addEventListener('dragover', function (e) {
             e.preventDefault();
             this.style.borderStyle = 'solid';
             const h3 = this.querySelector('h3');
             h3.textContent = 'Release here to upload image';
         });
 
-        dropArea.addEventListener('drop', function(e) {
+        dropArea.addEventListener('drop', function (e) {
             e.preventDefault();
             inputFile.files = e.dataTransfer.files;
             const file = e.dataTransfer.files[0];
@@ -926,7 +931,7 @@ ORDER BY date DESC
 
         const command = ['dragleave', 'dragend'];
         command.forEach(item => {
-            dropArea.addEventListener(item, function() {
+            dropArea.addEventListener(item, function () {
                 this.style.borderStyle = 'dashed';
                 const h3 = this.querySelector('h3');
                 h3.textContent = 'Drag and drop or click here to select image';
@@ -935,7 +940,7 @@ ORDER BY date DESC
 
         function updatePreview(file) {
             const reader = new FileReader();
-            reader.onload = function() {
+            reader.onload = function () {
                 const url = reader.result;
                 const preview = document.getElementById('image-preview');
                 preview.src = url;
@@ -954,14 +959,14 @@ ORDER BY date DESC
         }
 
 
-        document.getElementById('updateImageBtn').addEventListener('click', function() {
+        document.getElementById('updateImageBtn').addEventListener('click', function () {
             const formData = new FormData(document.getElementById('updateProfileForm'));
             formData.append('updateType', 'image');
 
             fetch('profileUpdate.php', {
-                    method: 'POST',
-                    body: formData
-                })
+                method: 'POST',
+                body: formData
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -976,14 +981,14 @@ ORDER BY date DESC
                 });
         });
 
-        document.getElementById('updateDetailsBtn').addEventListener('click', function() {
+        document.getElementById('updateDetailsBtn').addEventListener('click', function () {
             const formData = new FormData(document.getElementById('updateProfileForm'));
             formData.append('updateType', 'details');
 
             fetch('profileUpdate.php', {
-                    method: 'POST',
-                    body: formData
-                })
+                method: 'POST',
+                body: formData
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -1000,7 +1005,8 @@ ORDER BY date DESC
     </script>
 
     <!-- Payment Image Modal -->
-    <div class="modal fade" id="paymentImageModal" tabindex="-1" aria-labelledby="paymentImageModalLabel" aria-hidden="true">
+    <div class="modal fade" id="paymentImageModal" tabindex="-1" aria-labelledby="paymentImageModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-4 shadow" style="background-color: white;">
                 <div class="modal-header border-0">
@@ -1008,14 +1014,16 @@ ORDER BY date DESC
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body d-flex justify-content-center">
-                    <img id="paymentImageModalImg" src="" alt="Payment Image" class="img-fluid rounded" style="max-height: 80vh;">
+                    <img id="paymentImageModalImg" src="" alt="Payment Image" class="img-fluid rounded"
+                        style="max-height: 80vh;">
                 </div>
             </div>
         </div>
     </div>
     <!-- new images for resibo -->
-     <!-- Modal to display all receipts for an order -->
-    <div class="modal fade" id="paymentImagesModal" tabindex="-1" aria-labelledby="paymentImagesModalLabel" aria-hidden="true">
+    <!-- Modal to display all receipts for an order -->
+    <div class="modal fade" id="paymentImagesModal" tabindex="-1" aria-labelledby="paymentImagesModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content bg-white">
                 <div class="modal-header">
@@ -1031,49 +1039,50 @@ ORDER BY date DESC
 
 
     <!-- Balance Payment Modal -->
-    <div class="modal fade" id="balancePaymentModal" tabindex="-1" aria-labelledby="balancePaymentModalLabel" aria-hidden="true">
+    <div class="modal fade" id="balancePaymentModal" tabindex="-1" aria-labelledby="balancePaymentModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content bg-white">
-            <div class="modal-header">
-                <h5 class="modal-title" id="balancePaymentModalLabel">Upload Payment Receipt</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="upload_balance_payment.php" enctype="multipart/form-data">
-                <div class="modal-body">
-                <p><strong>Remaining Balance:</strong> ₱<span id="balanceAmountDisplay"></span></p>
-
-                <label for="paymentImage">Upload Payment Receipt</label>
-                <input type="file" name="paymentImage" class="form-control" required>
-
-                <input type="hidden" name="orderID" id="orderid">
-                <input type="hidden" name="userID" value="<?php echo $userID; ?>">
-                <input type="hidden" name="source" id="paymentSource">
-                <input type="hidden" name="prodName" id="paymentProdName">
-                <input type="hidden" name="balanceAmount" id="balanceAmountField">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="balancePaymentModalLabel">Upload Payment Receipt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Submit Payment</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                </div>
-            </form>
+                <form method="POST" action="upload_balance_payment.php" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <p><strong>Remaining Balance:</strong> ₱<span id="balanceAmountDisplay"></span></p>
+
+                        <label for="paymentImage">Upload Payment Receipt</label>
+                        <input type="file" name="paymentImage" class="form-control" required>
+
+                        <input type="hidden" name="orderID" id="orderid">
+                        <input type="hidden" name="userID" value="<?php echo $userID; ?>">
+                        <input type="hidden" name="source" id="paymentSource">
+                        <input type="hidden" name="prodName" id="paymentProdName">
+                        <input type="hidden" name="balanceAmount" id="balanceAmountField">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Submit Payment</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <!-- modal for invoice -->
     <div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-scrollable">
-        <div class="modal-content bg-white">
-            <div class="modal-header">
-            <h5 class="modal-title" id="invoiceModalLabel">All Invoices</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="invoices-container">
+        <div class="modal-dialog modal-md modal-dialog-scrollable">
+            <div class="modal-content bg-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="invoiceModalLabel">All Invoices</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="invoices-container">
 
-            <!-- Invoices -->
-            <!-- <div class="invoice" id="invoice1">
+                    <!-- Invoices -->
+                    <!-- <div class="invoice" id="invoice1">
                 <h3 class="text-center fw-bold">PAYMENT RECEIPT</h3>
-                <h5 class="text-center">Joynes Furniture</h5>
+                <h5 class="">Joynes Furniture</h5>
                 <h4 id="ref-number">Ref. Number: </h4>
                 <hr>
                 <p id="date-confirmed">Date: </p>
@@ -1084,89 +1093,132 @@ ORDER BY date DESC
             </div> -->
 
 
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
-            <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
         </div>
     </div>
 
     <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- JS to download invoice -->
-  <script>
-  function downloadInvoice(invoiceId) {
-    const invoice = document.getElementById(invoiceId);
-    const button = invoice.querySelector('button');
+    <!-- JS to download invoice -->
+    <script>
+        function downloadInvoice(invoiceId) {
+            const invoice = document.getElementById(invoiceId);
+            const button = invoice.querySelector('button');
 
-    // Hide button before capture
-    button.style.visibility = 'hidden';
+            // Hide button before capture
+            button.style.visibility = 'hidden';
 
-    html2canvas(invoice, {
-      scale: 2,
-      useCORS: true
-    }).then(canvas => {
-      // Show button again
-      button.style.visibility = 'visible';
+            html2canvas(invoice, {
+                scale: 2,
+                useCORS: true
+            }).then(canvas => {
+                // Show button again
+                button.style.visibility = 'visible';
 
-      const link = document.createElement('a');
-      link.download = invoiceId + ".png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    }).catch(() => {
-      // Ensure button is shown even if something goes wrong
-      button.style.visibility = 'visible';
-    });
-  }
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  document.querySelectorAll('.view-invoice-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const orderId = this.getAttribute('data-orderid');
-
-      fetch('fetch_invoice.php?orderID=' + encodeURIComponent(orderId))
-        .then(response => response.json())
-        .then(data => {
-          const container = document.getElementById('invoices-container');
-          container.innerHTML = ''; // Clear previous invoices
-
-          if (data.success) {
-            data.invoices.forEach((invoice, index) => {
-              // Create a unique ID for each invoice for download
-              const invoiceId = 'invoice' + index;
-
-              // Create invoice HTML
-              const invoiceHTML = `
-                <div class="invoice mb-4 p-3 border" id="${invoiceId}">
-                  <h3 class="text-center fw-bold">PAYMENT RECEIPT</h3>
-                  <h5 class="text-center">Joynes Furniture</h5>
-                  <h4>Ref. Number: ${invoice.reference_number}</h4>
-                  <hr>
-                  <p>Date: ${invoice.created_at}</p>
-                  <p>Order ID: ${invoice.orderID}</p>
-                  <p>Amount Paid: ${invoice.totalPaid}</p>
-                  <hr>
-                  <button class="btn btn-sm btn-outline-secondary" onclick="downloadInvoice('${invoiceId}')">Download</button>
-                </div>
-              `;
-              container.insertAdjacentHTML('beforeend', invoiceHTML);
+                const link = document.createElement('a');
+                link.download = invoiceId + ".png";
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            }).catch(() => {
+                // Ensure button is shown even if something goes wrong
+                button.style.visibility = 'visible';
             });
-          } else {
-            container.innerHTML = '<p>No invoices found.</p>';
-          }
-        })
-        .catch(error => {
-          console.error("Error fetching invoice:", error);
-        });
-    });
-  });
-});
+        }
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('.view-invoice-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const orderId = this.getAttribute('data-orderid');
 
-</script>
+                    fetch('fetch_invoice.php?orderID=' + encodeURIComponent(orderId))
+                        .then(response => response.json())
+                        .then(data => {
+                            const container = document.getElementById('invoices-container');
+                            container.innerHTML = ''; // Clear previous invoices
+
+                            if (data.success) {
+                                data.invoices.forEach((invoice, index) => {
+                                    // Create a unique ID for each invoice for download
+                                    const invoiceId = 'invoice' + index;
+
+                                    // Create invoice HTML
+                                    const invoiceHTML = `
+                                <div class="invoice mb-4 p-4 border rounded shadow-sm" id="${invoiceId}" style="max-width: 600px; background: #fff;">
+                                    <div class="row align-items-center mb-4">
+                                    <div class="col-8">
+                                        <h1 class="fw-bold text-primary mb-1" style="letter-spacing: 2px;">INVOICE</h1>
+                                        <p class="mb-0" style="text-align:text-start !important;">Joynes Furniture</p>
+                                        <small class="text-muted">Quality furniture for your home</small>
+                                    </div>
+                                    <div class="col-4 text-end">
+                                        <img src="./img/logo1.png" alt="Joynes Furniture Logo" style="max-height: 70px; object-fit: contain;">
+                                    </div>
+                                    </div>
+                                    
+                                    <hr>
+
+                                    <div class="">
+                                    <p class="mb-1"><strong>Date:</strong> ${invoice.created_at}</p>
+                                    <p class="mb-1"><strong>Order ID:</strong> ${invoice.orderID}</p>
+                                    <p class="mb-1"><strong>Amount Paid:</strong> <span class="text-success fw-semibold">${invoice.totalPaid}</span></p>
+                                    <p class="mb-1"><strong>Ref. Number:</strong> <span class="text-secondary">${invoice.reference_number}</span></p>
+                                    </div>
+
+                                    <hr>
+
+                                    <h5 class="mb-3">Purchase Details</h5>
+                                    <div class="table-responsive">
+                                    <table class="table table-striped table-bordered">
+                                        <thead class="table-primary">
+                                        <tr>
+                                            <th>Item</th>
+                                            <th class="text-center">Quantity</th>
+                                            <th class="text-end">Price</th>
+                                            <th class="text-end">Total</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>${invoice.prodName}</td>
+                                                <td class="text-center">${invoice.quantity}</td>
+                                                <td class="text-end">${invoice.cost}</td>
+                                                <td class="text-end">${invoice.cost * invoice.quantity}</td>
+                                            </tr>
+                                                                        
+                                        </tbody>
+                                    </table>
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="downloadInvoice('${invoiceId}')">
+                                        <i class="bi bi-download me-1"></i> Download
+                                    </button>
+                                    </div>
+                                </div>
+                                `;
+
+                                    container.insertAdjacentHTML('beforeend', invoiceHTML);
+                                });
+                            } else {
+                                container.innerHTML = '<p>No invoices found.</p>';
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error fetching invoice:", error);
+                        });
+                });
+            });
+        });
+
+    </script>
 
 
 
@@ -1192,31 +1244,31 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <!-- new script for displaying resibo -->
     <script>
-    $(document).ready(function () {
-        // See all payment images for an order
-        $('.see-payment-images-btn').click(function () {
-            var orderID = $(this).data('orderid');
-            var source = $(this).data('source');
+        $(document).ready(function () {
+            // See all payment images for an order
+            $('.see-payment-images-btn').click(function () {
+                var orderID = $(this).data('orderid');
+                var source = $(this).data('source');
 
-            $.ajax({
-                url: 'get_payment_images.php',
-                type: 'POST',
-                data: {
-                    orderID: orderID,
-                    source: source
-                },
-                success: function (response) {
-                    $('#paymentImagesContainer').html(response);
-                    var modal = new bootstrap.Modal(document.getElementById('paymentImagesModal'));
-                    modal.show();
-                },
-                error: function () {
-                    $('#paymentImagesContainer').html('<p class="text-danger">Failed to load payment images.</p>');
-                }
+                $.ajax({
+                    url: 'get_payment_images.php',
+                    type: 'POST',
+                    data: {
+                        orderID: orderID,
+                        source: source
+                    },
+                    success: function (response) {
+                        $('#paymentImagesContainer').html(response);
+                        var modal = new bootstrap.Modal(document.getElementById('paymentImagesModal'));
+                        modal.show();
+                    },
+                    error: function () {
+                        $('#paymentImagesContainer').html('<p class="text-danger">Failed to load payment images.</p>');
+                    }
+                });
             });
         });
-    });
-</script>
+    </script>
 
 
     <!-- <script>

@@ -11,24 +11,24 @@ include("database.php");
 try {
     if (
         isset(
-            $_POST['orderID'],
-            $_POST['amountPaid'],
-            $_POST['ref_no'],
-            $_POST['payment_status'],
-            $_POST['source'],
-            $_POST['totalCost'],
-            $_POST['currentBalance'],
-            $_POST['receiptID']  // <-- new required input
-        )
+        $_POST['orderID'],
+        $_POST['amountPaid'],
+        $_POST['ref_no'],
+        $_POST['payment_status'],
+        $_POST['source'],
+        $_POST['totalCost'],
+        $_POST['currentBalance'],
+        $_POST['receiptID']  // <-- new required input
+    )
     ) {
         $orderID = $_POST['orderID'];
-        $amountPaid = (float)$_POST['amountPaid'];
+        $amountPaid = (float) $_POST['amountPaid'];
         $refNo = trim($_POST['ref_no']);
         $paymentStatusPost = $_POST['payment_status'];
         $source = $_POST['source'];
-        $totalCost = (float)$_POST['totalCost'];
-        $currentBalance = (float)$_POST['currentBalance'];
-        $receiptID = (int)$_POST['receiptID']; // Unique receipt to update
+        $totalCost = (float) $_POST['totalCost'];
+        $currentBalance = (float) $_POST['currentBalance'];
+        $receiptID = (int) $_POST['receiptID']; // Unique receipt to update
 
         $balance = $currentBalance - $amountPaid;
 
@@ -41,6 +41,34 @@ try {
         } else {
             $payment = "Partial Paid";
         }
+
+        $receiptID = (int) $_POST['receiptID'];
+
+        // Check for duplicate reference number
+        if (!empty($refNo)) {
+            $checkRef = $conn->prepare("SELECT ref_no FROM payment_receipts WHERE ref_no = ? AND id != ?");
+            $checkRef->bind_param("ii", $refNo, $receiptID);
+            $checkRef->execute();
+            $checkRef->bind_result($countRef);
+            $checkRef->fetch();
+            $checkRef->close();
+
+            if ($countRef > 0) {
+                $msg = "Error: Reference number already exists.";
+                $url = "adminOrder.php";
+                echo "<script>
+        alert(" . json_encode($msg) . ");
+        setTimeout(function() {
+            window.location.href = " . json_encode($url) . ";
+        }, 100); // 100ms delay before redirecting
+    </script>";
+                exit();
+            }
+
+
+        }
+
+        // Continue with balance calculations and updates...
 
         // Update checkout or checkoutcustom table
         $updateSQL = ($source === "checkout") ?
