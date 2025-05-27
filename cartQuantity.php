@@ -1,45 +1,30 @@
 <?php
-session_start();
-include('./database.php');
+require_once 'database.php';
 
-$userID = $_SESSION['userID'];
-
-if (isset($_POST['action']) && isset($_POST['ID'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['ID'];
     $action = $_POST['action'];
 
-    $furnitureSql = "SELECT * FROM furnituretbl WHERE fID = '$id'";
-    $furnitureResult = mysqli_query($conn, $furnitureSql);
-    $furnitureRow = mysqli_fetch_assoc($furnitureResult);
+    // Fetch current quantity
+    $query = "SELECT quantity FROM addcart WHERE ID = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, 'i', $id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($result);
+    $quantity = (int)$row['quantity'];
 
-    $origCost = $furnitureRow['cost'];
-    $furnitureQuantity = $furnitureRow['fQuantity'];
-
-    $cartSql = "SELECT * FROM addcart WHERE ID = '$id' AND userID = '$userID'";
-    $cartResult = mysqli_query($conn, $cartSql);
-    $cartRow = mysqli_fetch_assoc($cartResult);
-
-    $quantity = $cartRow['quantity'];
-
-    if ($action === "plus") {
-        if ($furnitureQuantity > $quantity) {
-            $quantity++;
-        }
-
-        else {
-            echo "<script>window.location.href='./cart.php'</script>";
-        }
-    } else if ($action === "minus" && $quantity > 1) {
+    if ($action === 'plus') {
+        $quantity++;
+    } elseif ($action === 'minus' && $quantity > 1) {
         $quantity--;
     }
 
-    $totPrice = $quantity * $origCost;
+    $update = "UPDATE addcart SET quantity = ? WHERE ID = ?";
+    $stmt = mysqli_prepare($conn, $update);
+    mysqli_stmt_bind_param($stmt, 'ii', $quantity, $id);
+    mysqli_stmt_execute($stmt);
 
-    $sql = "UPDATE addcart SET quantity = '$quantity', cost = '$totPrice' WHERE ID = '$id' AND userID = '$userID'";
-
-    if (mysqli_query($conn, $sql)) {
-        // Refresh the page to reflect updates
-        echo "<script>window.location.href='./cart.php'</script>";
-    }
+    header('Location: cart.php');
+    exit();
 }
-?>

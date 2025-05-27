@@ -40,6 +40,19 @@ if ($result1->num_rows > 0) {
     $totalQueue = 0;
 }
 
+$sql2 = "
+ (SELECT COUNT(*) as newPayment FROM payment_receipts 
+ WHERE payment_status = 'Pending')";
+$result2 = $conn->query($sql2);
+$newPayment = 0;
+if ($result2->num_rows > 0) {
+    while ($row = $result2->fetch_assoc()) {
+        $newPayment += $row['newPayment'];
+    }
+} else {
+    $newPayment = 0;
+}
+
 
 $sqlGo = "
         (SELECT COUNT(*) as onGo FROM checkout 
@@ -371,12 +384,16 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                         </li>
 
                         <!-- Nav Item - Alerts -->
+                        <!-- Nav Item - Alerts -->
                         <li class="nav-item dropdown no-arrow mx-1">
                             <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-bell fa-fw"></i>
-                                <?php if ($totalQueue > 0): ?>
-                                    <span class="badge badge-danger badge-counter"><?php echo $totalQueue; ?></span>
+                                <?php
+                                $totalNotifications = $totalQueue + $newPayment;
+                                if ($totalNotifications > 0):
+                                    ?>
+                                    <span class="badge badge-danger badge-counter"><?php echo $totalNotifications; ?></span>
                                 <?php endif; ?>
                             </a>
                             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -384,6 +401,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 <h6 class="dropdown-header">
                                     Notifications
                                 </h6>
+
                                 <?php if ($totalQueue > 0): ?>
                                     <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
                                         <div class="mr-3">
@@ -393,14 +411,33 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         </div>
                                         <div>
                                             <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
-                                            <span class="font-weight-bold"><?php echo $totalQueue; ?> new order(s) to approve</span>
+                                            <span class="font-weight-bold"><?php echo $totalQueue; ?> new order(s) to
+                                                approve</span>
                                         </div>
                                     </a>
-                                <?php else: ?>
+                                <?php endif; ?>
+
+                                <?php if ($newPayment > 0): ?>
+                                    <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
+                                        <div class="mr-3">
+                                            <div class="icon-circle bg-success">
+                                                <i class="fas fa-receipt text-white"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                            <span class="font-weight-bold"><?php echo $newPayment; ?> new payment(s) to
+                                                review</span>
+                                        </div>
+                                    </a>
+                                <?php endif; ?>
+
+                                <?php if ($totalNotifications == 0): ?>
                                     <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
                                 <?php endif; ?>
                             </div>
                         </li>
+
 
 
                         <!-- Nav Item - Messages -->
@@ -480,15 +517,23 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             </div>
                             <div class="table-responsive">
                                 <?php
-                                $sql = "SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, 
+                                $sql = "
+                                    SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, 
                                         cost AS totalCost, date, status, orderID, width, length, height 
                                     FROM checkout
                                     UNION
                                     SELECT 'checkoutcustom' AS source, payment, proofPay, balance, fullName, address, cpNum, pName AS prodName, image, 
                                         quantity, totalCost, date, status, orderID, width, length, height 
                                     FROM checkoutcustom
-                                    ORDER BY date DESC
-                                    ";
+                                ORDER BY 
+                                CASE 
+                                    WHEN status = 'On Queue' THEN 0 
+                                    ELSE 1 
+                                END, 
+                                orderID DESC
+
+                                ";
+
 
 
                                 $receiptQuery = "SELECT * FROM payment_receipts";
@@ -629,7 +674,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
                                         // Always show the balance
                                         echo '<p class="my-1" style="font-size:14px;">Balance: ' . $row['balance'] . '</p>';
-                                ?>
+                                        ?>
                                         <?php
                                         $orderID = $row['orderID'];
                                         $source = $row['source'];
@@ -649,7 +694,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                             View Payment
                                         </button>
 
-                                <?php
+                                        <?php
                                         echo '</td>';
                                         echo '</tr>';
                                     }
@@ -665,9 +710,10 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                         <script>
                             function filterOrders(status) {
                                 const table = document.getElementById("dataTable");
+                                const tbody = table.querySelector("tbody");
                                 const buttons = document.querySelectorAll(".btn-group button");
 
-                                // Update active button style
+                                // Remove active from all buttons and add to selected
                                 buttons.forEach(btn => btn.classList.remove("active"));
                                 buttons.forEach(btn => {
                                     if (btn.textContent.trim().toLowerCase() === status.toLowerCase()) {
@@ -675,20 +721,47 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                     }
                                 });
 
-                                // Start filtering rows
-                                const rows = table.querySelectorAll("tbody tr");
-                                rows.forEach(row => {
-                                    const statusCell = row.querySelector("td:nth-child(11) span"); // 11th column = Status
-                                    const cellStatus = statusCell ? statusCell.textContent.trim().toLowerCase() : "";
+                                let rows = Array.from(tbody.querySelectorAll("tr"));
 
-                                    if (status.toLowerCase() === "all" || cellStatus === status.toLowerCase()) {
+                                // Show/hide rows based on filter
+                                rows.forEach(row => {
+                                    const statusCell = row.querySelector("td:nth-child(11) span");
+                                    const rowStatus = statusCell ? statusCell.textContent.trim().toLowerCase() : "";
+
+                                    if (status.toLowerCase() === "all" || rowStatus === status.toLowerCase()) {
                                         row.style.display = "";
                                     } else {
                                         row.style.display = "none";
                                     }
                                 });
+
+                                // If "All" selected, re-sort rows to show "On Queue" first, then orderID desc
+                                if (status.toLowerCase() === "all") {
+                                    const visibleRows = rows.filter(row => row.style.display !== "none");
+
+                                    visibleRows.sort((a, b) => {
+                                        const statusA = a.querySelector("td:nth-child(11) span")?.textContent.trim().toLowerCase();
+                                        const statusB = b.querySelector("td:nth-child(11) span")?.textContent.trim().toLowerCase();
+
+                                        // orderID is in the first column (td:nth-child(1))
+                                        const idA = parseInt(a.querySelector("td:nth-child(1)")?.textContent) || 0;
+                                        const idB = parseInt(b.querySelector("td:nth-child(1)")?.textContent) || 0;
+
+                                        // Sort: "on queue" first, then by orderID descending
+                                        if (statusA === "on queue" && statusB !== "on queue") return -1;
+                                        if (statusA !== "on queue" && statusB === "on queue") return 1;
+
+                                        return idB - idA;
+                                    });
+
+                                    // Re-append rows to tbody in new order
+                                    visibleRows.forEach(row => tbody.appendChild(row));
+                                }
                             }
+
+
                         </script>
+
 
                     </div>
                 </div>
@@ -863,7 +936,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             xhr.open("POST", "editstatus.php", true);
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-            xhr.onreadystatechange = function() {
+            xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     if (xhr.responseText.trim() === "Status updated successfully.") {
                         // Option 1: Refresh the entire page
@@ -913,7 +986,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
         }
 
         // Call toggleMonthPicker on page load to set initial state
-        window.onload = function() {
+        window.onload = function () {
             toggleMonthPicker();
         };
 
@@ -931,7 +1004,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
             iframe.src = url;
 
-            iframe.onload = function() {
+            iframe.onload = function () {
                 iframe.contentWindow.focus();
                 iframe.contentWindow.print();
             };
@@ -1014,32 +1087,31 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             imgContainer.innerHTML = '';
             details.innerHTML = '';
 
-            // These variables are not defined in this scope, so set to empty or 0
-            let totalPayment = 0;
-
             details.innerHTML += `
-                <div class="mb-4">
-                    <h6 class="text-uppercase text-muted">Order Details</h6>
-                    <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
-                    <div class="mb-2">
-                        <p><strong>Total Cost:</strong> <span class="text-muted">&#8369; ${Number(totalCost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
-                    </div>
-                    <div class="mb-2">
-                        <p><strong>Total Payment:</strong> <span class="text-muted">&#8369; ${Number(totalPaid).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
-                    </div>
-                    <div class="mb-2">
-                        <p><strong>Balance:</strong> <span class="text-muted">&#8369; ${Number(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
-                    </div>
+            <div class="mb-4">
+                <h6 class="text-uppercase text-muted">Order Details</h6>
+                <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
+                <div class="mb-2">
+                    <p><strong>Total Cost:</strong> <span class="text-muted">&#8369; ${Number(totalCost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
                 </div>
-                <hr class="border border-1 border-dark border-dashed">
-            `;
-
-
+                <div class="mb-2">
+                    <p><strong>Total Payment:</strong> <span class="text-muted">&#8369; ${Number(totalPaid).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
+                </div>
+                <div class="mb-2">
+                    <p><strong>Balance:</strong> <span class="text-muted">&#8369; ${Number(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
+                </div>
+               
+            </div>
+            <hr class="border border-1 border-dark border-dashed">
+        `;
 
             if (receipts.length === 0) {
                 imgContainer.innerHTML = `<div class="text-muted"><p class="mt-3 mb-0">No receipt image found.</p></div>`;
                 details.innerHTML += '<p class="text-muted">No receipts found.</p>';
             } else {
+                // Initialize usedRefNumbers from receipts on load
+                usedRefNumbers = receipts.map(r => r.ref_no).filter(ref => ref && ref.trim() !== '');
+
                 receipts.forEach((r, index) => {
                     const row = document.createElement('div');
                     row.className = 'row mb-4 align-items-center';
@@ -1066,72 +1138,53 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                     colDetails.className = 'col-md-8';
 
                     colDetails.innerHTML = `
-                        <div class="p-3 bg-light rounded shadow-sm">
-                            <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
-                            <form action="updatePayment.php" method="POST" onsubmit="return validateReceiptForm(this);">
-                                <input type="hidden" name="receiptID" value="${r.id}">
-                                <input type="hidden" name="orderID" value="${orderID}">
-                                <input type="hidden" name="source" value="${r.source || ''}">
-                                <input type="hidden" name="currentBalance" value="${balance}">
-                                <input type="hidden" name="totalCost" value="${totalCost}">
+                    <div class="p-3 bg-light rounded shadow-sm">
+                        <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
+                        <form action="updatePayment.php" method="POST" onsubmit="return validateReceiptForm(this);">
+                            <input type="hidden" name="receiptID" value="${r.id}">
+                            <input type="hidden" name="orderID" value="${orderID}">
+                            <input type="hidden" name="source" value="${r.source || ''}">
+                            <input type="hidden" name="currentBalance" value="${balance}">
+                            <input type="hidden" name="totalCost" value="${totalCost}">
 
-                                <div class="mb-2">
-                                    <label for="amountPaid_${index}" class="form-label"><strong>Amount Paid:</strong></label>
-                                    <input type="number" step="0.01" min="0" id="amountPaid_${index}" name="amountPaid"
-                                        class="form-control form-control-sm" 
-                                        value="${r.amountPaid !== undefined ? parseFloat(r.amountPaid).toFixed(2) : ''}" required>
-                                </div>
-                                <div class="mb-2">
-                                    <label for="refNo_${index}" class="form-label"><strong>Reference No:</strong></label>
-                                    <input type="text" id="refNo_${index}" name="ref_no" class="form-control form-control-sm" placeholder="Enter Reference No." value="${r.ref_no || ''}">
-                                </div>
-                                <div class="mb-2">
-                                    <label for="paymentStatus_${index}" class="form-label"><strong>Payment Status:</strong></label>
-                                    <select id="paymentStatus_${index}" name="payment_status" class="form-select form-select-sm" required>
-                                        <option value="Pending" ${r.payment_status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                        <option value="Confirmed" ${r.payment_status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                                        <option value="Invalid" ${r.payment_status === 'Invalid' ? 'selected' : ''}>Invalid</option>
-                                        <option value="Refunded" ${r.payment_status === 'Refunded' ? 'selected' : ''}>Refunded</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-sm btn-success mt-2">
-                                    Update Payment
-                                </button>
-                            </form>
-                            <div class="mt-2">
-                                <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate || ''}</span></p>
-                                <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName}</span></p>
+                            <div class="mb-2">
+                                <label for="amountPaid_${index}" class="form-label"><strong>Amount Paid:</strong></label>
+                                <input type="number" step="0.01" min="0" id="amountPaid_${index}" name="amountPaid"
+                                    class="form-control form-control-sm" 
+                                    value="${r.amountPaid !== undefined ? parseFloat(r.amountPaid).toFixed(2) : ''}" >
                             </div>
+                            
+                            <div class="mb-2">
+                                <label for="refNo_${index}" class="form-label"><strong>Reference No:</strong></label>
+                                <input type="text" 
+                                    id="refNo_${index}" 
+                                    name="ref_no" 
+                                    class="form-control form-control-sm" 
+                                    placeholder="Enter Reference No." 
+                                    value="${r.ref_no || ''}" 
+                                    oninput="validateRefNo(this, ${index})">
+                                <small id="refNoError_${index}" class="text-danger d-none">This reference number is already used.</small>
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="paymentStatus_${index}" class="form-label"><strong>Payment Status:</strong></label>
+                                <select id="paymentStatus_${index}" name="payment_status" class="form-select form-select-sm" required>
+                                    <option value="Pending" ${r.payment_status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="Confirmed" ${r.payment_status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                                    <option value="Invalid" ${r.payment_status === 'Invalid' ? 'selected' : ''}>Invalid</option>
+                                    <option value="Refunded" ${r.payment_status === 'Refunded' ? 'selected' : ''}>Refunded</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-success mt-2">
+                                Update Payment
+                            </button>
+                        </form>
+                        <div class="mt-2">
+                            <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate || ''}</span></p>
+                            <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName}</span></p>
                         </div>
-                    `;
-
-                    // JS validation function
-                    window.validateReceiptForm = function(form) {
-                        const amount = form.amountPaid.value;
-                        const ref = form.ref_no.value.trim();
-
-                        if (amount === "" || isNaN(amount) || Number(amount) < 0) {
-                            alert('Amount Paid is required and must not be negative.');
-                            form.amountPaid.focus();
-                            return false;
-                        }
-                        if (Number(amount) === -1) {
-                            alert('Amount Paid cannot be -1.');
-                            form.amountPaid.focus();
-                            return false;
-                        }
-                        if (ref !== "" && ref.length !== 13) {
-                            alert('Reference No. must be exactly 13 characters if provided.');
-                            form.ref_no.focus();
-                            return false;
-                        }
-                        if (!form.payment_status.value) {
-                            alert('Please select a payment status.');
-                            form.payment_status.focus();
-                            return false;
-                        }
-                        return true;
-                    };
+                    </div>
+                `;
 
                     row.appendChild(colDetails);
                     details.appendChild(row);

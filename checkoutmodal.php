@@ -82,7 +82,7 @@ $dateToday = date('Y-m-d');
 
               <!-- Upload Image Field -->
               <div class="mt-3">
-                <label for="uploadReceipt"><b>Upload Payment Receipt:<br>*Minimum required downpayment is ₱1,000</b></label>
+                <label for="uploadReceipt"><b>Upload Payment Receipt:<br>Pay the exact amount <?php echo $cost ?></b></label>
                 <input type="file" id="receiptImage" name="image" class="form-control" accept=".jpg,.jpeg,.png">
               </div>
             </div>

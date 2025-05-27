@@ -111,6 +111,7 @@ $furResultnew = mysqli_query($conn, $furniturenew);
             transition: border 0.3s ease-in-out, transform 0.3s ease-in-out;
             transform: scale(1.05);
         }
+
         .img1 {
             transition: border 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
@@ -124,11 +125,15 @@ $furResultnew = mysqli_query($conn, $furniturenew);
             color: #e47011 !important;
 
         }
+
         /* Add animation to quantity buttons */
-        .btn-minus, .btn-plus {
+        .btn-minus,
+        .btn-plus {
             transition: transform 0.2s ease;
         }
-        .btn-minus:active, .btn-plus:active {
+
+        .btn-minus:active,
+        .btn-plus:active {
             transform: scale(0.9);
         }
 
@@ -163,56 +168,16 @@ $furResultnew = mysqli_query($conn, $furniturenew);
 <body>
 
     <!-- Spinner Start -->
-    <div id="spinner" class="show w-100 vh-100 bg-white position-fixed translate-middle top-50 start-50  d-flex align-items-center justify-content-center">
+    <div id="spinner"
+        class="show w-100 vh-100 bg-white position-fixed translate-middle top-50 start-50  d-flex align-items-center justify-content-center">
         <div class="spinner-grow text-primary" role="status"></div>
     </div>
     <!-- Spinner End -->
 
 
-    <!-- Navbar start -->
-    <div class="container-fluid fixed-top">
-        <div class=" topbar  d-none d-lg-flex">
-
-        </div>
-
-        <div class="container px-0">
-            <nav class="navbar navbar-light bg-white navbar-expand-xl">
-                <img class="logo" src="./img/logo1.png" alt="Bootstrap" style="width: 200px">
-                
-                <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-                    <span class="fa fa-bars text-primary"></span>
-                </button>
-
-                <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
-                    <div class="navbar-nav mx-auto">
-                        <a href="shop.php" class="position-relative me-3 my-auto text-dark">Home</a>
-
-                        <a href="customize.php" class="position-relative me-3 my-auto text-primary fw-bold">Costumize</a>
-                        
-                        <a href="Profile.php" class="position-relative me-3 my-auto text-dark">Purchase</a>
-                    </div>
-
-                    <div class="d-flex m-3 me-0">
-                        <a href="cart.php" class="position-relative me-4 my-auto">
-                            <i class="fa fa-shopping-bag fa-2x text-muted"></i>
-
-                            <span class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1" style="top: -5px; left: 15px; height: 20px; min-width: 20px;"><?php echo $i; ?></span>
-                        </a>
-                        <div class="nav-item dropdown">
-                            <i class="fas fa-user fa-2x"></i>
-
-                            <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                                <a href="profile.php" class="dropdown-item">My Profile</a>
-
-                                <a href="logout.php" class="dropdown-item">Log Out</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </div>
-    </div>
-    <!-- Navbar End -->
+    <?php
+    include("nav.php");
+    ?>
 
 
 
@@ -220,7 +185,7 @@ $furResultnew = mysqli_query($conn, $furniturenew);
 
     <!-- Single Page Header start -->
     <div class="container-fluid page-header py-5">
-        <h1 class="text-center text-white display-6" style="text-decoration: underline;">Costumize</h1>
+        <h1 class="text-center text-white display-6" style="text-decoration: underline;">Customize</h1>
     </div>
     <!-- Single Page Header End -->
 
@@ -231,17 +196,20 @@ $furResultnew = mysqli_query($conn, $furniturenew);
         <div class="container py-2 rounded ">
             <div class="col-lg-12 col-xl-12 bg-light" style="margin-bottom: 100px;">
                 <form method="POST" action="customizeadd.php" enctype="multipart/form-data">
-                    <div class="row justify-content-center" style="margin-top: 50px; padding-top: 50px; padding-bottom: 50px;">
+                    <div class="row justify-content-center"
+                        style="margin-top: 50px; padding-top: 50px; padding-bottom: 50px;">
                         <div class="col-lg-4">
                             <div class="border rounded">
                                 <div class="container drop">
                                     <div class="drop-area text-center mt-5">
-                                        <img width="64" height="64" src="https://img.icons8.com/sf-black/64/737373/add-image.png" alt="add-image" />
+                                        <img width="64" height="64"
+                                            src="https://img.icons8.com/sf-black/64/737373/add-image.png"
+                                            alt="add-image" />
 
                                         <input type="file" id="input-file" name="image" hidden required>
-                                        
+
                                         <h3>Drag and drop or click here to select image</h3>
-                                        
+
                                         <p>Image size must be less than <span>2MB</span></p>
                                     </div>
                                 </div>
@@ -253,13 +221,15 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                             <div class="my-2">
                                 <h5>Name of Furniture</h5>
 
-                                <input type="text" name="prodName" id="prodName" class="form-control form-control-sm w-50" required>
+                                <input type="text" name="prodName" id="prodName"
+                                    class="form-control form-control-sm w-50" required>
                             </div>
-                            
+
                             <div class="my-2">
                                 <h5>Type of Furniture</h5>
 
-                                <select name="category" id="category" class="form-control form-control-sm w-50" required>
+                                <select name="category" id="category" class="form-control form-control-sm w-50"
+                                    required>
                                     <option value="" diabled hidden>Select Category</option>
 
                                     <option value="mirror">Mirror</option>
@@ -284,10 +254,13 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                             <div class="image-container">
                                 <?php while ($rows = mysqli_fetch_assoc($varresult)) { ?>
                                     <label for="<?php echo $rows['ID']; ?>" class="input_var hover-text">
-                                        <input class="input_hidden" type="radio" name="vName[]" value="<?php echo $rows['vName']; ?>" id="<?php echo $rows['ID']; ?>" data-cost="<?php echo $rows['cost']; ?>" required>
-                                        
-                                        <img class="img1" src="./up/<?php echo $rows['image']; ?>" alt="" width="40" height="40">
-                                        
+                                        <input class="input_hidden" type="radio" name="vName[]"
+                                            value="<?php echo $rows['vName']; ?>" id="<?php echo $rows['ID']; ?>"
+                                            data-cost="<?php echo $rows['cost']; ?>" required>
+
+                                        <img class="img1" src="./up/<?php echo $rows['image']; ?>" alt="" width="40"
+                                            height="40">
+
                                         <span class="tooltip-text top" id="top" value="">Product Name:
                                             &nbsp;<?php echo $rows['vName']; ?> <br> Price: &nbsp;<span
                                                 class="litValueDisplay" data-id="<?php echo $rows['ID']; ?>">Select category
@@ -305,10 +278,13 @@ $furResultnew = mysqli_query($conn, $furniturenew);
 
                                 <?php while ($rows = mysqli_fetch_assoc($rawresult)) { ?>
                                     <label for="<?php echo $rows['pID']; ?>" class="input_var hover-text">
-                                        <input class="input_hidden" type="radio" name="pName[]" value="<?php echo $rows['pName']; ?>" id="<?php echo $rows['pID']; ?>" data-cost="<?php echo $rows['pCost']; ?>" required>
-                                        
-                                        <img class="img1" src="./up/<?php echo $rows['image']; ?>" alt="" width="40" height="40">
-                                        
+                                        <input class="input_hidden" type="radio" name="pName[]"
+                                            value="<?php echo $rows['pName']; ?>" id="<?php echo $rows['pID']; ?>"
+                                            data-cost="<?php echo $rows['pCost']; ?>" required>
+
+                                        <img class="img1" src="./up/<?php echo $rows['image']; ?>" alt="" width="40"
+                                            height="40">
+
                                         <span class="tooltip-text mt-3 bot" id="bottom" value="">Product Name:
                                             &nbsp;<?php echo $rows['pName']; ?><br>Price:
                                             &nbsp;&#8369;<?php echo $rows['pCost']; ?></span>
@@ -327,19 +303,22 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                                     <div class="d-flex">
                                         <label for="width" class="form-label mt-2">Width:</label>
 
-                                        <input type="number" id="width" name="width" class="form-control form-control-sm w-50 mx-1" min="1" required>
+                                        <input type="number" id="width" name="width"
+                                            class="form-control form-control-sm w-50 mx-1" min="1" required>
                                     </div>
 
                                     <div class="d-flex">
                                         <label for="length" class="form-label mt-2">Length:</label>
-                                        
-                                        <input type="number" id="length" name="length" class="form-control form-control-sm w-50 mx-1" min="1" required>
+
+                                        <input type="number" id="length" name="length"
+                                            class="form-control form-control-sm w-50 mx-1" min="1" required>
                                     </div>
 
                                     <div class="d-flex">
                                         <label for="length" class="form-label mt-2">Height:</label>
-                                        
-                                        <input type="number" id="height" name="height" class="form-control form-control-sm w-50 mx-1" min="1" required>
+
+                                        <input type="number" id="height" name="height"
+                                            class="form-control form-control-sm w-50 mx-1" min="1" required>
                                     </div>
                                 </div>
                             </div>
@@ -355,8 +334,10 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                                         </a>
                                     </div>
 
-                                    <input type="text" name="quantity" id="quantity" class="form-control form-control-sm qform text-center border-0 bg-transparent" readonly value="1">
-                                    
+                                    <input type="text" name="quantity" id="quantity"
+                                        class="form-control form-control-sm qform text-center border-0 bg-transparent"
+                                        readonly value="1">
+
                                     <div class="input-group-btn">
                                         <a class="btn btn-sm btn-plus rounded-circle bg-light border">
                                             <i class="fa fa-plus"></i>
@@ -367,15 +348,22 @@ $furResultnew = mysqli_query($conn, $furniturenew);
 
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <button type="submit" class="btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4" name="add"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Add to cart</button>
+                                    <button type="submit"
+                                        class="btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4"
+                                        name="add"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Add to
+                                        cart</button>
 
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#checkoutModal" class="position-relative me-4 my-auto btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4" id="checkoutButton" onclick="showCheckoutModal()">Check Out</a>
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#checkoutModal"
+                                        class="position-relative me-4 my-auto btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4"
+                                        id="checkoutButton" onclick="showCheckoutModal()">Check Out</a>
                                 </div>
 
                                 <!-- Add View Cost button -->
                                 <div class="d-flex justify-content-end">
                                     <div style="display: none;">
-                                        <a href="#" data-bs-toggle="modal" data-bs-target="#costModal" class="position-relative me-4 my-auto btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4" id="viewCostButton" onclick="checkFields()">View Cost</a>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#costModal"
+                                            class="position-relative me-4 my-auto btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4"
+                                            id="viewCostButton" onclick="checkFields()">View Cost</a>
                                     </div>
                                 </div>
                             </div>
@@ -401,7 +389,8 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                             <img src="./up/<?php echo $row['image']; ?>" class="img-fluid w-100 rounded-top" alt="">
                         </div>
 
-                        <div class="text-white bg-danger px-2  py-2 rounded-pill position-absolute" style="top: 20px; right: 10px;">New</div>
+                        <div class="text-white bg-danger px-2  py-2 rounded-pill position-absolute"
+                            style="top: 20px; right: 10px;">New</div>
 
                         <div class="p-4 rounded-bottom">
                             <h4><?php echo $row['fName']; ?></h4>
@@ -411,11 +400,12 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                             <div class="d-flex justify-content-between flex-lg-wrap">
                                 <p class="text-dark fs-5 fw-bold mb-0">&#8369;<?php echo $cost; ?></p>
 
-                                <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
+                                <a href="#" class="btn border border-secondary rounded-pill px-3 text-primary"><i
+                                        class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                             </div>
                         </div>
                     </div>
-                <?php
+                    <?php
                 }
                 ?>
 
@@ -490,7 +480,8 @@ $furResultnew = mysqli_query($conn, $furniturenew);
             <div class="row">
                 <center>
                     <div class="col-md-6 text-center  mb-3 mb-md-0">
-                        <span class="text-light"><a href="#"><i class="fas fa-copyright text-light me-2"></i>Your Site Name</a>, All right reserved.</span>
+                        <span class="text-light"><a href="#"><i class="fas fa-copyright text-light me-2"></i>Your Site
+                                Name</a>, All right reserved.</span>
                     </div>
                 </center>
             </div>
@@ -501,7 +492,8 @@ $furResultnew = mysqli_query($conn, $furniturenew);
 
 
     <!-- Back to Top -->
-    <a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top"><i class="fa fa-arrow-up"></i></a>
+    <a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top"><i
+            class="fa fa-arrow-up"></i></a>
 
     <!-- View Cost Modal -->
     <div class="modal fade" id="costModal" tabindex="-1" aria-labelledby="costModalLabel" aria-hidden="true">
@@ -598,7 +590,8 @@ $furResultnew = mysqli_query($conn, $furniturenew);
 
                         <h6 class="mt-5">Payment Method:</h6>
 
-                        <p class="fw-bold d-flex align-items-center" style="color:#0d6efd;"><img src="img/gcash.png" width="25px" height="25px"> GCash</p>
+                        <p class="fw-bold d-flex align-items-center" style="color:#0d6efd;"><img src="img/gcash.png"
+                                width="25px" height="25px"> GCash</p>
 
                         <!-- Removed SCAN TO PAY text and toggle -->
                         <!-- Show QR code image directly -->
@@ -618,7 +611,8 @@ $furResultnew = mysqli_query($conn, $furniturenew);
 
                         <label for="qrImage" class="mt-4">Upload Proof of Payment:</label>
 
-                        <input type="file" name="qrImage" class="form-control form-control-sm w-50" id="qrImage" onchange="previewImage(event)">
+                        <input type="file" name="qrImage" class="form-control form-control-sm w-50" id="qrImage"
+                            onchange="previewImage(event)">
 
                         <!-- image preview -->
                         <div id="imagePreviewContainer" style="margin-top: 10px;">
@@ -647,7 +641,7 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                         <input type="hidden" id="productDetails" name="productDetails">
 
                         <input type="hidden" id="displayWidth" name="width">
-                        
+
                         <input type="hidden" id="displayLength" name="length">
 
                         <input type="hidden" id="displayHeight" name="height">
@@ -660,7 +654,8 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                     <div class="modal-footer d-flex justify-content-between">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 
-                        <button type="submit" form="checkoutForm" name="checkout" class="btn btn-secondary">Checkout</button>
+                        <button type="submit" form="checkoutForm" name="checkout"
+                            class="btn btn-secondary">Checkout</button>
                     </div>
                 </form>
             </div>
@@ -668,6 +663,20 @@ $furResultnew = mysqli_query($conn, $furniturenew);
     </div>
 
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const paymentSelect = document.getElementById("payment");
+            const displayPaymentInput = document.getElementById("displayPayment");
+
+            // Set initial value
+            displayPaymentInput.value = paymentSelect.value;
+
+            // Update value on change
+            paymentSelect.addEventListener("change", function () {
+                displayPaymentInput.value = paymentSelect.value;
+            });
+        });
+    </script>
 
 
     <!-- JavaScript Libraries -->
@@ -982,7 +991,7 @@ $furResultnew = mysqli_query($conn, $furniturenew);
             document.getElementById('varnishCostModal').textContent = dLit ? `₱${dLit.toLocaleString('en-US')}` : '₱0,000';
             document.getElementById('laborFeeModal').textContent = `₱${dLaborFee.toLocaleString('en-US')}`;
             document.getElementById('totalCostModal').textContent = `₱${totalCost.toLocaleString('en-US')}`;
-            document.getElementById('selectedWidth').textContent = width; 
+            document.getElementById('selectedWidth').textContent = width;
             document.getElementById('selectedLength').textContent = length;
             document.getElementById('selectedHeight').textContent = height;
         }
@@ -1025,6 +1034,7 @@ $furResultnew = mysqli_query($conn, $furniturenew);
     </script>
 
 </body>
+
 </html>
 
 </html>

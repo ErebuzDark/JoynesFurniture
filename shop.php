@@ -114,6 +114,68 @@ if (isset($_GET['page-nr'])) {
 }
 
 ?>
+<?php
+
+$sql = "
+    SELECT status, SUM(total) AS total FROM (
+        SELECT 'Pending Approval' AS status, COUNT(*) AS total 
+        FROM checkoutcustom 
+        WHERE status = 'Pending Approval' AND userID = $userID
+
+        UNION ALL
+
+        SELECT 'Pending Approval' AS status, COUNT(*) AS total 
+        FROM checkout 
+        WHERE status = 'Pending Approval' AND userID = $userID
+
+        UNION ALL
+
+        SELECT 'On Progress' AS status, COUNT(*) AS total 
+        FROM checkoutcustom 
+        WHERE status = 'In progress' AND userID = $userID
+
+        UNION ALL
+
+        SELECT 'On Progress' AS status, COUNT(*) AS total 
+        FROM checkout 
+        WHERE status = 'In progress' AND userID = $userID
+
+        UNION ALL
+
+        SELECT 'Completed' AS status, COUNT(*) AS total 
+        FROM checkoutcustom 
+        WHERE status = 'Completed' AND userID = $userID
+
+        UNION ALL
+
+        SELECT 'Completed' AS status, COUNT(*) AS total 
+        FROM checkout 
+        WHERE status = 'Completed' AND userID = $userID
+    ) AS combined
+    GROUP BY status
+";
+
+$result = $conn->query($sql);
+
+$notifications = [
+    'Pending Approval' => 0,
+    'On Progress' => 0,
+    'Completed' => 0,
+];
+
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $notifications[$row['status']] = $row['total'];
+    }
+}
+
+// Total count of all notifications (if greater than 0)
+$totalNotifications = array_sum(array_filter($notifications));
+
+
+// Total notification count (only count those > 0)
+$totalNotifications = array_sum(array_filter($notifications));
+?>
 
 <body id="<?php echo $id; ?>">
 
@@ -149,6 +211,83 @@ if (isset($_GET['page-nr'])) {
                     </div>
 
                     <div class="d-flex m-3 me-0">
+                        <ul class="navbar-nav">
+                            <li class="nav-item dropdown no-arrow mx-1">
+                                <a class="nav-link position-relative <?php echo $totalNotifications > 0 ? 'fw-bold text-dark' : 'text-muted'; ?>"
+                                    href="#" id="alertsDropdown" role="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <i class="fas fa-bell fa-fw"></i>
+                                    <?php if ($totalNotifications > 0): ?>
+                                        <span
+                                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+                                            <?php echo $totalNotifications; ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </a>
+
+                                <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in"
+                                    aria-labelledby="alertsDropdown">
+                                    <h6 class="dropdown-header">Notifications</h6>
+
+                                    <?php if ($notifications['Pending Approval'] > 0): ?>
+                                        <a class="dropdown-item d-flex align-items-center" href="profile.php#on-queue">
+                                            <div class="me-3">
+                                                <div class="icon-circle">
+                                                    <i class="fas fa-hourglass-start text-warning"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                                <span
+                                                    class="<?php echo $notifications['Pending Approval'] > 0 ? 'fw-bold' : ''; ?>">
+                                                    <?php echo $notifications['Pending Approval']; ?> order(s) pending
+                                                    approval
+                                                </span>
+                                            </div>
+                                        </a>
+                                    <?php endif; ?>
+
+                                    <?php if ($notifications['On Progress'] > 0): ?>
+                                        <a class="dropdown-item d-flex align-items-center" href="profile.php#on-progress">
+                                            <div class="me-3">
+                                                <div class="icon-circle">
+                                                    <i class="fas fa-cogs text-success"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                                <span
+                                                    class="<?php echo $notifications['On Progress'] > 0 ? 'fw-bold' : ''; ?>">
+                                                    <?php echo $notifications['On Progress']; ?> order(s) on progress
+                                                </span>
+                                            </div>
+                                        </a>
+                                    <?php endif; ?>
+
+                                    <?php if ($notifications['Completed'] > 0): ?>
+                                        <a class="dropdown-item d-flex align-items-center" href="profile.php#completed">
+                                            <div class="me-3">
+                                                <div class="icon-circle">
+                                                    <i class="fas fa-check-circle text-primary"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                                <span
+                                                    class="<?php echo $notifications['Completed'] > 0 ? 'fw-bold' : ''; ?>">
+                                                    <?php echo $notifications['Completed']; ?> order(s) completed
+                                                </span>
+                                            </div>
+                                        </a>
+                                    <?php endif; ?>
+
+                                    <?php if ($totalNotifications == 0): ?>
+                                        <div class="dropdown-item text-center small text-gray-500">No new notifications
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </li>
+                        </ul>
                         <a href="customize.php" class="position-relative me-3 my-auto">
 
                             <img width="40" height="40" src="https://img.icons8.com/ios-filled/50/737373/hammer.png"
@@ -439,7 +578,7 @@ if (isset($_GET['page-nr'])) {
                                                         if ($_GET['page-nr'] >= $pages) {
                                                             ?>
                                                             <a class="rounded">&raquo;</a>
-                                                        <?php
+                                                            <?php
                                                         } else {
                                                             ?>
                                                             <a href="?page-nr=<?php echo $_GET['page-nr'] + 1 ?>"

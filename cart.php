@@ -53,15 +53,16 @@ $costs = number_format($totalCost, 0, '.', ',');
             color: #e47011 !important;
 
         }
+
         a:hover {
             color: white !important;
 
         }
+
         .page-header {
             background-image: url(./img/1.jpg) !important;
 
         }
-
     </style>
 </head>
 
@@ -75,51 +76,9 @@ $costs = number_format($totalCost, 0, '.', ',');
 
 
     <!-- Navbar start -->
-    <div class="container-fluid fixed-top">
-        <div class="container topbar d-none d-lg-block">
-
-        </div>
-        <div class="container px-0">
-            <nav class="navbar navbar-light bg-white navbar-expand-xl">
-                <a href="shop.php" class="navbar-brand"><img class="logo" src="./img/logo1.png" alt="Bootstrap"
-                        style="width: 200px"></a>
-
-                <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarCollapse">
-                    <span class="fa fa-bars text-primary"></span>
-                </button>
-
-                <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
-                    <div class="navbar-nav mx-auto">
-                        <ol class="breadcrumb justify-content-center mb-0">
-                            <li class="breadcrumb-item"><a href="shop.php">Home</a></li>
-                            <li class="breadcrumb-item active text-dark">Cart</li>
-                            <li class="breadcrumb-item"><a href="customizecart.php">Customized Cart</a></li>
-                        </ol>
-                    </div>
-
-                    <div class="d-flex m-3 me-0">
-                        <a href="cart.php" class="position-relative me-4 my-auto">
-                            <i class="fa fa-shopping-bag fa-2x text-muted"></i>
-                            <span
-                                class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
-                                style="top: -5px; left: 15px; height: 20px; min-width: 20px;"><?php echo $i; ?></span>
-                        </a>
-
-                        <div class="nav-item dropdown">
-                            <i class="fas fa-user fa-2x"></i>
-
-                            <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                                <a href="profile.php" class="dropdown-item">My Profile</a>
-                                <a href="logout.php" class="dropdown-item">Log Out</a>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </div>
-    </div>
+    <?php
+    include("cartNav.php");
+    ?>
     <!-- Navbar End -->
 
     <!-- Single Page Header start -->
@@ -133,10 +92,19 @@ $costs = number_format($totalCost, 0, '.', ',');
         <div class="container py-5">
             <div class="table-responsive">
                 <table class="table">
+                    <div class="form-check mb-3 d-flex align-items-center gap-2 mx-2">
+                        <input type="checkbox" class="form-check-input mr-2" id="select-all" checked>
+                        <label class="form-check-label text-dark font-weight-medium small mb-0" for="select-all"
+                            style="cursor: pointer;">
+                            Select All Products
+                        </label>
+                    </div>
+
+
 
                     <thead>
                         <tr>
-                            <th></th>
+                            <th scope="col">Products</th>
                             <th scope="col">Products</th>
                             <th scope="col">Name</th>
                             <th scope="col">Price</th>
@@ -145,8 +113,10 @@ $costs = number_format($totalCost, 0, '.', ',');
                             <th scope="col">Handle</th>
                         </tr>
                     </thead>
-                    
+
                     <?php
+                    $totalCost = 0; // initialize total cost
+                    
                     while ($row = mysqli_fetch_assoc($resultu)) {
                         $number = $row['cost'];
                         $formattedNumber = number_format($number, 0, '.', ',');
@@ -156,99 +126,109 @@ $costs = number_format($totalCost, 0, '.', ',');
                         $costSql = "SELECT * FROM furnituretbl WHERE fID = '$costID'";
                         $costResult = mysqli_query($conn, $costSql);
                         $costRow = mysqli_fetch_assoc($costResult);
-                        
-                        $costFormat = number_format($costRow['cost'], 0, '.', ',');
-                        $costDisplay = $costFormat;
+
+                        $unitCost = $costRow['cost'];
+                        $costDisplay = number_format($unitCost, 0, '.', ',');
+
+                        $quantity = $row['quantity'];
+                        $subtotal = $unitCost * $quantity;
+                        $totalCost += $subtotal;
                         ?>
                         <tbody>
-                            <form method="POST" action="cartQuantity.php">
-                                <!-- Change to method POST for form submission -->
-                                <tr>
+                            <tr>
+                                <form method="POST" action="cartQuantity.php">
                                     <!-- Product Select Checkbox -->
-                                    <th scope="row">
-                                        <input type="checkbox" name="selected_products[]" value="<?php echo $row['ID']; ?>" checked>
+                                    <th scope="row" class="align-middle">
+                                        <div class="form-check">
+                                            <input class="form-check-input product-checkbox" type="checkbox"
+                                                name="selected_products[]" value="<?= $row['ID'] ?>"
+                                                data-cost="<?= $row['cost'] ?>" data-quantity="<?= $row['quantity'] ?>"
+                                                id="productCheckbox<?= $row['ID'] ?>" checked>
+                                        </div>
                                     </th>
 
+
+
                                     <!-- Product Image -->
-                                    <th scope="row">
+                                    <th>
                                         <div class="d-flex align-items-center">
-                                            <img src="./up/<?php echo $row['image']; ?>"
-                                                class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;"
-                                                alt="">
+                                            <img src="./up/<?= $row['image'] ?>" class="img-fluid me-5 rounded-circle"
+                                                style="width: 80px; height: 80px;" alt="">
                                         </div>
                                     </th>
 
                                     <!-- Product Name -->
                                     <td>
-                                        <p class="mb-0 mt-4"><?php echo $row['prodName']; ?></p>
+                                        <p class="mb-0 mt-4"><?= $row['prodName'] ?></p>
                                     </td>
 
                                     <!-- Product Cost -->
                                     <td>
-                                        <p class="mb-0 mt-4"><?php echo $costDisplay; ?></p>
+                                        <p class="mb-0 mt-4">₱<?= $costDisplay ?></p>
                                     </td>
 
                                     <!-- Quantity Controls -->
                                     <td>
                                         <div class="input-group quantity mt-4" style="width: 100px;">
-                                            <input type="hidden" name="ID" value="<?php echo $row['ID']; ?>">
-                                            <input type="hidden" name="action" value="">
-                                            <input type="hidden" name="products" value="<?php echo $row['products']; ?>">
+                                            <input type="hidden" name="ID" value="<?= $row['ID'] ?>">
+                                            <input type="hidden" name="products" value="<?= $row['products'] ?>">
+                                            <input type="hidden" name="quantity" value="<?= $quantity ?>">
 
-                                            <!-- Minus Button -->
-                                            <div class="input-group-btn">
-                                                <button type="submit" name="action" value="minus"
-                                                    class="btn btn-sm btn-minus rounded-circle bg-light border">
-                                                    <i class="fa fa-minus"></i>
-                                                </button>
-                                            </div>
-
-                                            <!-- Quantity Input -->
-                                            <input type="text" class="form-control form-control-sm text-center border-0"
-                                                name="quantity" value="<?php echo $row['quantity']; ?>">
-
-                                            <!-- Plus Button -->
-                                            <div class="input-group-btn">
-                                                <button type="submit" name="action" value="plus"
-                                                    class="btn btn-sm btn-plus rounded-circle bg-light border">
-                                                    <i class="fa fa-plus"></i>
-                                                </button>
-                                            </div>
+                                            <button type="submit" name="action" value="minus"
+                                                class="btn btn-sm btn-minus">-</button>
+                                            <input type="text" readonly class="form-control text-center"
+                                                value="<?= $quantity ?>">
+                                            <button type="submit" name="action" value="plus"
+                                                class="btn btn-sm btn-plus">+</button>
                                         </div>
                                     </td>
 
                                     <!-- Subtotal -->
                                     <td>
-                                        <p class="mb-0 mt-4"><?php echo $cost; ?></p>
+                                        <p class="mb-0 mt-4">₱<?= number_format($subtotal, 0, '.', ',') ?></p>
                                     </td>
 
                                     <!-- Delete Button -->
-                                    <td>
-                                        <a href="cartdelete.php?id=<?php echo $row['ID']; ?>"
-                                            class="btn btn-md rounded-circle bg-light border mt-4">
+                                    <td class="">
+                                        <a href="cartdelete.php?id=<?= $row['ID'] ?>"
+                                            class="btn btn-md rounded-circle bg-light border mt-4 mx-2">
                                             <i class="fa fa-times text-danger"></i>
                                         </a>
                                     </td>
-                                </tr>
-                            </form>
-
+                                </form>
+                            </tr>
                         </tbody>
                         <?php
                     }
                     ?>
+
+                    <!-- Total Row -->
+                    <tfoot>
+
+                    </tfoot>
+
                 </table>
             </div>
-            <div class="mt-5">
-                <button id="checkoutBtn" class="btn proc border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" type="button">Proceed Checkout</button>
-            </div>
+            <div class="container mt-5">
+                <!-- Checkout Button and Total Row -->
+                <div class="row align-items-center bg-light p-3 rounded">
+                    <!-- Proceed Checkout Button -->
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <button id="checkoutBtn"
+                            class="btn proc border-secondary rounded-pill px-4 py-3 text-primary text-uppercase"
+                            type="button">Proceed Checkout</button>
+                    </div>
 
-            <div class="row g-4 justify-content-start bg-light">
-                <div class="col-8"></div>
-                <div class="col-3">
-                    <p class=" fw-bolder px-4 py-3 text-primary text-uppercase mb-4 ms-4" style="font-size: 21px;"><span
-                            style="margin-right: 10px;">Total:</span> &#8369;<?php echo $costs; ?></p>
+                    <!-- Total Cost -->
+                    <div class="col-md-6 text-md-end">
+                        <p class="fw-bolder text-primary text-uppercase m-0" style="font-size: 21px;">
+                            <span class="me-2">Total:</span>
+                            <strong id="total-cost">₱0</strong>
+                        </p>
+                    </div>
                 </div>
             </div>
+
         </div>
     </div>
     <!-- Cart Page End -->
@@ -342,11 +322,44 @@ $costs = number_format($totalCost, 0, '.', ',');
     <script src="js/main.js"></script>
     <script src="js/cartfunction.js"></script>
 
-    <script type='text/javascript'>
+    <script type="text/javascript">
         $(document).ready(function () {
-            // Add page pop-up animation class on page load
+            // Animate page load
             $('.container-fluid.py-5').addClass('page-pop-up');
 
+            // Calculate and update total
+            function updateTotal() {
+                let total = 0;
+
+                $('input.product-checkbox:checked').each(function () {
+                    const cost = parseFloat($(this).data('cost'));
+                    const quantity = parseInt($(this).data('quantity'));
+                    total += cost * quantity;
+                });
+
+                $('#total-cost').text('₱' + total.toLocaleString());
+            }
+
+            // Initial total on page load
+            updateTotal();
+
+            // Update total when a checkbox is toggled
+            $('body').on('change', 'input.product-checkbox', function () {
+                updateTotal();
+
+                // Sync Select All checkbox
+                let allChecked = $('input.product-checkbox').length === $('input.product-checkbox:checked').length;
+                $('#select-all').prop('checked', allChecked);
+            });
+
+            // Handle "Select All" checkbox
+            $('#select-all').on('change', function () {
+                let isChecked = $(this).is(':checked');
+                $('input.product-checkbox').prop('checked', isChecked);
+                updateTotal();
+            });
+
+            // Checkout click event
             $('#checkoutBtn').click(function () {
                 var selectedProducts = [];
 
@@ -370,6 +383,52 @@ $costs = number_format($totalCost, 0, '.', ',');
             });
         });
     </script>
+
+
+
+    <script>
+        function updateTotal() {
+            let total = 0;
+            document.querySelectorAll('.product-checkbox').forEach((checkbox, index) => {
+                const quantityInput = document.querySelectorAll('.quantity-input')[index];
+                const cost = parseFloat(quantityInput.dataset.cost);
+                const quantity = parseInt(quantityInput.value);
+
+                if (checkbox.checked) {
+                    total += cost * quantity;
+                }
+            });
+
+            document.getElementById('total-cost').textContent = '₱' + total.toLocaleString();
+        }
+
+        document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateTotal);
+        });
+
+        document.querySelectorAll('.btn-plus').forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                const input = document.querySelectorAll('.quantity-input')[index];
+                input.value = parseInt(input.value) + 1;
+                updateTotal();
+            });
+        });
+
+        document.querySelectorAll('.btn-minus').forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                const input = document.querySelectorAll('.quantity-input')[index];
+                const currentValue = parseInt(input.value);
+                if (currentValue > 1) {
+                    input.value = currentValue - 1;
+                    updateTotal();
+                }
+            });
+        });
+
+        // Initial total calculation
+        updateTotal();
+    </script>
+
 </body>
 
 </html>

@@ -104,58 +104,17 @@ if ($userresult->num_rows > 0) {
 <body>
 
     <!-- Spinner Start -->
-    <div id="spinner" class="show w-100 vh-100 bg-white position-fixed translate-middle top-50 start-50  d-flex align-items-center justify-content-center">
+    <div id="spinner"
+        class="show w-100 vh-100 bg-white position-fixed translate-middle top-50 start-50  d-flex align-items-center justify-content-center">
         <div class="spinner-grow text-primary" role="status"></div>
     </div>
     <!-- Spinner End -->
 
 
     <!-- Navbar start -->
-    <div class="container-fluid fixed-top">
-        <div class="container topbar d-none d-lg-block">
-
-        </div>
-
-        <div class="container px-0">
-            <nav class="navbar navbar-light bg-white navbar-expand-xl">
-                <a href="shop.php" class="navbar-brand"><img class="logo" src="./img/logo1.png" alt="Bootstrap" style="width: 200px"></a>
-
-                <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-                    <span class="fa fa-bars text-primary"></span>
-                </button>
-
-                <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
-                    <div class="navbar-nav mx-auto">
-                        <ol class="breadcrumb justify-content-center mb-0">
-                            <li class="breadcrumb-item"><a href="shop.php">Home</a></li>
-
-                            <li class="breadcrumb-item "><a href="cart.php">Cart</a></li>
-
-                            <li class="breadcrumb-item active text-dark">Customized Cart</li>
-                        </ol>
-                    </div>
-
-                    <div class="d-flex m-3 me-0">
-                        <a href="cart.php" class="position-relative me-4 my-auto">
-                            <i class="fa fa-shopping-bag fa-2x text-muted"></i>
-
-                            <span class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1" style="top: -5px; left: 15px; height: 20px; min-width: 20px;"><?php echo $i; ?></span>
-                        </a>
-
-                        <div class="nav-item dropdown">
-                            <i class="fas fa-user fa-2x"></i>
-
-                            <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                                <a href="#" class="dropdown-item">My Profile</a>
-
-                                <a href="logout.php" class="dropdown-item">Log Out</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </div>
-    </div>
+    <?php
+    include("cartNav.php");
+    ?>
     <!-- Navbar End -->
 
     <!-- Single Page Header start -->
@@ -179,7 +138,7 @@ if ($userresult->num_rows > 0) {
                                 <th scope="col">Products</th>
 
                                 <th scope="col">Name</th>
-                                
+
                                 <th scope="col">Product Details</th>
 
                                 <th scope="col">Price</th>
@@ -193,7 +152,7 @@ if ($userresult->num_rows > 0) {
                         </thead>
 
                         <tbody>
-                            
+
                             <?php while ($row = mysqli_fetch_assoc($resultu)) {
                                 $number = $row['totalCost'];
                                 $cost = $number;
@@ -201,11 +160,13 @@ if ($userresult->num_rows > 0) {
                                 <tr class="align-middle">
 
                                     <td>
-                                        <input type="checkbox" name="selected_items[]" value="<?php echo $row['cart_id']; ?>" class="cart-checkbox" checked>
+                                        <input type="checkbox" name="selected_items[]"
+                                            value="<?php echo $row['cart_id']; ?>" class="cart-checkbox" checked>
                                     </td>
 
                                     <td>
-                                        <img src="./up/<?php echo $row['image']; ?>" class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;" alt="" alt="">
+                                        <img src="./up/<?php echo $row['image']; ?>" class="img-fluid me-5 rounded-circle"
+                                            style="width: 80px; height: 80px;" alt="" alt="">
                                     </td>
 
                                     <td>
@@ -229,17 +190,26 @@ if ($userresult->num_rows > 0) {
                                     </td>
 
                                     <td>
-                                        <div class="input-group quantity mb-3 d-flex align-items-center" style="width: 100px;">
+                                        <div class="input-group quantity mb-3 d-flex align-items-center"
+                                            style="width: 100px;">
                                             <div class="input-group-btn">
-                                                <a class="btn btn-sm btn-minus rounded-circle bg-light border" data-id="<?php echo $row['cart_id']; ?>" data-cost="<?php echo $row['cost']; ?>">
+                                                <a class="btn btn-sm btn-minus rounded-circle bg-light border"
+                                                    data-id="<?php echo $row['cart_id']; ?>"
+                                                    data-cost="<?php echo $row['cost']; ?>">
                                                     <i class="fa fa-minus"></i>
                                                 </a>
                                             </div>
 
-                                            <input type="text" name="quantity" id="quantity-<?php echo $row['cart_id']; ?>" class="form-control form-control-sm text-center border-0 bg-transparent" readonly value="<?php echo $row['quantity']; ?>" data-id="<?php echo $row['cart_id']; ?>" data-price="<?php echo $row['cost']; ?>">
+                                            <input type="text" name="quantity" id="quantity-<?php echo $row['cart_id']; ?>"
+                                                class="form-control form-control-sm text-center border-0 bg-transparent"
+                                                readonly value="<?php echo $row['quantity']; ?>"
+                                                data-id="<?php echo $row['cart_id']; ?>"
+                                                data-price="<?php echo $row['cost']; ?>">
 
                                             <div class="input-group-btn">
-                                                <a class="btn btn-sm btn-plus rounded-circle bg-light border" data-id="<?php echo $row['cart_id']; ?>" data-cost="<?php echo $row['cost']; ?>">
+                                                <a class="btn btn-sm btn-plus rounded-circle bg-light border"
+                                                    data-id="<?php echo $row['cart_id']; ?>"
+                                                    data-cost="<?php echo $row['cost']; ?>">
                                                     <i class="fa fa-plus"></i>
                                                 </a>
                                             </div>
@@ -253,7 +223,8 @@ if ($userresult->num_rows > 0) {
                                     </td>
 
                                     <td>
-                                        <a href="cartdelete.php?cart_id=<?php echo $row['cart_id']; ?>" class="btn btn-md rounded-circle bg-light border">
+                                        <a href="cartdelete.php?cart_id=<?php echo $row['cart_id']; ?>"
+                                            class="btn btn-md rounded-circle bg-light border">
                                             <i class="fa fa-times text-danger"></i>
                                         </a>
                                     </td>
@@ -265,30 +236,38 @@ if ($userresult->num_rows > 0) {
                     </table>
                     <div class="d-flex justify-content-between mt-3">
                         <!-- Button to trigger the modal -->
-                        <button class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4" type="button" id="proceedCheckoutBtn">
+                        <button
+                            class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4"
+                            type="button" id="proceedCheckoutBtn">
                             Proceed Checkout
                         </button>
                     </div>
                     <div class="d-flex g-4 justify-content-start bg-light">
                         <div class="col-8"></div>
                         <div class="col-3">
-                            <p class=" fw-bolder px-4 py-3 text-primary text-uppercase mb-4 ms-4" style="font-size: 21px;">
-                               <span>Total:</span> &#8369;<?php echo number_format(is_numeric($cost) ? $cost : 0, 0, '.', ','); ?>
+                            <p class=" fw-bolder px-4 py-3 text-primary text-uppercase mb-4 ms-4"
+                                style="font-size: 21px;">
+                                <span>Total:</span>
+                                &#8369;<?php echo number_format(is_numeric($cost) ? $cost : 0, 0, '.', ','); ?>
                         </div>
                     </div>
                 </form>
             </div>
             <!-- Checkout Preview Modal -->
-            <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+            <div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel"
+                aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content bg-white">
                         <div class="card-header p-4">
                             <div id="userDetails" class="lh-1">
-                                <p><strong>Full Name:</strong> <span id="userName"><?php echo $user['fullName']; ?></span></p>
+                                <p><strong>Full Name:</strong> <span
+                                        id="userName"><?php echo $user['fullName']; ?></span></p>
 
-                                <p><strong>Address:</strong> <span id="userAddress"><?php echo $user['address']; ?></span></p>
+                                <p><strong>Address:</strong> <span
+                                        id="userAddress"><?php echo $user['address']; ?></span></p>
 
-                                <p><strong>Contact Number:</strong> <span id="userPhone"><?php echo $user['cpNum']; ?></span></p>
+                                <p><strong>Contact Number:</strong> <span
+                                        id="userPhone"><?php echo $user['cpNum']; ?></span></p>
                             </div>
                         </div>
 
@@ -302,7 +281,8 @@ if ($userresult->num_rows > 0) {
 
                                 <h6 class="mt-5">Payment Method:</h6>
 
-                                <p class="fw-bold d-flex align-items-center" style="color:#0d6efd;"><img src="img/gcash.png" width="25px" height="25px"> GCash</p>
+                                <p class="fw-bold d-flex align-items-center" style="color:#0d6efd;"><img
+                                        src="img/gcash.png" width="25px" height="25px"> GCash</p>
 
                                 <!-- QR code image shown by default -->
                                 <div class="qr-container" style="display:block; margin-left:60px;">
@@ -319,13 +299,16 @@ if ($userresult->num_rows > 0) {
                                     <option value="Down Payment">Down Payment</option>
                                 </select>
 
-                                <label for="qrImage" class="mt-4">Upload Proof of Payment:<br>*Minimum required downpayment is ₱1,000*</label>
+                                <label for="qrImage" class="mt-4">Upload Proof of Payment:<br>*Minimum required
+                                    downpayment is ₱1,000*</label>
 
-                                <input type="file" name="qrImage" class="form-control form-control-sm w-50" id="qrImage" onchange="previewImage(event)">
+                                <input type="file" name="qrImage" class="form-control form-control-sm w-50" id="qrImage"
+                                    onchange="previewImage(event)">
 
                                 <!-- image preview -->
                                 <div id="imagePreviewContainer" style="margin-top: 10px;">
-                                    <img id="imagePreview" src="#" alt="Image Preview" style="max-width: 150px; display: none;">
+                                    <img id="imagePreview" src="#" alt="Image Preview"
+                                        style="max-width: 150px; display: none;">
                                 </div>
 
                                 <hr>
@@ -471,7 +454,8 @@ if ($userresult->num_rows > 0) {
         <div class="container">
             <div class="row">
                 <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                    <span class="text-light"><a href="#"><i class="fas fa-copyright text-light me-2"></i>Your Site Name</a>, All right reserved.</span>
+                    <span class="text-light"><a href="#"><i class="fas fa-copyright text-light me-2"></i>Your Site
+                            Name</a>, All right reserved.</span>
                 </div>
 
                 <div class="col-md-6 my-auto text-center text-md-end text-white">
@@ -489,7 +473,8 @@ if ($userresult->num_rows > 0) {
 
 
     <!-- Back to Top -->
-    <a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top"><i class="fa fa-arrow-up"></i></a>
+    <a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top"><i
+            class="fa fa-arrow-up"></i></a>
 
 
     <!-- JavaScript Libraries -->
@@ -523,16 +508,16 @@ if ($userresult->num_rows > 0) {
                     quantityField.val(newQuantity);  // Update quantity input field
                     updateTotal(cartId, cost, newQuantity);  // Update total column
 
-                // Update the database via AJAX
-                $.ajax({
-                    url: '',
-                    method: 'POST',
-                    data: { cart_id: cartId, quantity: newQuantity },
-                    success: function (response) {
-                        console.log(response); // Optionally log the response
-                        location.reload(); // Reload the page after update
-                    }
-                });
+                    // Update the database via AJAX
+                    $.ajax({
+                        url: '',
+                        method: 'POST',
+                        data: { cart_id: cartId, quantity: newQuantity },
+                        success: function (response) {
+                            console.log(response); // Optionally log the response
+                            location.reload(); // Reload the page after update
+                        }
+                    });
                 }
             });
 
@@ -625,7 +610,7 @@ if ($userresult->num_rows > 0) {
                     });
 
                     // Show total cost in the modal
-                    $("#totalCost").text('₱'+totalCost.toLocaleString('en-US'));
+                    $("#totalCost").text('₱' + totalCost.toLocaleString('en-US'));
 
                     // Set the form fields
                     $("#cartIds").val(selectedItems.map(item => item.cartId).join(", "));

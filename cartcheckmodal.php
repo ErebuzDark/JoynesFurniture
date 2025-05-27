@@ -28,29 +28,33 @@ if (isset($_POST['selected_products'])) {
           </div>';
 
   while ($row = $result->fetch_assoc()) {
+    $quantity = $row['quantity'];
     $cost = $row['cost'];
-    $totalCost += $cost;
+    $productTotal = $quantity * $cost;
+    $totalCost += $productTotal;
+    $totalQuantity = 0; // ✅ Initialize total quantity
+    $totalQuantity += $quantity; // ✅ Add quantity to total
+
 
     echo '<div class="card-body p-3">';
     echo '<div class="d-flex flex-row mb-3 pb-2">';
     echo '<div class="col-md-10 col-lg-10 col-xl-10 flex-fill ms-4">';
     echo '<h5>' . $row['prodName'] . '</h5>';
-    echo '<p>Quantity: ' . $row['quantity'] . '</p>';
-    echo '<h5>Total: &#8369; ' . number_format($cost) . '</h5>';
+    echo '<p>Quantity: ' . $quantity . '</p>';
+    echo '<h5>Total: &#8369; ' . number_format($productTotal) . '</h5>';  // <-- updated here
 
     echo '<input type="hidden" name="prodIDs[]" value="' . $row['ID'] . '">';
     echo '<input type="hidden" name="prodNames[]" value="' . $row['prodName'] . '">';
-    echo '<input type="hidden" name="prodCosts[]" value="' . $row['cost'] . '">';
-    echo '<input type="hidden" name="balance" value="' . $row['cost'] . '">';
+    echo '<input type="hidden" name="prodCosts[]" value="' . $productTotal . '">';
     echo '<input type="hidden" name="userID" value="' . $_SESSION['userID'] . '"> ';
     echo '<input type="hidden" name="fullName" value="' . $_SESSION['fullName'] . '"> ';
-    echo '<input type="hidden" name="quantity" value="' . $row['quantity'] . '"> ';
+    echo '<input type="hidden" name="quantity[]" value="' . $quantity . '"> ';
     echo '<input type="hidden" name="address" value="' . $_SESSION['address'] . '"> ';
     echo '<input type="hidden" name="cpNum" value="' . $_SESSION['cpNum'] . '"> ';
     echo '<input type="hidden" name="tblImage[]" value="' . $row['image'] . '">';
     echo '<input type="hidden" name="prodWidth[]" value="' . $row['width'] . '">';
-    echo '<input type="hidden" name="prodLength[]" value="'.$row['length'].'">';
-    echo '<input type="hidden" name="prodHeight[]" value="'.$row['height'].'">';
+    echo '<input type="hidden" name="prodLength[]" value="' . $row['length'] . '">';
+    echo '<input type="hidden" name="prodHeight[]" value="' . $row['height'] . '">';
     echo '<input type="hidden" name="payment" value="Full Payment">';
 
     echo '</div>';
@@ -61,14 +65,15 @@ if (isset($_POST['selected_products'])) {
     echo '</div>';
   }
 
-  // Payment Method (shown once outside the loop)
+
+  // Payment Method
   echo '<div class="card-body p-3">';
   echo '<h6>Payment Method:</h6>';
+
   echo '<p class="fw-bold d-flex align-items-center" style="color:#0d6efd;">
             <img src="img/gcash.png" width="25px" height="25px"> GCash 
         </p>';
 
-  // QR Code shown by default (no toggle)
   echo '<div class="qr-container" style="margin-left:60px;">
             <img src="img/qr.jpg" width="150px" height="150px" alt="QR Code">
         </div>';
@@ -79,6 +84,10 @@ if (isset($_POST['selected_products'])) {
   echo '<div id="imagePreviewContainer" style="margin-top: 10px;">
             <img id="imagePreview" src="#" alt="Image Preview" style="max-width: 200px; display: none;">
         </div>';
+
+  // ✅ Add total balance here (after loop, once)
+  echo '<input type="hidden" name="balance" value="' . $totalCost . '">';
+
   echo '</div>';
 
   echo '<div class="card-footer">';
