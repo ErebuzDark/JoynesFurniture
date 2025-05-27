@@ -39,6 +39,22 @@ $userImage = ($image) ? $image : $defaultImage;
 $userSql = "SELECT * FROM usertbl WHERE ID = '$userID'";
 $userResult = mysqli_query($conn, $userSql);
 $userRow = mysqli_fetch_assoc($userResult);
+
+$check = "SELECT * FROM checkout WHERE  userID = '$userID'";
+$checkResult = mysqli_query($conn, $check);
+if (mysqli_num_rows($checkResult) > 0) {
+    $checkoutRow = mysqli_fetch_assoc($checkResult);
+    $orderID = $checkoutRow['orderID'];
+} else {
+    $checkoutRow = null;
+}
+
+
+
+
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -58,6 +74,10 @@ $userRow = mysqli_fetch_assoc($userResult);
     <link
         href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Raleway:wght@600;800&display=swap"
         rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome (for icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Icon Font Stylesheet -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" />
@@ -185,47 +205,9 @@ $userRow = mysqli_fetch_assoc($userResult);
     <!-- Spinner End -->
 
 
-    <!-- Navbar start -->
-    <div class="container-fluid fixed-top">
-        <div class="container topbar d-none d-lg-block">
-        </div>
-
-        <div class="container px-0">
-            <nav class="navbar navbar-light bg-white navbar-expand-xl">
-                <a href="shop.php" class="navbar-brand"><img class="logo" src="./img/logo1.png" alt="Bootstrap"
-                        style="width: 200px"></a>
-
-                <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarCollapse">
-                    <span class="fa fa-bars text-primary"></span>
-                </button>
-
-                <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
-                    <div class="navbar-nav mx-auto">
-                    </div>
-
-                    <div class="d-flex m-3 me-0">
-                        <a href="customize.php" class="position-relative me-3 my-auto">
-                            <img width="40" height="40" src="https://img.icons8.com/ios-filled/50/737373/hammer.png"
-                                alt="hammer" /></a>
-                        <a href="cart.php" class="position-relative me-4 my-auto text-muted">
-                            <i class="fa fa-shopping-bag fa-2x"></i>
-                            <span
-                                class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
-                                style="top: -5px; left: 15px; height: 20px; min-width: 20px;"><?php echo $i; ?></span>
-                        </a>
-                    </div>
-                    <div class="nav-item dropdown">
-                        <i class="fas fa-user fa-2x"></i>
-                        <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                            <a href="profile.php" class="dropdown-item">My Profile</a>
-                            <a href="logout.php" class="dropdown-item"><i class="fa fa-sign-out"></i>Log Out</a>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </div>
-    </div>
+    <?php
+    include("nav.php");
+    ?>
 
 
     <!-- Single Product Start -->
@@ -489,17 +471,16 @@ $userRow = mysqli_fetch_assoc($userResult);
                                 <div class="tab-pane fade show active" id="overview">
                                     <?php
                                     $sql = "
-(SELECT 'checkout' AS source, prodName, image, proofPay, cost AS totalCost, orderID, quantity, date, status, balance, variant FROM checkout WHERE userID = '$userID')
-UNION
-(SELECT 'checkoutcustom' AS source, pName AS prodName, image, proofPay, totalCost, orderID, quantity, date, status, balance, variant FROM checkoutcustom WHERE userID = '$userID')
-ORDER BY date DESC
-                                            ";
+    (SELECT 'checkout' AS source, prodName, image, proofPay, cost AS totalCost, orderID, quantity, date, status, balance, variant FROM checkout WHERE userID = '$userID')
+    UNION
+    (SELECT 'checkoutcustom' AS source, pName AS prodName, image, proofPay, totalCost, orderID, quantity, date, status, balance, variant FROM checkoutcustom WHERE userID = '$userID')
+    ORDER BY date DESC
+    ";
 
                                     $result = $conn->query($sql);
 
                                     if ($result->num_rows > 0) {
                                         echo '<table class="table table-borderless">';
-
 
                                         while ($row = $result->fetch_assoc()) {
                                             $prodNames = explode(',', $row['prodName']);
@@ -514,81 +495,91 @@ ORDER BY date DESC
                                                 $reject = "";
                                             }
 
-                                            echo '<tr class="bg-light" style="border-top: solid white 20px;">';
-                                            echo '<td style="width:40%;">';
+                                            echo '<tr class="bg-light border-top border-white" style="border-width: 20px;">';
+                                            echo '<td class="p-3 align-middle" style="width:40%;">';
                                             for ($i = 0; $i < $maxItems; $i++) {
                                                 $image = isset($images[$i]) ? trim($images[$i]) : trim($images[0]);
-                                                echo '<img class="image-fluid border rounded m-2" height="80px" width="80px" src="' . htmlspecialchars($image) . '" alt="Product Image">';
+                                                echo '<img class="img-thumbnail border border-secondary-subtle rounded me-2 mb-2" height="80" width="80" src="' . htmlspecialchars($image) . '" alt="Product Image">';
                                             }
                                             echo '</td>';
-                                            echo '<td class="align-middle" style="width:30%;">';
+
+                                            echo '<td class="p-3 align-middle" style="width:30%;">';
                                             for ($i = 0; $i < $maxItems; $i++) {
                                                 $prodName = isset($prodNames[$i]) ? trim($prodNames[$i]) : trim($prodNames[0]);
                                                 $quantity = isset($quantities[$i]) ? trim($quantities[$i]) : 1;
-                                                echo '<h6>' . htmlspecialchars($prodName) . ' (Qty: ' . htmlspecialchars($quantity) . ')</h6>';
+                                                echo '<h6 class="fw-semibold mb-1">' . htmlspecialchars($prodName) . ' <span class="text-muted" style="font-size: 13px;">(Qty: ' . htmlspecialchars($quantity) . ')</span></h6>';
+                                            }
+                                            if ($row['variant'] == "" && $row['quantity'] > 1) {
+                                                echo '<p class="text-muted mb-0" style="font-size:13px;">Items are being delivered: Estimated 2-4 weeks</p>';
+                                            } else if ($row['variant'] == "" && $row['quantity'] == 1) {
+                                                echo '<p class="text-muted mb-0" style="font-size:13px;">Items are being delivered: Estimated 2 weeks</p>';
+                                            } else {
+                                                echo '<p class="text-muted mb-0" style="font-size:13px;">Items are being delivered: Estimated 3–4 days</p>';
                                             }
                                             echo '</td>';
-                                            echo '<td class="fw-bold align-middle" style="line-height:10px;width:30%;">';
-                                            echo '<p class="text-dark my-2 ">' . htmlspecialchars($row['status']) . ' <br><br><span style="font-size:12px;">' . $reject . '</span></p><br>';
-                                            echo '<p class="text-dark my-2">Balance: ₱' . number_format($balance, 2, '.', ',') . '</p>';
-                                            echo '<p class="text-dark my-2">Total: ₱' . number_format($row['totalCost'], 2, '.', ',') . '</p>';
+
+                                            echo '<td class="p-3 align-middle" style="width:30%;">';
+                                            echo '<p class="text-dark fw-bold mb-1">' . htmlspecialchars($row['status']) . '</p>';
+                                            if (!empty($reject)) {
+                                                echo '<p class="text-danger mb-2" style="font-size:12px;">' . $reject . '</p>';
+                                            }
+                                            echo '<p class="text-dark mb-1">Balance: <span class="fw-semibold">₱' . number_format($balance, 2, '.', ',') . '</span></p>';
+                                            echo '<p class="text-dark mb-2">Total: <span class="fw-semibold">₱' . number_format($row['totalCost'], 2, '.', ',') . '</span></p>';
+
                                             if ($balance > 0 && $row['variant'] !== "full") {
-                                                echo '<button class="btn btn-success pay-balance-btn" 
-                                                    style="font-size:13px; color:white;" 
-                                                    data-balance="' . htmlspecialchars($balance) . '" 
-                                                    data-source="' . htmlspecialchars($row['source']) . '" 
-                                                    data-prodname="' . htmlspecialchars($row['prodName']) . '" 
-                                                    data-orderid="' . htmlspecialchars($row['orderID']) . '" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#balancePaymentModal">
-                                                    Upload Another Payment
-                                                </button>';
+                                                echo '<button class="btn btn-success btn-sm d-block mb-2 pay-balance-btn" 
+                    data-balance="' . htmlspecialchars($balance) . '" 
+                    data-source="' . htmlspecialchars($row['source']) . '" 
+                    data-prodname="' . htmlspecialchars($row['prodName']) . '" 
+                    data-orderid="' . htmlspecialchars($row['orderID']) . '" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#balancePaymentModal">
+                    Upload Another Payment
+                </button>';
                                             }
 
                                             echo '<button 
-                                                class="btn btn-primary see-payment-images-btn mt-2" 
-                                                style="font-size:13px; color:white;" 
-                                                data-orderid="' . htmlspecialchars($row['orderID']) . '" 
-                                                data-source="' . htmlspecialchars($row['source']) . '">
-                                                See All Payment Images
-                                            </button>';
+                class="btn btn-outline-primary btn-sm d-block mb-2 see-payment-images-btn" 
+                data-orderid="' . htmlspecialchars($row['orderID']) . '" 
+                data-source="' . htmlspecialchars($row['source']) . '">
+                See All Payment Images
+            </button>';
+
                                             echo '<button 
-                                                class="btn btn-primary mt-2 view-invoice-btn" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#invoiceModal" 
-                                                style="font-size:13px; color:white;" 
-                                                data-orderid="' . htmlspecialchars($row['orderID']) . '" 
-                                                data-source="' . htmlspecialchars($row['source']) . '">
-                                                View All Invoice
-                                            </button>';
+                class="btn btn-outline-primary btn-sm d-block view-invoice-btn" 
+                data-bs-toggle="modal" 
+                data-bs-target="#invoiceModal" 
+                data-orderid="' . htmlspecialchars($row['orderID']) . '" 
+                data-source="' . htmlspecialchars($row['source']) . '">
+                View All Invoice
+            </button>';
 
-
-                                            // echo '<button class="btn btn-primary see-payment-image-btn" style="font-size:13px; color:white;" data-image="' . htmlspecialchars($row['proofPay']) . '">See Payment Image</button>';
                                             echo '</td>';
                                             echo '</tr>';
                                         }
 
                                         echo '</table>';
                                     } else {
-                                        echo "No in-process order.";
+                                        echo '<div class="text-center py-4 text-muted">No in-process order.</div>';
                                     }
                                     ?>
                                 </div>
+
+
 
                                 <div class="tab-pane fade" id="on-queue">
                                     <?php
                                     $sql = "
-(SELECT 'checkout' AS source, orderID, status, prodName, image, cost AS totalCost, quantity, date FROM checkout WHERE userID = '$userID' AND status = 'On Queue')
-UNION
-(SELECT 'checkoutcustom' AS source, orderID, status, pName AS prodName, image, totalCost, quantity, date FROM checkoutcustom WHERE userID = '$userID' AND status = 'Pending Approval')
-ORDER BY date DESC
-                                            ";
+    (SELECT 'checkout' AS source, orderID, status, prodName, image, cost AS totalCost, quantity, date FROM checkout WHERE userID = '$userID' AND status = 'Pending Approval')
+    UNION
+    (SELECT 'checkoutcustom' AS source, orderID, status, pName AS prodName, image, totalCost, quantity, date FROM checkoutcustom WHERE userID = '$userID' AND status = 'Pending Approval')
+    ORDER BY date DESC
+    ";
 
                                     $result = $conn->query($sql);
 
                                     if ($result->num_rows > 0) {
                                         echo '<table class="table table-borderless">';
-
 
                                         while ($row = $result->fetch_assoc()) {
                                             $prodNames = explode(',', $row['prodName']);
@@ -596,50 +587,59 @@ ORDER BY date DESC
                                             $quantities = explode(',', $row['quantity']);
                                             $maxItems = max(count($prodNames), count($images), count($quantities));
 
-                                            echo '<tr class="bg-light" style="border-top: solid white 20px;">';
-                                            echo '<td style="width:50%;">';
+                                            echo '<tr class="bg-light rounded shadow-sm" style="border-top: solid white 20px;">';
+
+                                            // Product Images
+                                            echo '<td style="width:40%;" class="d-flex flex-wrap align-items-center">';
                                             for ($i = 0; $i < $maxItems; $i++) {
                                                 $image = isset($images[$i]) ? trim($images[$i]) : trim($images[0]);
-                                                echo '<img class="image-fluid border rounded m-2" height="80px" width="80px" src="' . htmlspecialchars($image) . '" alt="Product Image">';
+                                                echo '<img class="img-thumbnail m-1" height="80" width="80" src="' . htmlspecialchars($image) . '" alt="Product Image">';
                                             }
                                             echo '</td>';
-                                            echo '<td class="align-middle" style="width:30%;">';
+
+                                            // Product Details
+                                            echo '<td class="align-middle" style="width:40%;">';
                                             for ($i = 0; $i < $maxItems; $i++) {
                                                 $prodName = isset($prodNames[$i]) ? trim($prodNames[$i]) : trim($prodNames[0]);
                                                 $quantity = isset($quantities[$i]) ? trim($quantities[$i]) : 1;
-                                                echo '<h6>' . htmlspecialchars($prodName) . ' (Qty: ' . htmlspecialchars($quantity) . ')</h6>';
+                                                echo '<div class="mb-1"><strong>' . htmlspecialchars($prodName) . '</strong> <span class="text-muted">(Qty: ' . htmlspecialchars($quantity) . ')</span></div>';
                                             }
                                             echo '</td>';
-                                            echo '<td class="fw-bold align-middle" style="width:20%;">';
-                                            echo '<button name="cancel"  class="btn btn-sm btn-danger text-white btn-outline-dark rounded-0 py-0" 
-                                                        data-status="Cancelled"
-                                                        data-orderid="' . $row['orderID'] . '" 
-                                                        data-source="' . $row['source'] . '">Cancel Order</button>';
-                                            echo '<p class="text-dark my-2">Total: ₱' . htmlspecialchars(number_format($row['totalCost'], 2, '.', ',')) . '</p>';
+
+                                            // Actions & Total
+                                            echo '<td class="align-middle text-end" style="width:20%;">';
+                                            echo '<button name="cancel" class="btn btn-sm btn-outline-danger rounded-1 mb-2 px-3 py-1"
+                        data-status="Cancelled"
+                        data-orderid="' . htmlspecialchars($row['orderID']) . '" 
+                        data-source="' . htmlspecialchars($row['source']) . '">
+                        Cancel Order
+                  </button>';
+                                            echo '<p class="text-dark mt-2 fw-semibold">Total: <span class="text-success">₱' . number_format($row['totalCost'], 2, '.', ',') . '</span></p>';
                                             echo '</td>';
+
                                             echo '</tr>';
                                         }
 
                                         echo '</table>';
                                     } else {
-                                        echo "No in-process order.";
+                                        echo '<div class="alert alert-secondary text-center my-3">No in-process order.</div>';
                                     }
                                     ?>
                                 </div>
+
                                 <div class="tab-pane fade" id="on-progress">
                                     <?php
                                     $sql = "
-(SELECT 'checkout' AS source, prodName, image, cost AS totalCost, quantity, date FROM checkout WHERE userID = '$userID' AND status = 'In Progress')
-UNION
-(SELECT 'checkoutcustom' AS source, pName AS prodName, image, totalCost, quantity, date FROM checkoutcustom WHERE userID = '$userID' AND status = 'In Progress')
-ORDER BY date DESC
-                                            ";
+    (SELECT 'checkout' AS source, prodName, image, cost AS totalCost, quantity, date FROM checkout WHERE userID = '$userID' AND status = 'In Progress')
+    UNION
+    (SELECT 'checkoutcustom' AS source, pName AS prodName, image, totalCost, quantity, date FROM checkoutcustom WHERE userID = '$userID' AND status = 'In Progress')
+    ORDER BY date DESC
+    ";
 
                                     $result = $conn->query($sql);
 
                                     if ($result->num_rows > 0) {
                                         echo '<table class="table table-borderless">';
-
 
                                         while ($row = $result->fetch_assoc()) {
                                             $prodNames = explode(',', $row['prodName']);
@@ -647,47 +647,57 @@ ORDER BY date DESC
                                             $quantities = explode(',', $row['quantity']);
                                             $maxItems = max(count($prodNames), count($images), count($quantities));
 
-                                            echo '<tr class="bg-light" style="border-top: solid white 20px;">';
-                                            echo '<td style="width:50%;">';
+                                            echo '<tr class="bg-light rounded shadow-sm" style="border-top: solid white 20px;">';
+
+                                            // Images
+                                            echo '<td style="width:40%;" class="d-flex flex-wrap align-items-center">';
                                             for ($i = 0; $i < $maxItems; $i++) {
                                                 $image = isset($images[$i]) ? trim($images[$i]) : trim($images[0]);
-                                                echo '<img class="image-fluid border rounded m-2" height="80px" width="80px" src="' . htmlspecialchars($image) . '" alt="Product Image">';
+                                                echo '<img class="img-thumbnail m-1" height="80" width="80" src="' . htmlspecialchars($image) . '" alt="Product Image">';
                                             }
                                             echo '</td>';
-                                            echo '<td class="align-middle" style="width:30%;">';
+
+                                            // Product names and quantities
+                                            echo '<td class="align-middle" style="width:40%;">';
                                             for ($i = 0; $i < $maxItems; $i++) {
                                                 $prodName = isset($prodNames[$i]) ? trim($prodNames[$i]) : trim($prodNames[0]);
                                                 $quantity = isset($quantities[$i]) ? trim($quantities[$i]) : 1;
-                                                echo '<h6>' . htmlspecialchars($prodName) . ' (Qty: ' . htmlspecialchars($quantity) . ')</h6>';
+                                                echo '<div class="mb-1"><strong>' . htmlspecialchars($prodName) . '</strong> <span class="text-muted">(Qty: ' . htmlspecialchars($quantity) . ')</span></div>';
                                             }
                                             echo '</td>';
-                                            echo '<td class="fw-bold align-middle" style="line-height:10px;width:20%;">';
-                                            echo '<p>On Progress</p>';
-                                            echo '<p class="text-dark my-2">Total: ₱' . htmlspecialchars(number_format($row['totalCost'], 2, '.', ',')) . '</p>';
+
+                                            // Status and Total
+                                            echo '<td class="align-middle text-end" style="width:20%;">';
+                                            echo '<span class="badge bg-warning text-dark mb-2 px-3 py-1">On Progress</span>';
+                                            echo '<p class="text-dark mt-2 fw-semibold">Total: <span class="text-success">₱' . number_format($row['totalCost'], 2, '.', ',') . '</span></p>';
                                             echo '</td>';
+
                                             echo '</tr>';
                                         }
 
                                         echo '</table>';
                                     } else {
-                                        echo "No in-process order.";
+                                        echo '<div class="alert alert-secondary text-center my-3">No in-progress order.</div>';
                                     }
                                     ?>
                                 </div>
+
+
                                 <div class="tab-pane fade" id="completed">
                                     <?php
                                     $sql = "
-(SELECT 'checkout' AS source, prodName, orderID, image, cost AS totalCost, quantity, date, status FROM checkout WHERE userID = '$userID' AND (status = 'Completed' OR status = 'Delivered'))
-UNION
-(SELECT 'checkoutcustom' AS source, pName AS prodName, orderID, image, totalCost, quantity, date, status FROM checkoutcustom WHERE userID = '$userID' AND (status = 'Completed' OR status = 'Delivered'))
-ORDER BY date DESC
-                                            ";
+        (SELECT 'checkout' AS source, prodName, orderID, image, cost AS totalCost, quantity, date, status FROM checkout 
+         WHERE userID = '$userID' AND (status = 'Completed' OR status = 'Delivered'))
+        UNION
+        (SELECT 'checkoutcustom' AS source, pName AS prodName, orderID, image, totalCost, quantity, date, status FROM checkoutcustom 
+         WHERE userID = '$userID' AND (status = 'Completed' OR status = 'Delivered'))
+        ORDER BY date DESC
+    ";
 
                                     $result = $conn->query($sql);
 
                                     if ($result->num_rows > 0) {
                                         echo '<table class="table table-borderless">';
-
 
                                         while ($row = $result->fetch_assoc()) {
                                             $prodNames = explode(',', $row['prodName']);
@@ -695,41 +705,51 @@ ORDER BY date DESC
                                             $quantities = explode(',', $row['quantity']);
                                             $maxItems = max(count($prodNames), count($images), count($quantities));
 
-                                            echo '<tr class="bg-light" style="border-top: solid white 20px;">';
-                                            echo '<td style="width:50%;">';
+                                            echo '<tr class="bg-light rounded shadow-sm" style="border-top: solid white 20px;">';
+
+                                            // Images
+                                            echo '<td style="width:40%;" class="d-flex flex-wrap align-items-center">';
                                             for ($i = 0; $i < $maxItems; $i++) {
                                                 $image = isset($images[$i]) ? trim($images[$i]) : trim($images[0]);
-                                                echo '<img class="image-fluid border rounded m-2" height="80px" width="80px" src="' . htmlspecialchars($image) . '" alt="Product Image">';
+                                                echo '<img class="img-thumbnail m-1" height="80" width="80" src="' . htmlspecialchars($image) . '" alt="Product Image">';
                                             }
                                             echo '</td>';
-                                            echo '<td class="align-middle" style="width:30%;">';
+
+                                            // Product names and quantities
+                                            echo '<td class="align-middle" style="width:40%;">';
                                             for ($i = 0; $i < $maxItems; $i++) {
                                                 $prodName = isset($prodNames[$i]) ? trim($prodNames[$i]) : trim($prodNames[0]);
                                                 $quantity = isset($quantities[$i]) ? trim($quantities[$i]) : 1;
-                                                echo '<h6>' . htmlspecialchars($prodName) . ' (Qty: ' . htmlspecialchars($quantity) . ')</h6>';
+                                                echo '<div class="mb-1"><strong>' . htmlspecialchars($prodName) . '</strong> <span class="text-muted">(Qty: ' . htmlspecialchars($quantity) . ')</span></div>';
                                             }
                                             echo '</td>';
-                                            echo '<td class="fw-bold align-middle" style="line-height:10px;width:20%;">';
+
+                                            // Status and total
+                                            echo '<td class="align-middle text-end" style="width:20%;">';
+
                                             if ($row['status'] == 'Delivered') {
-                                                echo '<p class="my-2">Completed</p>';
+                                                echo '<span class="badge bg-success mb-2 px-3 py-1">Completed</span>';
                                             } else {
-                                                echo '<button name="complete" class="btn btn-sm text-white btn-outline-dark rounded-0 py-0" 
-                                                        style="background-color:#e47011;" 
-                                                        data-status="Delivered"
-                                                        data-orderid="' . $row['orderID'] . '" 
-                                                        data-source="' . $row['source'] . '">Order Complete</button>';
+                                                echo '<button name="complete" class="btn btn-sm text-white rounded-1 mb-2" 
+                        style="background-color:#e47011;" 
+                        data-status="Delivered"
+                        data-orderid="' . $row['orderID'] . '" 
+                        data-source="' . $row['source'] . '">Mark as Complete</button>';
                                             }
-                                            echo '<p class="text-dark my-3">Total: ₱' . htmlspecialchars(number_format((float) $row['totalCost'], 2, '.', ',')) . '</p>';
+
+                                            echo '<p class="text-dark fw-semibold mt-2">Total: <span class="text-success">₱' . number_format((float) $row['totalCost'], 2, '.', ',') . '</span></p>';
                                             echo '</td>';
+
                                             echo '</tr>';
                                         }
 
                                         echo '</table>';
                                     } else {
-                                        echo "No in-process order.";
+                                        echo '<div class="alert alert-secondary text-center my-3">No completed or delivered orders found.</div>';
                                     }
                                     ?>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -1135,76 +1155,96 @@ ORDER BY date DESC
             document.querySelectorAll('.view-invoice-btn').forEach(button => {
                 button.addEventListener('click', function () {
                     const orderId = this.getAttribute('data-orderid');
+                    const prodName = this.getAttribute('data-prodname');
 
-                    fetch('fetch_invoice.php?orderID=' + encodeURIComponent(orderId))
+                    fetch(`fetch_invoice.php?orderID=${orderId}`) // <-- FIXED LINE
                         .then(response => response.json())
                         .then(data => {
+                            console.log("Fetched data:", data);
+
                             const container = document.getElementById('invoices-container');
-                            container.innerHTML = ''; // Clear previous invoices
+                            container.innerHTML = '';
 
                             if (data.success) {
                                 data.invoices.forEach((invoice, index) => {
-                                    // Create a unique ID for each invoice for download
                                     const invoiceId = 'invoice' + index;
-
-                                    // Create invoice HTML
                                     const invoiceHTML = `
                                 <div class="invoice mb-4 p-4 border rounded shadow-sm" id="${invoiceId}" style="max-width: 600px; background: #fff;">
                                     <div class="row align-items-center mb-4">
-                                    <div class="col-8">
-                                        <h1 class="fw-bold text-primary mb-1" style="letter-spacing: 2px;">INVOICE</h1>
-                                        <p class="mb-0" style="text-align:text-start !important;">Joynes Furniture</p>
-                                        <small class="text-muted">Quality furniture for your home</small>
+                                        <div class="col-8">
+                                            <h1 class="fw-bold text-primary mb-1" style="letter-spacing: 2px;">INVOICE</h1>
+                                            <p class="mb-0">Joynes Furniture</p>
+                                            <small class="text-muted">Quality furniture for your home</small>
+                                        </div>
+                                        <div class="col-4 text-end">
+                                            <img src="./img/logo1.png" alt="Joynes Furniture Logo" style="max-height: 70px; object-fit: contain;">
+                                        </div>
                                     </div>
-                                    <div class="col-4 text-end">
-                                        <img src="./img/logo1.png" alt="Joynes Furniture Logo" style="max-height: 70px; object-fit: contain;">
-                                    </div>
-                                    </div>
-                                    
+
                                     <hr>
 
-                                    <div class="">
-                                    <p class="mb-1"><strong>Date:</strong> ${invoice.created_at}</p>
-                                    <p class="mb-1"><strong>Order ID:</strong> ${invoice.orderID}</p>
-                                    <p class="mb-1"><strong>Amount Paid:</strong> <span class="text-success fw-semibold">${invoice.totalPaid}</span></p>
-                                    <p class="mb-1"><strong>Ref. Number:</strong> <span class="text-secondary">${invoice.reference_number}</span></p>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <p class="fw-bold mb-3">Invoice Details</p>
+                                            <p><strong>Date:</strong> ${invoice.created_at}</p>
+                                            <p><strong>Order ID:</strong> ${invoice.orderID}</p>
+                                            <p class="mb-0"><strong>Amount Paid:</strong> <span class="text-success fw-semibold">${invoice.totalPaid}</span></p>
+                                            <p class="mb-0"><strong>Payment Method:</strong> <span class="text-white badge bg-info">Gcash</span></p>
+                                            <p><strong>Ref. Number:</strong> <span class="text-secondary">${invoice.reference_number}</span></p>
+                                        </div>
+                                                                    <div class="col-md-6 mb-3 text-end">
+                                    <p class="fw-bold mb-3">Billed / Issued To</p>
+                                    <p><strong>Name:</strong> ${userInfo.name}</p>
+                                    <p><strong>Email:</strong> ${userInfo.email}</p>
+                                    <p><strong>Address:</strong> ${userInfo.address}</p>
+                                    <p><strong>Contact:</strong> ${userInfo.cpNum}</p>
+                                    <p class="mb-0"><strong>Payment Status:</strong> <span class="text-white badge bg-info">${invoice.payment_status}</span></p>
+
+                                </div>
+
                                     </div>
 
                                     <hr>
 
                                     <h5 class="mb-3">Purchase Details</h5>
                                     <div class="table-responsive">
-                                    <table class="table table-striped table-bordered">
-                                        <thead class="table-primary">
-                                        <tr>
-                                            <th>Item</th>
-                                            <th class="text-center">Quantity</th>
-                                            <th class="text-end">Price</th>
-                                            <th class="text-end">Total</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>${invoice.prodName}</td>
-                                                <td class="text-center">${invoice.quantity}</td>
-                                                <td class="text-end">${invoice.cost}</td>
-                                                <td class="text-end">${invoice.cost * invoice.quantity}</td>
-                                            </tr>
-                                                                        
-                                        </tbody>
-                                    </table>
+                                        <table class="table table-striped table-bordered">
+                                            <thead class="table-primary">
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th class="text-center">Quantity</th>
+                                                    <th class="text-end">Price</th>
+                                                    <th class="text-end">Total</th>
+                                                </tr>
+                                            </thead>
+                                           <tbody>
+                            ${invoice.items.map(item => `
+                                <tr>
+                                    <td>${item.item}</td>
+                                    <td class="text-center">${item.quantity}</td>
+                                    <td class="text-end">${item.price}</td>
+                                    <td class="text-end">${item.total}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                                              <tfoot>
+    <tr>
+        <th colspan="3" class="text-end">Total</th>
+        <th class="text-end text-success">${invoice.invoiceTotal}</th>
+    </tr>
+</tfoot>
+                                        </table>
                                     </div>
 
                                     <hr>
 
                                     <div class="text-end">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="downloadInvoice('${invoiceId}')">
-                                        <i class="bi bi-download me-1"></i> Download
-                                    </button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="downloadInvoice('${invoiceId}')">
+                                            <i class="bi bi-download me-1"></i> Download
+                                        </button>
                                     </div>
                                 </div>
-                                `;
-
+                            `;
                                     container.insertAdjacentHTML('beforeend', invoiceHTML);
                                 });
                             } else {
@@ -1213,14 +1253,26 @@ ORDER BY date DESC
                         })
                         .catch(error => {
                             console.error("Error fetching invoice:", error);
+                            document.getElementById('invoices-container').innerHTML = '<p class="text-danger">Failed to load invoice.</p>';
                         });
                 });
             });
         });
-
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
 
 
+
+
+
+    <script>
+        const userInfo = {
+            name: <?php echo json_encode($_SESSION['fullName'] ?? ''); ?>,
+            email: <?php echo json_encode($_SESSION['email'] ?? ''); ?>,
+            address: <?php echo json_encode($_SESSION['address'] ?? ''); ?>,
+            cpNum: <?php echo json_encode($_SESSION['cpNum'] ?? ''); ?>
+        };
+    </script>
 
 
     <script>

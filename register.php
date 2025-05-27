@@ -2,12 +2,11 @@
 session_start();
 include("database.php");
 
-
 if (isset($_POST['submit'])) {
-  $fullName = $_POST["fullName"];
-  $email = $_POST["email"];
-  $address = $_POST["address"];
-  $cpNum = $_POST["phone"];
+  $fullName = trim($_POST["fullName"]);
+  $email = trim($_POST["email"]);
+  $address = trim($_POST["address"]);
+  $cpNum = trim($_POST["phone"]);
   $password = $_POST["password"];
   $confirmPassword = $_POST["confirmPassword"];
   $recaptcha = $_POST['g-recaptcha-response'];
@@ -15,34 +14,54 @@ if (isset($_POST['submit'])) {
   if (strlen($recaptcha) >= 10) {
     if (!empty($fullName) && !empty($address) && !empty($email) && !empty($cpNum) && !empty($password) && !empty($confirmPassword)) {
 
-      $sqlnum = "SELECT * FROM usertbl WHERE email = '$email'";
-      $resultnum = mysqli_query($conn, $sqlnum);
-      if (mysqli_num_rows($resultnum) > 0) {
-        header("location: signup-modal.php?error=Email is Already Exist");
+      if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        header("Location: signup-modal.php?error=Invalid Email Format");
+        exit();
+      }
+
+      if ($password !== $confirmPassword) {
+        header("Location: signup-modal.php?error=Passwords do not match");
+        exit();
+      }
+
+      // Prepared statement to prevent SQL injection
+      $stmt = $conn->prepare("SELECT * FROM usertbl WHERE email = ?");
+      $stmt->bind_param("s", $email);
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      if ($result->num_rows > 0) {
+        header("Location: signup-modal.php?error=Email already exists");
         exit();
       } else {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO usertbl (fullName, address, email, cpNum, password) values('$fullName', '$address', '$email', '$cpNum', '$hash')";
 
+        $insert = $conn->prepare("INSERT INTO usertbl (fullName, address, email, cpNum, password) VALUES (?, ?, ?, ?, ?)");
+        $insert->bind_param("sssss", $fullName, $address, $email, $cpNum, $hash);
 
-        if (mysqli_query($conn, $sql)) {
+        if ($insert->execute()) {
+          $_SESSION['userID'] = $conn->insert_id;
+          $_SESSION['fullName'] = $fullName;
+
           header("Location: index.php?modal=loginModal");
-          exit;
+          exit();
         } else {
-          echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+          echo "Database Error: " . $conn->error;
         }
-
-        mysqli_close($conn);
       }
+
+      $stmt->close();
+      $insert->close();
+      $conn->close();
     } else {
-      header("location: index.php?error=Please Enter Valid Information!");
+      header("Location: index.php?error=Please fill in all required fields.");
       exit();
     }
   } else {
-    echo "<script>window.location.href='./index.php?error=Invalid Captcha!'</script>";
+    header("Location: index.php?error=Invalid Captcha!");
+    exit();
   }
-
-
 }
+
 
 ?>

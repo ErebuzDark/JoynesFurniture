@@ -12,13 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $filePath = $uploadDir . $fileName;
 
         if (move_uploaded_file($qrImageFile['tmp_name'], $filePath)) {
-            // Store the path of the uploaded file
             $qrImagePath = $filePath;
         } else {
             echo "Error uploading image.";
         }
     }
-
 
     $fullName = $_POST['fullName'];
     $address = $_POST['address'];
@@ -39,37 +37,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $totalCost = array_sum($prodCosts);
     $imagesString = 'up/' . implode(', up/', $images);
-    // $imagesString = implode(', ', $image);
 
     $prodIDsString = implode(', ', $prodIDs);
     $prodNamesString = implode(', ', $prodNames);
     $prodWidthString = implode(', ', $prodWidth);
     $prodLengthString = implode(', ', $prodLength);
     $prodHeightString = implode(', ', $prodHeight);
+    $quantityString = implode(', ', $quantity);
+
     mysqli_begin_transaction($conn);
 
     try {
         $query = "INSERT INTO checkout (userID, image, fID, fullName, prodName, address, cpNum, cost, status, proofPay, payment, balance, quantity, variant, width, length, height) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?)";
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = mysqli_prepare($conn, $query);
         if ($stmt === false) {
             throw new Exception("Error preparing statement: " . mysqli_error($conn));
         }
 
-        mysqli_stmt_bind_param($stmt, 'sssssssssssiissss', $userID, $imagesString, $prodIDsString, $fullName, $prodNamesString, $address, $cpNum, $totalCost, $status, $qrImagePath, $payment, $balance, $quantity, $variant, $prodWidthString, $prodLengthString, $prodHeightString);
+        mysqli_stmt_bind_param($stmt, 'sssssssssssiissss', $userID, $imagesString, $prodIDsString, $fullName, $prodNamesString, $address, $cpNum, $totalCost, $status, $qrImagePath, $payment, $balance, $quantityString, $variant, $prodWidthString, $prodLengthString, $prodHeightString);
         mysqli_stmt_execute($stmt);
 
-         // NEW: Insert proof into payment_receipts
+        // NEW: Insert into payment_receipts
         $orderID = $conn->insert_id;
         $source = 'checkout';
         $paymentDate = date("Y-m-d H:i:s");
+        $prodName = implode(', ', $prodNames);
+        $cost = $totalCost;
 
         $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $receiptStmt->bind_param("iisssss", $orderID, $userID, $source, $prodName, $cost, $qrImagePath, $paymentDate);
         $receiptStmt->execute();
         $receiptStmt->close();
 
+        // Delete from addcart table
         $deleteQuery = "DELETE FROM addcart WHERE ID = ?";
         $deleteStmt = mysqli_prepare($conn, $deleteQuery);
         if ($deleteStmt === false) {
@@ -81,21 +83,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             mysqli_stmt_execute($deleteStmt);
         }
 
-        mysqli_commit($conn);
+        // Deduct stock quantities
+        foreach ($prodIDs as $index => $prodID) {
+            $orderedQty = (int) $quantity[$index];
 
-        foreach($prodIDs as $prodID) {
-            $minusQuantitySql = "SELECT * FROM furnituretbl WHERE fID = '$prodID'";
+            $minusQuantitySql = "SELECT fQuantity FROM furnituretbl WHERE fID = '$prodID'";
             $minusQuantityResult = mysqli_query($conn, $minusQuantitySql);
             $minusQuantityRow = mysqli_fetch_assoc($minusQuantityResult);
 
-            $qty2 = $minusQuantityRow['fQuantity'];
-
-            $totQty = (int) $qty2-$quantity;
+            $qty2 = (int) $minusQuantityRow['fQuantity'];
+            $totQty = $qty2 - $orderedQty;
 
             $updateQuantitySql = "UPDATE furnituretbl SET fQuantity = '$totQty' WHERE fID = '$prodID'";
             mysqli_query($conn, $updateQuantitySql);
         }
-        
+
+        mysqli_commit($conn);
+
         echo "<script>
                 alert('Order successfully placed!');
                 window.location.href = 'profile.php';

@@ -94,16 +94,42 @@ try {
         $getUserID->close();
 
         // Insert official_receipts if amountPaid > 0
+        // Insert official_receipts if amountPaid > 0, regardless of the source
         if ($amountPaid > 0) {
-            $insertOfficial = $conn->prepare(
-                "INSERT INTO official_receipts (userID, orderID, payment_receipt_id, totalPaid, reference_number, created_at, update_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())"
-            );
-            $insertOfficial->bind_param("iiids", $userID, $orderID, $receiptID, $amountPaid, $refNo);
-            if (!$insertOfficial->execute()) {
-                throw new Exception("Failed to insert official_receipt: " . $insertOfficial->error);
+            // Check if official receipt exists for this payment_receipt_id
+            $checkOfficial = $conn->prepare("SELECT OFC_ID FROM official_receipts WHERE payment_receipt_id = ?");
+            $checkOfficial->bind_param("i", $receiptID);
+            $checkOfficial->execute();
+            $checkOfficial->bind_result($officialID);
+            $exists = $checkOfficial->fetch();
+            $checkOfficial->close();
+
+            if ($exists) {
+                // Update the existing official_receipts record
+                $updateOfficial = $conn->prepare(
+                    "UPDATE official_receipts 
+             SET userID = ?, orderID = ?, totalPaid = ?, reference_number = ?, update_at = NOW()
+             WHERE OFC_ID = ?"
+                );
+                $updateOfficial->bind_param("iidsi", $userID, $orderID, $amountPaid, $refNo, $officialID);
+                if (!$updateOfficial->execute()) {
+                    throw new Exception("Failed to update official_receipt: " . $updateOfficial->error);
+                }
+                $updateOfficial->close();
+            } else {
+                // Insert new official_receipts record
+                $insertOfficial = $conn->prepare(
+                    "INSERT INTO official_receipts (userID, orderID, payment_receipt_id, totalPaid, reference_number, created_at, update_at) 
+             VALUES (?, ?, ?, ?, ?, NOW(), NOW())"
+                );
+                $insertOfficial->bind_param("iiids", $userID, $orderID, $receiptID, $amountPaid, $refNo);
+                if (!$insertOfficial->execute()) {
+                    throw new Exception("Failed to insert official_receipt: " . $insertOfficial->error);
+                }
+                $insertOfficial->close();
             }
-            $insertOfficial->close();
         }
+
 
         // Update payment_receipts using receiptID to avoid affecting others
         $updateReceipt = $conn->prepare(

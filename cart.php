@@ -76,51 +76,9 @@ $costs = number_format($totalCost, 0, '.', ',');
 
 
     <!-- Navbar start -->
-    <div class="container-fluid fixed-top">
-        <div class="container topbar d-none d-lg-block">
-
-        </div>
-        <div class="container px-0">
-            <nav class="navbar navbar-light bg-white navbar-expand-xl">
-                <a href="shop.php" class="navbar-brand"><img class="logo" src="./img/logo1.png" alt="Bootstrap"
-                        style="width: 200px"></a>
-
-                <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarCollapse">
-                    <span class="fa fa-bars text-primary"></span>
-                </button>
-
-                <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
-                    <div class="navbar-nav mx-auto">
-                        <ol class="breadcrumb justify-content-center mb-0">
-                            <li class="breadcrumb-item"><a href="shop.php">Home</a></li>
-                            <li class="breadcrumb-item active text-dark">Cart</li>
-                            <li class="breadcrumb-item"><a href="customizecart.php">Customized Cart</a></li>
-                        </ol>
-                    </div>
-
-                    <div class="d-flex m-3 me-0">
-                        <a href="cart.php" class="position-relative me-4 my-auto">
-                            <i class="fa fa-shopping-bag fa-2x text-muted"></i>
-                            <span
-                                class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
-                                style="top: -5px; left: 15px; height: 20px; min-width: 20px;"><?php echo $i; ?></span>
-                        </a>
-
-                        <div class="nav-item dropdown">
-                            <i class="fas fa-user fa-2x"></i>
-
-                            <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                                <a href="profile.php" class="dropdown-item">My Profile</a>
-                                <a href="logout.php" class="dropdown-item">Log Out</a>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </div>
-    </div>
+    <?php
+    include("cartNav.php");
+    ?>
     <!-- Navbar End -->
 
     <!-- Single Page Header start -->
@@ -135,7 +93,7 @@ $costs = number_format($totalCost, 0, '.', ',');
             <div class="table-responsive">
                 <table class="table">
                     <div class="form-check mb-3 d-flex align-items-center gap-2 mx-2">
-                        <input type="checkbox" class="form-check-input mr-2" id="select-all">
+                        <input type="checkbox" class="form-check-input mr-2" id="select-all" checked>
                         <label class="form-check-label text-dark font-weight-medium small mb-0" for="select-all"
                             style="cursor: pointer;">
                             Select All Products

@@ -40,6 +40,19 @@ if ($result1->num_rows > 0) {
     $totalQueue = 0;
 }
 
+$sql2 = "
+ (SELECT COUNT(*) as newPayment FROM payment_receipts 
+ WHERE payment_status = 'Pending')";
+$result2 = $conn->query($sql2);
+$newPayment = 0;
+if ($result2->num_rows > 0) {
+    while ($row = $result2->fetch_assoc()) {
+        $newPayment += $row['newPayment'];
+    }
+} else {
+    $newPayment = 0;
+}
+
 
 $sqlGo = "
         (SELECT COUNT(*) as onGo FROM checkout 
@@ -371,12 +384,16 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                         </li>
 
                         <!-- Nav Item - Alerts -->
+                        <!-- Nav Item - Alerts -->
                         <li class="nav-item dropdown no-arrow mx-1">
                             <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-bell fa-fw"></i>
-                                <?php if ($totalQueue > 0): ?>
-                                    <span class="badge badge-danger badge-counter"><?php echo $totalQueue; ?></span>
+                                <?php
+                                $totalNotifications = $totalQueue + $newPayment;
+                                if ($totalNotifications > 0):
+                                    ?>
+                                    <span class="badge badge-danger badge-counter"><?php echo $totalNotifications; ?></span>
                                 <?php endif; ?>
                             </a>
                             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -384,6 +401,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 <h6 class="dropdown-header">
                                     Notifications
                                 </h6>
+
                                 <?php if ($totalQueue > 0): ?>
                                     <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
                                         <div class="mr-3">
@@ -397,11 +415,29 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                                 approve</span>
                                         </div>
                                     </a>
-                                <?php else: ?>
+                                <?php endif; ?>
+
+                                <?php if ($newPayment > 0): ?>
+                                    <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
+                                        <div class="mr-3">
+                                            <div class="icon-circle bg-success">
+                                                <i class="fas fa-receipt text-white"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                            <span class="font-weight-bold"><?php echo $newPayment; ?> new payment(s) to
+                                                review</span>
+                                        </div>
+                                    </a>
+                                <?php endif; ?>
+
+                                <?php if ($totalNotifications == 0): ?>
                                     <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
                                 <?php endif; ?>
                             </div>
                         </li>
+
 
 
                         <!-- Nav Item - Messages -->
@@ -481,15 +517,23 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             </div>
                             <div class="table-responsive">
                                 <?php
-                                $sql = "SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, 
+                                $sql = "
+                                    SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, 
                                         cost AS totalCost, date, status, orderID, width, length, height 
                                     FROM checkout
                                     UNION
                                     SELECT 'checkoutcustom' AS source, payment, proofPay, balance, fullName, address, cpNum, pName AS prodName, image, 
                                         quantity, totalCost, date, status, orderID, width, length, height 
                                     FROM checkoutcustom
-                                    ORDER BY date DESC
-                                    ";
+                                ORDER BY 
+                                CASE 
+                                    WHEN status = 'On Queue' THEN 0 
+                                    ELSE 1 
+                                END, 
+                                orderID DESC
+
+                                ";
+
 
 
                                 $receiptQuery = "SELECT * FROM payment_receipts";
@@ -666,9 +710,10 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                         <script>
                             function filterOrders(status) {
                                 const table = document.getElementById("dataTable");
+                                const tbody = table.querySelector("tbody");
                                 const buttons = document.querySelectorAll(".btn-group button");
 
-                                // Update active button style
+                                // Remove active from all buttons and add to selected
                                 buttons.forEach(btn => btn.classList.remove("active"));
                                 buttons.forEach(btn => {
                                     if (btn.textContent.trim().toLowerCase() === status.toLowerCase()) {
@@ -676,20 +721,47 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                     }
                                 });
 
-                                // Start filtering rows
-                                const rows = table.querySelectorAll("tbody tr");
-                                rows.forEach(row => {
-                                    const statusCell = row.querySelector("td:nth-child(11) span"); // 11th column = Status
-                                    const cellStatus = statusCell ? statusCell.textContent.trim().toLowerCase() : "";
+                                let rows = Array.from(tbody.querySelectorAll("tr"));
 
-                                    if (status.toLowerCase() === "all" || cellStatus === status.toLowerCase()) {
+                                // Show/hide rows based on filter
+                                rows.forEach(row => {
+                                    const statusCell = row.querySelector("td:nth-child(11) span");
+                                    const rowStatus = statusCell ? statusCell.textContent.trim().toLowerCase() : "";
+
+                                    if (status.toLowerCase() === "all" || rowStatus === status.toLowerCase()) {
                                         row.style.display = "";
                                     } else {
                                         row.style.display = "none";
                                     }
                                 });
+
+                                // If "All" selected, re-sort rows to show "On Queue" first, then orderID desc
+                                if (status.toLowerCase() === "all") {
+                                    const visibleRows = rows.filter(row => row.style.display !== "none");
+
+                                    visibleRows.sort((a, b) => {
+                                        const statusA = a.querySelector("td:nth-child(11) span")?.textContent.trim().toLowerCase();
+                                        const statusB = b.querySelector("td:nth-child(11) span")?.textContent.trim().toLowerCase();
+
+                                        // orderID is in the first column (td:nth-child(1))
+                                        const idA = parseInt(a.querySelector("td:nth-child(1)")?.textContent) || 0;
+                                        const idB = parseInt(b.querySelector("td:nth-child(1)")?.textContent) || 0;
+
+                                        // Sort: "on queue" first, then by orderID descending
+                                        if (statusA === "on queue" && statusB !== "on queue") return -1;
+                                        if (statusA !== "on queue" && statusB === "on queue") return 1;
+
+                                        return idB - idA;
+                                    });
+
+                                    // Re-append rows to tbody in new order
+                                    visibleRows.forEach(row => tbody.appendChild(row));
+                                }
                             }
+
+
                         </script>
+
 
                     </div>
                 </div>
