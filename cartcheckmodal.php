@@ -13,6 +13,8 @@ if (isset($_POST['selected_products'])) {
   $result = $stmt->get_result();
 
   $totalCost = 0;
+  $totalQuantity = 0; // Initialize total quantity here, before loop
+
   echo '<form action="cartOrder.php" method="POST" enctype="multipart/form-data">';
 
   echo ' <div class="card-header p-4">
@@ -32,25 +34,26 @@ if (isset($_POST['selected_products'])) {
     $cost = $row['cost'];
     $productTotal = $quantity * $cost;
     $totalCost += $productTotal;
-    $totalQuantity = 0; // ✅ Initialize total quantity
-    $totalQuantity += $quantity; // ✅ Add quantity to total
-
 
     echo '<div class="card-body p-3">';
     echo '<div class="d-flex flex-row mb-3 pb-2">';
     echo '<div class="col-md-10 col-lg-10 col-xl-10 flex-fill ms-4">';
-    echo '<h5>' . $row['prodName'] . '</h5>';
-    echo '<p>Quantity: ' . $quantity . '</p>';
-    echo '<h5>Total: &#8369; ' . number_format($productTotal) . '</h5>';  // <-- updated here
+    echo '<h5>' . htmlspecialchars($row['prodName']) . '</h5>';
+
+    // Quantity input field so user can adjust quantity
+    echo '<label for="quantity_' . $row['ID'] . '">Quantity:</label> ';
+    echo '<input type="number" id="quantity_' . $row['ID'] . '" name="quantity[]" value="' . $quantity . '" min="1" style="width: 60px;" onchange="updateTotals()">';
+
+    // Show total for this product based on quantity * cost (will be updated by JS)
+    echo '<h5>Total: &#8369; <span class="product-total" data-cost="' . $cost . '">' . number_format($productTotal) . '</span></h5>';
 
     echo '<input type="hidden" name="prodIDs[]" value="' . $row['ID'] . '">';
-    echo '<input type="hidden" name="prodNames[]" value="' . $row['prodName'] . '">';
-    echo '<input type="hidden" name="prodCosts[]" value="' . $productTotal . '">';
-    echo '<input type="hidden" name="userID" value="' . $_SESSION['userID'] . '"> ';
-    echo '<input type="hidden" name="fullName" value="' . $_SESSION['fullName'] . '"> ';
-    echo '<input type="hidden" name="quantity[]" value="' . $quantity . '"> ';
-    echo '<input type="hidden" name="address" value="' . $_SESSION['address'] . '"> ';
-    echo '<input type="hidden" name="cpNum" value="' . $_SESSION['cpNum'] . '"> ';
+    echo '<input type="hidden" name="prodNames[]" value="' . htmlspecialchars($row['prodName']) . '">';
+    echo '<input type="hidden" name="prodCosts[]" value="' . $cost . '">';  // store per unit cost now
+    echo '<input type="hidden" name="userID" value="' . $_SESSION['userID'] . '">';
+    echo '<input type="hidden" name="fullName" value="' . htmlspecialchars($_SESSION['fullName']) . '">';
+    echo '<input type="hidden" name="address" value="' . htmlspecialchars($_SESSION['address']) . '">';
+    echo '<input type="hidden" name="cpNum" value="' . htmlspecialchars($_SESSION['cpNum']) . '">';
     echo '<input type="hidden" name="tblImage[]" value="' . $row['image'] . '">';
     echo '<input type="hidden" name="prodWidth[]" value="' . $row['width'] . '">';
     echo '<input type="hidden" name="prodLength[]" value="' . $row['length'] . '">';
@@ -67,6 +70,8 @@ if (isset($_POST['selected_products'])) {
 
 
   // Payment Method
+  echo '<p>Total quantity of all products: ' . $totalQuantity . '</p>';
+
   echo '<div class="card-body p-3">';
   echo '<h6>Payment Method:</h6>';
 
@@ -85,7 +90,6 @@ if (isset($_POST['selected_products'])) {
             <img id="imagePreview" src="#" alt="Image Preview" style="max-width: 200px; display: none;">
         </div>';
 
-  // ✅ Add total balance here (after loop, once)
   echo '<input type="hidden" name="balance" value="' . $totalCost . '">';
 
   echo '</div>';
@@ -98,11 +102,39 @@ if (isset($_POST['selected_products'])) {
   echo '</div>';
   echo '</div>';
   echo '</form>';
+} else {
+  echo '<p>No products selected.</p>';
 }
 ?>
 
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  function updateTotals() {
+    let totalCost = 0;
+    const quantities = document.querySelectorAll('input[name="quantity[]"]');
+    const productTotals = document.querySelectorAll('.product-total');
+    const prodCosts = document.querySelectorAll('input[name="prodCosts[]"]');
+
+    quantities.forEach((qtyInput, index) => {
+      let qty = parseInt(qtyInput.value) || 1;
+      let unitCost = parseFloat(prodCosts[index].value) || 0;
+      let productTotal = qty * unitCost;
+      productTotals[index].textContent = productTotal.toLocaleString(undefined, { minimumFractionDigits: 2 });
+      totalCost += productTotal;
+    });
+
+    // Update total cost displayed on page
+    document.querySelector('h3.mt-3.mb-5').textContent = 'Total: ₱ ' + totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+    // Also update hidden balance input value
+    const balanceInput = document.querySelector('input[name="balance"]');
+    if (balanceInput) balanceInput.value = totalCost.toFixed(2);
+  }
+
+  // Run once on page load to ensure totals are correct
+  document.addEventListener('DOMContentLoaded', updateTotals);
+</script>
 
 <script>
   function previewImage(event) {

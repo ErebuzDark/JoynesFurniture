@@ -8,9 +8,11 @@ $sql = "
 
         UNION ALL
 
-        SELECT 'Pending Approval' AS status, COUNT(*) AS total 
-        FROM checkout 
-        WHERE status = 'Pending Approval' AND userID = $userID
+        SELECT status, COUNT(*) AS total
+FROM checkout
+WHERE status IN ('Pending Approval', 'On Queue') AND userID = '$userID'
+GROUP BY status
+
 
         UNION ALL
 
@@ -43,6 +45,7 @@ $result = $conn->query($sql);
 
 $notifications = [
     'Pending Approval' => 0,
+    'On Queue' => 0,
     'On Progress' => 0,
     'Completed' => 0,
 ];
@@ -83,78 +86,92 @@ $totalNotifications = array_sum(array_filter($notifications));
                     <!-- Optional nav links here -->
                 </ul>
 
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown no-arrow mx-1">
-                        <a class="nav-link position-relative <?php echo $totalNotifications > 0 ? 'fw-bold text-dark' : 'text-muted'; ?>"
-                            href="#" id="alertsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-bell fa-fw"></i>
-                            <?php if ($totalNotifications > 0): ?>
-                                <span
-                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
-                                    <?php echo $totalNotifications; ?>
-                                </span>
-                            <?php endif; ?>
-                        </a>
+              <ul class="navbar-nav">
+    <li class="nav-item dropdown no-arrow mx-1">
+        <a class="nav-link position-relative <?php echo $totalNotifications > 0 ? 'fw-bold text-dark' : 'text-muted'; ?>"
+            href="#" id="alertsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-bell fa-fw"></i>
+            <?php if ($totalNotifications > 0): ?>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
+                    <?php echo $totalNotifications; ?>
+                </span>
+            <?php endif; ?>
+        </a>
 
-                        <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in"
-                            aria-labelledby="alertsDropdown">
-                            <h6 class="dropdown-header">Notifications</h6>
+        <div class="dropdown-menu dropdown-menu-end shadow animated--grow-in" aria-labelledby="alertsDropdown">
+            <h6 class="dropdown-header">Notifications</h6>
 
-                            <?php if ($notifications['Pending Approval'] > 0): ?>
-                                <a class="dropdown-item d-flex align-items-center" href="profile.php#on-queue">
-                                    <div class="me-3">
-                                        <div class="icon-circle">
-                                            <i class="fas fa-hourglass-start text-warning"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
-                                        <span
-                                            class="<?php echo $notifications['Pending Approval'] > 0 ? 'fw-bold' : ''; ?>">
-                                            <?php echo $notifications['Pending Approval']; ?> order(s) pending approval
-                                        </span>
-                                    </div>
-                                </a>
-                            <?php endif; ?>
-
-                            <?php if ($notifications['On Progress'] > 0): ?>
-                                <a class="dropdown-item d-flex align-items-center" href="profile.php#on-progress">
-                                    <div class="me-3">
-                                        <div class="icon-circle">
-                                            <i class="fas fa-cogs text-success"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
-                                        <span class="<?php echo $notifications['On Progress'] > 0 ? 'fw-bold' : ''; ?>">
-                                            <?php echo $notifications['On Progress']; ?> order(s) on progress
-                                        </span>
-                                    </div>
-                                </a>
-                            <?php endif; ?>
-
-                            <?php if ($notifications['Completed'] > 0): ?>
-                                <a class="dropdown-item d-flex align-items-center" href="profile.php#completed">
-                                    <div class="me-3">
-                                        <div class="icon-circle">
-                                            <i class="fas fa-check-circle text-primary"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
-                                        <span class="<?php echo $notifications['Completed'] > 0 ? 'fw-bold' : ''; ?>">
-                                            <?php echo $notifications['Completed']; ?> order(s) completed
-                                        </span>
-                                    </div>
-                                </a>
-                            <?php endif; ?>
-
-                            <?php if ($totalNotifications == 0): ?>
-                                <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
-                            <?php endif; ?>
+            <?php if (!empty($notifications['Pending Approval']) && $notifications['Pending Approval'] > 0): ?>
+                <a class="dropdown-item d-flex align-items-center" href="profile.php#pending-approval">
+                    <div class="me-3">
+                        <div class="icon-circle">
+                            <i class="fas fa-hourglass-start text-warning"></i>
                         </div>
-                    </li>
-                </ul>
+                    </div>
+                    <div>
+                        <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                        <span class="<?php echo $notifications['Pending Approval'] > 0 ? 'fw-bold' : ''; ?>">
+                            <?php echo $notifications['Pending Approval']; ?> order(s) pending approval
+                        </span>
+                    </div>
+                </a>
+            <?php endif; ?>
+
+            <?php if (!empty($notifications['On Queue']) && $notifications['On Queue'] > 0): ?>
+                <a class="dropdown-item d-flex align-items-center" href="profile.php#on-queue">
+                    <div class="me-3">
+                        <div class="icon-circle">
+                            <i class="fas fa-clock text-info"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                        <span class="<?php echo $notifications['On Queue'] > 0 ? 'fw-bold' : ''; ?>">
+                            <?php echo $notifications['On Queue']; ?> order(s) on queue
+                        </span>
+                    </div>
+                </a>
+            <?php endif; ?>
+
+            <?php if (!empty($notifications['On Progress']) && $notifications['On Progress'] > 0): ?>
+                <a class="dropdown-item d-flex align-items-center" href="profile.php#on-progress">
+                    <div class="me-3">
+                        <div class="icon-circle">
+                            <i class="fas fa-cogs text-success"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                        <span class="<?php echo $notifications['On Progress'] > 0 ? 'fw-bold' : ''; ?>">
+                            <?php echo $notifications['On Progress']; ?> order(s) on progress
+                        </span>
+                    </div>
+                </a>
+            <?php endif; ?>
+
+            <?php if (!empty($notifications['Completed']) && $notifications['Completed'] > 0): ?>
+                <a class="dropdown-item d-flex align-items-center" href="profile.php#completed">
+                    <div class="me-3">
+                        <div class="icon-circle">
+                            <i class="fas fa-check-circle text-primary"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                        <span class="<?php echo $notifications['Completed'] > 0 ? 'fw-bold' : ''; ?>">
+                            <?php echo $notifications['Completed']; ?> order(s) completed
+                        </span>
+                    </div>
+                </a>
+            <?php endif; ?>
+
+            <?php if ($totalNotifications == 0): ?>
+                <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
+            <?php endif; ?>
+        </div>
+    </li>
+</ul>
+
 
 
 

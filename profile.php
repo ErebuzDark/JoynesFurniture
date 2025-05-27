@@ -570,7 +570,9 @@ if (mysqli_num_rows($checkResult) > 0) {
                                 <div class="tab-pane fade" id="on-queue">
                                     <?php
                                     $sql = "
-    (SELECT 'checkout' AS source, orderID, status, prodName, image, cost AS totalCost, quantity, date FROM checkout WHERE userID = '$userID' AND status = 'Pending Approval')
+SELECT 'checkout' AS source, orderID, status, prodName, image, cost AS totalCost, quantity, date
+FROM checkout
+WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
     UNION
     (SELECT 'checkoutcustom' AS source, orderID, status, pName AS prodName, image, totalCost, quantity, date FROM checkoutcustom WHERE userID = '$userID' AND status = 'Pending Approval')
     ORDER BY date DESC
