@@ -584,10 +584,27 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         echo '<td>' . $row['address'] . '</td>';
                                         echo '<td>' . $row['cpNum'] . '</td>';
                                         echo '<td>';
-                                        foreach ($images as $image):
-                                            echo '<img src="' . trim($image) . '" class="img-fluid rounded-circle" style="width: 70px; height: 70px; object-fit:cover;" alt="">';
-                                        endforeach;
+                                        foreach ($images as $index => $image):
+                                            $modalId = 'imageModal' . $index;
+                                            $imageSrc = trim($image);
+
+                                            echo '<a href="#" data-toggle="modal" data-target="#' . $modalId . '">';
+                                            echo '<img src="' . $imageSrc . '" class="img-fluid rounded-circle mr-1 mb-1" style="width: 70px; height: 70px; object-fit:cover;" alt="">';
+                                            echo '</a>';
+
+                                            echo '
+                                            <div class="modal fade" id="' . $modalId . '" tabindex="-1" role="dialog" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                                                    <div class="modal-content bg-transparent border-0">
+                                                        <div class="modal-body text-center">
+                                                            <img src="' . $imageSrc . '" class="img-fluid rounded" style="max-height: 90vh;" alt="">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>';
+                                                                                endforeach;
                                         echo '</td>';
+
                                         echo '<td class="align-middle">';
                                         for ($i = 0; $i < $maxItems; $i++) {
                                             $prodName = isset($prodNames[$i]) ? trim($prodNames[$i]) : trim($prodNames[0]);

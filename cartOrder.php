@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prodNames = $_POST['prodNames'];
     $prodCosts = $_POST['prodCosts'];
     $balance = $_POST['balance'];
-    $status = 'On Queue';
+    $status = 'Pending Approval';
     $userID = $_POST['userID'];
     $images = $_POST['tblImage'];
     $payment = $_POST['payment'];
