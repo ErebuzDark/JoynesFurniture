@@ -193,10 +193,10 @@ if (isset($_POST['post'])) {
                     <div class="d-flex m-3 me-0">
                         <ul class="navbar-nav">
                             <li class="nav-item dropdown no-arrow mx-1">
-                                <a class="nav-link position-relative <?php echo $totalNotifications > 0 ? 'fw-bold text-dark' : 'text-muted'; ?>"
+                                <a class="nav-link position-relative <?php echo $totalNotifications > 0 ? 'fw-bold text-dark' : 'text-muted'; ?> p-0"
                                     href="#" id="alertsDropdown" role="button" data-bs-toggle="dropdown"
                                     aria-expanded="false">
-                                    <i class="fas fa-bell fa-fw"></i>
+                                    <i class="fas fa-bell fa-fw fs-1"></i>
                                     <?php if ($totalNotifications > 0): ?>
                                         <span
                                             class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">

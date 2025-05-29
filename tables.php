@@ -359,7 +359,7 @@ $row = mysqli_fetch_assoc($furnitureresult1);
                                                             data-name="<?php echo htmlspecialchars($row['fName']); ?>"
                                                             data-category="<?php echo htmlspecialchars($row['category']); ?>"
                                                             data-quantity="<?php echo (int)$row['fQuantity']; ?>"
-                                                            data-price="<?php echo number_format($row['cost'], 2, '.', ','); ?>"
+                                                            data-price="<?php echo $row['cost']; ?>"
                                                             data-description="<?php echo htmlspecialchars($row['fDes']); ?>"
                                                             data-image="<?php echo htmlspecialchars($row['image']); ?>">
                                                             Edit
