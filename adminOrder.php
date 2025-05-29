@@ -754,7 +754,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
                                 // Show/hide rows based on filter
                                 rows.forEach(row => {
-                                    const statusCell = row.querySelector("td:nth-child(11) span");
+                                    const statusCell = row.querySelector("td:nth-child(12) span");
                                     const rowStatus = statusCell ? statusCell.textContent.trim().toLowerCase() : "";
 
                                     if (status.toLowerCase() === "all" || rowStatus === status.toLowerCase()) {
@@ -769,8 +769,8 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                     const visibleRows = rows.filter(row => row.style.display !== "none");
 
                                     visibleRows.sort((a, b) => {
-                                        const statusA = a.querySelector("td:nth-child(11) span")?.textContent.trim().toLowerCase();
-                                        const statusB = b.querySelector("td:nth-child(11) span")?.textContent.trim().toLowerCase();
+                                        const statusA = a.querySelector("td:nth-child(12) span")?.textContent.trim().toLowerCase();
+                                        const statusB = b.querySelector("td:nth-child(12) span")?.textContent.trim().toLowerCase();
 
                                         // orderID is in the first column (td:nth-child(1))
                                         const idA = parseInt(a.querySelector("td:nth-child(1)")?.textContent) || 0;
@@ -1189,6 +1189,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             <input type="hidden" name="currentBalance" value="${balance}">
                             <input type="hidden" name="totalCost" value="${totalCost}">
 
+                            <label for="" class="form-label"><strong>Amount Paid:</strong></label>
                             <input type="number" step="0.01" min="1000" id="amountPaid_${index}" name="amountPaid"
                                 class="form-control form-control-sm" 
                                 value="${r.amountPaid !== undefined ? parseFloat(r.amountPaid).toFixed(2) : ''}" 

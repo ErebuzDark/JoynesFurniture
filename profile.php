@@ -50,11 +50,6 @@ if (mysqli_num_rows($checkResult) > 0) {
 }
 
 
-
-
-
-
-
 ?>
 
 <!DOCTYPE html>
