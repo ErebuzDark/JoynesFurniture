@@ -2,44 +2,47 @@
 include "database.php";
 header('Content-Type: application/json');
 
-if (isset($_GET['orderID'])) {
+if (isset($_GET['orderID'], $_GET['source'])) {
     $orderID = intval($_GET['orderID']);
+    $source = $_GET['source'];
 
-    $stmt = $conn->prepare("
-        SELECT 
-            'checkout' AS source,
-            o.OFC_ID, o.userID AS receipt_userID, o.orderID, o.payment_receipt_id, o.totalPaid,
-            o.reference_number, o.created_at, o.update_at,
-            pr.payment_status,
-            c.userID AS checkout_userID, c.image, c.fID, c.fullName, c.prodName, c.address, c.cpNum, 
-            c.cost, c.date, c.status, c.payment, c.balance, c.proofPay, c.quantity, c.variant
-        FROM checkout c
-        INNER JOIN official_receipts o ON c.orderID = o.orderID
-        INNER JOIN payment_receipts pr ON o.payment_receipt_id = pr.id
-        WHERE c.orderID = ?
+    if ($source === 'checkout') {
+        $stmt = $conn->prepare("
+            SELECT 
+                'checkout' AS source,
+                o.OFC_ID, o.userID AS receipt_userID, o.orderID, o.payment_receipt_id, o.totalPaid,
+                o.reference_number, o.created_at, o.update_at,
+                pr.payment_status,
+                c.userID AS checkout_userID, c.image, c.fID, c.fullName, c.prodName, c.address, c.cpNum, 
+                c.cost, c.date, c.status, c.payment, c.balance, c.proofPay, c.quantity, c.variant
+            FROM checkout c
+            INNER JOIN official_receipts o ON c.orderID = o.orderID
+            INNER JOIN payment_receipts pr ON o.payment_receipt_id = pr.id
+            WHERE c.orderID = ? AND pr.source = 'checkout'
+        ");
+    } else {
+        $stmt = $conn->prepare("
+            SELECT 
+                'checkoutcustom' AS source,
+                o.OFC_ID, o.userID AS receipt_userID, o.orderID, o.payment_receipt_id, o.totalPaid,
+                o.reference_number, o.created_at, o.update_at,
+                pr.payment_status,
+                cc.userID AS checkout_userID, cc.image, NULL AS fID, cc.fullName, cc.pName AS prodName, cc.address, cc.cpNum, 
+                cc.totalCost AS cost, cc.date, cc.status, cc.payment, cc.balance, NULL AS proofPay, cc.quantity, cc.variant
+            FROM checkoutcustom cc
+            INNER JOIN official_receipts o ON cc.orderID = o.orderID
+            INNER JOIN payment_receipts pr ON o.payment_receipt_id = pr.id
+            WHERE cc.orderID = ? AND pr.source = 'checkoutcustom'
+        ");
+    }
 
-        UNION ALL
-
-        SELECT 
-            'checkoutcustom' AS source,
-            o.OFC_ID, o.userID AS receipt_userID, o.orderID, o.payment_receipt_id, o.totalPaid,
-            o.reference_number, o.created_at, o.update_at,
-            pr.payment_status,
-            cc.userID AS checkout_userID, cc.image, NULL AS fID, cc.fullName, cc.pName AS prodName, cc.address, cc.cpNum, 
-            cc.totalCost AS cost, cc.date, cc.status, cc.payment, cc.balance, NULL AS proofPay, cc.quantity, cc.variant
-        FROM checkoutcustom cc
-        INNER JOIN official_receipts o ON cc.orderID = o.orderID
-        INNER JOIN payment_receipts pr ON o.payment_receipt_id = pr.id
-        WHERE cc.orderID = ?
-    ");
-
-    $stmt->bind_param("ii", $orderID, $orderID);
+    $stmt->bind_param("i", $orderID);
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
 
     if ($result->num_rows === 0) {
-        echo json_encode(['success' => false, 'message' => 'No invoice found for this order ID.']);
+        echo json_encode(['success' => false, 'message' => 'No invoice found for this order ID and source.']);
         exit;
     }
 

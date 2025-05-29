@@ -466,11 +466,11 @@ if (mysqli_num_rows($checkResult) > 0) {
                                 <div class="tab-pane fade show active" id="overview">
                                     <?php
                                     $sql = "
-    (SELECT 'checkout' AS source, prodName, image, proofPay, cost AS totalCost, orderID, quantity, date, status, balance, variant FROM checkout WHERE userID = '$userID')
-    UNION
-    (SELECT 'checkoutcustom' AS source, pName AS prodName, image, proofPay, totalCost, orderID, quantity, date, status, balance, variant FROM checkoutcustom WHERE userID = '$userID')
-    ORDER BY date DESC
-    ";
+                                        (SELECT 'checkout' AS source, userID, prodName, image, proofPay, cost AS totalCost, orderID, quantity, date, status, balance, variant FROM checkout WHERE userID = '$userID')
+                                        UNION
+                                        (SELECT 'checkoutcustom' AS source, userID, pName AS prodName, image, proofPay, totalCost, orderID, quantity, date, status, balance, variant FROM checkoutcustom WHERE userID = '$userID')
+                                        ORDER BY date DESC
+                                        ";
 
                                     $result = $conn->query($sql);
 
@@ -545,6 +545,8 @@ if (mysqli_num_rows($checkResult) > 0) {
                 data-bs-toggle="modal" 
                 data-bs-target="#invoiceModal" 
                 data-orderid="' . htmlspecialchars($row['orderID']) . '" 
+                data-userid="' . htmlspecialchars($row['userID']) . '" 
+                data-prodname="' . htmlspecialchars($row['prodName']) . '" 
                 data-source="' . htmlspecialchars($row['source']) . '">
                 View All Invoice
             </button>';
@@ -565,13 +567,13 @@ if (mysqli_num_rows($checkResult) > 0) {
                                 <div class="tab-pane fade" id="on-queue">
                                     <?php
                                     $sql = "
-SELECT 'checkout' AS source, orderID, status, prodName, image, cost AS totalCost, quantity, date
-FROM checkout
-WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
-    UNION
-    (SELECT 'checkoutcustom' AS source, orderID, status, pName AS prodName, image, totalCost, quantity, date FROM checkoutcustom WHERE userID = '$userID' AND status = 'Pending Approval')
-    ORDER BY date DESC
-    ";
+                                        SELECT 'checkout' AS source, orderID, status, prodName, image, cost AS totalCost, quantity, date
+                                        FROM checkout
+                                        WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
+                                            UNION
+                                            (SELECT 'checkoutcustom' AS source, orderID, status, pName AS prodName, image, totalCost, quantity, date FROM checkoutcustom WHERE userID = '$userID' AND status = 'Pending Approval')
+                                            ORDER BY date DESC
+                                            ";
 
                                     $result = $conn->query($sql);
 
@@ -837,8 +839,8 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
     <script src="js/main.js"></script>
 
     <script>
-        $(document).ready(function () {
-            $("button[name='complete']").click(function () {
+        $(document).ready(function() {
+            $("button[name='complete']").click(function() {
                 var orderID = $(this).data("orderid");
                 var source = $(this).data("source");
                 var status = $(this).data("status");
@@ -853,7 +855,7 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
                         source: source,
                         status: status
                     },
-                    success: function (response) {
+                    success: function(response) {
                         if (response === 'success') {
                             alert("Order status updated to Delivered!");
                             button.text('Delivered').prop('disabled', true);
@@ -861,13 +863,13 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
                             alert("Error updating order status.");
                         }
                     },
-                    error: function () {
+                    error: function() {
                         alert("Error with AJAX request.");
                     }
                 });
             });
 
-            $("button[name='cancel']").click(function () {
+            $("button[name='cancel']").click(function() {
                 var orderID = $(this).data("orderid");
                 var source = $(this).data("source");
                 var status = $(this).data("status");
@@ -882,7 +884,7 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
                         source: source,
                         status: status
                     },
-                    success: function (response) {
+                    success: function(response) {
                         if (response === 'success') {
                             alert("Order cancelled!");
                             button.text('Cancelled').prop('disabled', true);
@@ -891,7 +893,7 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
                             alert("Error updating order status.");
                         }
                     },
-                    error: function () {
+                    error: function() {
                         alert("Error with AJAX request.");
                     }
                 });
@@ -903,11 +905,11 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
         const imageText = document.getElementById('image-text');
         const imageSizeText = document.getElementById('image-size-text');
 
-        dropArea.addEventListener('click', function () {
+        dropArea.addEventListener('click', function() {
             inputFile.click();
         });
 
-        inputFile.addEventListener('change', function () {
+        inputFile.addEventListener('change', function() {
             const file = this.files[0];
 
             if (file.type.startsWith('image/')) {
@@ -922,14 +924,14 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
             }
         });
 
-        dropArea.addEventListener('dragover', function (e) {
+        dropArea.addEventListener('dragover', function(e) {
             e.preventDefault();
             this.style.borderStyle = 'solid';
             const h3 = this.querySelector('h3');
             h3.textContent = 'Release here to upload image';
         });
 
-        dropArea.addEventListener('drop', function (e) {
+        dropArea.addEventListener('drop', function(e) {
             e.preventDefault();
             inputFile.files = e.dataTransfer.files;
             const file = e.dataTransfer.files[0];
@@ -948,7 +950,7 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
 
         const command = ['dragleave', 'dragend'];
         command.forEach(item => {
-            dropArea.addEventListener(item, function () {
+            dropArea.addEventListener(item, function() {
                 this.style.borderStyle = 'dashed';
                 const h3 = this.querySelector('h3');
                 h3.textContent = 'Drag and drop or click here to select image';
@@ -957,7 +959,7 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
 
         function updatePreview(file) {
             const reader = new FileReader();
-            reader.onload = function () {
+            reader.onload = function() {
                 const url = reader.result;
                 const preview = document.getElementById('image-preview');
                 preview.src = url;
@@ -976,14 +978,14 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
         }
 
 
-        document.getElementById('updateImageBtn').addEventListener('click', function () {
+        document.getElementById('updateImageBtn').addEventListener('click', function() {
             const formData = new FormData(document.getElementById('updateProfileForm'));
             formData.append('updateType', 'image');
 
             fetch('profileUpdate.php', {
-                method: 'POST',
-                body: formData
-            })
+                    method: 'POST',
+                    body: formData
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -998,14 +1000,14 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
                 });
         });
 
-        document.getElementById('updateDetailsBtn').addEventListener('click', function () {
+        document.getElementById('updateDetailsBtn').addEventListener('click', function() {
             const formData = new FormData(document.getElementById('updateProfileForm'));
             formData.append('updateType', 'details');
 
             fetch('profileUpdate.php', {
-                method: 'POST',
-                body: formData
-            })
+                    method: 'POST',
+                    body: formData
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -1148,108 +1150,108 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
         }
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             document.querySelectorAll('.view-invoice-btn').forEach(button => {
-                button.addEventListener('click', function () {
+                button.addEventListener('click', function() {
                     const orderId = this.getAttribute('data-orderid');
                     const prodName = this.getAttribute('data-prodname');
+                    const userId = this.getAttribute('data-userid');
+                    const source = this.getAttribute('data-source');
 
-                    fetch(`fetch_invoice.php?orderID=${orderId}`) // <-- FIXED LINE
+                    fetch(`fetch_invoice.php?source=${source}&orderID=${orderId}&userID=${userId}&prodName=${encodeURIComponent(prodName)}`)
                         .then(response => response.json())
                         .then(data => {
-                            console.log("Fetched data:", data);
+                            console.log("Fetched data here:", data);
 
                             const container = document.getElementById('invoices-container');
                             container.innerHTML = '';
 
-                            if (data.success) {
+                            if (data.success && data.invoices && data.invoices.length > 0) {
                                 data.invoices.forEach((invoice, index) => {
-                                    const invoiceId = 'invoice' + index;
+                                    const invoiceId = `invoice${index}`;
                                     const invoiceHTML = `
-                                <div class="invoice mb-4 p-4 border rounded shadow-sm" id="${invoiceId}" style="max-width: 600px; background: #fff;">
-                                    <div class="row align-items-center mb-4">
-                                        <div class="col-8">
-                                            <h1 class="fw-bold text-primary mb-1" style="letter-spacing: 2px;">INVOICE</h1>
-                                            <p class="mb-0">Joynes Furniture</p>
-                                            <small class="text-muted">Quality furniture for your home</small>
+                                        <div class="invoice mb-4 p-4 border rounded shadow-sm" id="${invoiceId}" style="max-width: 600px; background: #fff;">
+                                            <div class="row align-items-center mb-4">
+                                                <div class="col-8">
+                                                    <h1 class="fw-bold text-primary mb-1" style="letter-spacing: 2px;">INVOICE</h1>
+                                                    <p class="mb-0">Joynes Furniture</p>
+                                                    <small class="text-muted">Quality furniture for your home</small>
+                                                </div>
+                                                <div class="col-4 text-end">
+                                                    <img src="./img/logo1.png" alt="Joynes Furniture Logo" style="max-height: 70px; object-fit: contain;">
+                                                </div>
+                                            </div>
+
+                                            <hr>
+
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <p class="fw-bold mb-3">Invoice Details</p>
+                                                    <p><strong>Date:</strong> ${invoice.created_at}</p>
+                                                    <p><strong>Order ID:</strong> ${invoice.orderID}</p>
+                                                    <p><strong>Amount Paid:</strong> PHP <span class="text-success fw-semibold">${invoice.totalPaid}</span></p>
+                                                    <p><strong>Payment Method:</strong> <span class="text-white badge bg-info">Gcash</span></p>
+                                                    <p><strong>Ref. Number:</strong> <span class="text-secondary">${invoice.reference_number}</span></p>
+                                                    ${invoice.variant === 'full'
+                                                        ? ''
+                                                        : `<p><strong>Balance:</strong> PHP <span class="text-success fw-semibold">${invoice.balance}</span></p>`}
+                                                </div>
+                                                <div class="col-md-6 mb-3 text-end">
+                                                    <p class="fw-bold mb-3">Billed / Issued To</p>
+                                                    <p><strong>Name:</strong> ${invoice.fullName}</p>
+                                                    <p><strong>Address:</strong> ${invoice.address}</p>
+                                                    <p><strong>Contact:</strong> ${invoice.cpNum}</p>
+                                                    <p><strong>Status:</strong> <span class="text-white badge bg-info">${invoice.payment_status}</span></p>
+                                                </div>
+                                            </div>
+
+                                            <hr>
+
+                                            <h5 class="mb-3">Purchase Details</h5>
+                                            <div class="table-responsive">
+                                                <table class="table table-striped table-bordered">
+                                                    <thead class="table-primary">
+                                                        <tr>
+                                                            <th>Item</th>
+                                                            <th class="text-center">Quantity</th>
+                                                            <th class="text-end">Price</th>
+                                                            <th class="text-end">Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        ${invoice.items.map(item => `
+                                                            <tr>
+                                                                <td>${item.item}</td>
+                                                                <td class="text-center">${item.quantity}</td>
+                                                                <td class="text-end">${item.price}</td>
+                                                                <td class="text-end">${item.total}</td>
+                                                            </tr>
+                                                        `).join('')}
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr>
+                                                            <th colspan="3" class="text-end">Total</th>
+                                                            <th class="text-end text-success">${invoice.invoiceTotal}</th>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+
+                                            <hr>
+
+                                            <div class="text-end">
+                                                <button class="btn btn-sm btn-outline-primary" onclick="downloadInvoice('${invoiceId}')">
+                                                    <i class="bi bi-download me-1"></i> Download
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="col-4 text-end">
-                                            <img src="./img/logo1.png" alt="Joynes Furniture Logo" style="max-height: 70px; object-fit: contain;">
-                                        </div>
-                                    </div>
-
-                                    <hr>
-
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <p class="fw-bold mb-3">Invoice Details</p>
-                                            <p><strong>Date:</strong> ${invoice.created_at}</p>
-                                            <p><strong>Order ID:</strong> ${invoice.orderID}</p>
-                                            <p class=""><strong>Amount Paid:</strong> PHP <span class="text-success fw-semibold">${invoice.totalPaid}</span></p>
-                                            <p class="mb-0"><strong>Payment Method:</strong> <span class="text-white badge bg-info">Gcash</span></p>
-                                            <p><strong>Ref. Number:</strong> <span class="text-secondary">${invoice.reference_number}</span></p>
-                                            ${invoice.variant === 'full'
-                                            ? ''
-                                            : `<p class="mb-0"><strong>Balance:</strong> PHP <span class="text-success fw-semibold">${invoice.balance}</span></p>`}
-                                        </div>
-                                                                    <div class="col-md-6 mb-3 text-end">
-                                    <p class="fw-bold mb-3">Billed / Issued To</p>
-                                    <p><strong>Name:</strong> ${userInfo.name}</p>
-                                    <p><strong>Email:</strong> ${userInfo.email}</p>
-                                    <p><strong>Address:</strong> ${userInfo.address}</p>
-                                    <p><strong>Contact:</strong> ${userInfo.cpNum}</p>
-                                    <p class="mb-0"><strong>Payment Status:</strong> <span class="text-white badge bg-info">${invoice.payment_status}</span></p>
-
-                                </div>
-
-                                    </div>
-
-                                    <hr>
-
-                                    <h5 class="mb-3">Purchase Details</h5>
-                                    <div class="table-responsive">
-                                        <table class="table table-striped table-bordered">
-                                            <thead class="table-primary">
-                                                <tr>
-                                                    <th>Item</th>
-                                                    <th class="text-center">Quantity</th>
-                                                    <th class="text-end">Price</th>
-                                                    <th class="text-end">Total</th>
-                                                </tr>
-                                            </thead>
-                                           <tbody>
-                            ${invoice.items.map(item => `
-                                <tr>
-                                    <td>${item.item}</td>
-                                    <td class="text-center">${item.quantity}</td>
-                                    <td class="text-end">${item.price}</td>
-                                    <td class="text-end">${item.total}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                                              <tfoot>
-    <tr>
-        <th colspan="3" class="text-end">Total</th>
-        <th class="text-end text-success">${invoice.invoiceTotal}</th>
-    </tr>
-</tfoot>
-                                        </table>
-                                    </div>
-
-                                    <hr>
-
-                                    <div class="text-end">
-                                        <button class="btn btn-sm btn-outline-primary" onclick="downloadInvoice('${invoiceId}')">
-                                            <i class="bi bi-download me-1"></i> Download
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
+                                    `;
                                     container.insertAdjacentHTML('beforeend', invoiceHTML);
                                 });
                             } else {
-                                container.innerHTML = '<p>No invoices found.</p>';
+                                container.innerHTML = '<p class="text-danger">No invoice found.</p>';
                             }
+
                         })
                         .catch(error => {
                             console.error("Error fetching invoice:", error);
@@ -1259,6 +1261,8 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
             });
         });
     </script>
+
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
 
 
@@ -1276,8 +1280,8 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
 
 
     <script>
-        $(document).ready(function () {
-            $('.pay-balance-btn').click(function () {
+        $(document).ready(function() {
+            $('.pay-balance-btn').click(function() {
                 var balance = $(this).data('balance');
                 var orderid = $(this).data('orderid');
                 var source = $(this).data('source');
@@ -1296,9 +1300,9 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
 
     <!-- new script for displaying resibo -->
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             // See all payment images for an order
-            $('.see-payment-images-btn').click(function () {
+            $('.see-payment-images-btn').click(function() {
                 var orderID = $(this).data('orderid');
                 var source = $(this).data('source');
 
@@ -1309,12 +1313,12 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
                         orderID: orderID,
                         source: source
                     },
-                    success: function (response) {
+                    success: function(response) {
                         $('#paymentImagesContainer').html(response);
                         var modal = new bootstrap.Modal(document.getElementById('paymentImagesModal'));
                         modal.show();
                     },
-                    error: function () {
+                    error: function() {
                         $('#paymentImagesContainer').html('<p class="text-danger">Failed to load payment images.</p>');
                     }
                 });
@@ -1337,7 +1341,7 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
         });
     </script> -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const payBtns = document.querySelectorAll('.pay-balance-btn');
 
             payBtns.forEach(button => {
