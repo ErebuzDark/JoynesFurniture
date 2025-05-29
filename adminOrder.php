@@ -23,35 +23,40 @@ if ($result->num_rows > 0) {
     $totalEarnings = 0;
 }
 
+
 $sql1 = "
-        (SELECT COUNT(*) as totalQueue FROM checkout 
-        WHERE status = 'On Queue')
-        UNION
-        (SELECT COUNT(*) as totalQueue FROM checkoutcustom 
-        WHERE status = 'Pending Approval')
-    ";
+    SELECT orderID, prodName AS productName, status FROM checkout 
+    WHERE status = 'On Queue'
+    UNION ALL
+    SELECT orderID, pName AS productName, status FROM checkoutcustom 
+    WHERE status = 'Pending Approval'
+";
 $result1 = $conn->query($sql1);
-$totalQueue = 0;
+
+$orders = [];
 if ($result1->num_rows > 0) {
     while ($row = $result1->fetch_assoc()) {
-        $totalQueue += $row['totalQueue'];
+        $orders[] = $row;
     }
-} else {
-    $totalQueue = 0;
 }
+$totalQueue = count($orders);
 
 $sql2 = "
- (SELECT COUNT(*) as newPayment FROM payment_receipts 
- WHERE payment_status = 'Pending')";
+    SELECT orderID, productName
+    FROM payment_receipts 
+    WHERE payment_status = 'Pending'
+";
+
 $result2 = $conn->query($sql2);
-$newPayment = 0;
+
+$pendingPayments = [];
 if ($result2->num_rows > 0) {
     while ($row = $result2->fetch_assoc()) {
-        $newPayment += $row['newPayment'];
+        $pendingPayments[] = $row;
     }
-} else {
-    $newPayment = 0;
 }
+$newPayment = count($pendingPayments);
+
 
 
 $sqlGo = "
@@ -382,8 +387,6 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 </form>
                             </div>
                         </li>
-
-                        <!-- Nav Item - Alerts -->
                         <!-- Nav Item - Alerts -->
                         <li class="nav-item dropdown no-arrow mx-1">
                             <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
@@ -403,34 +406,41 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 </h6>
 
                                 <?php if ($totalQueue > 0): ?>
-                                    <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
-                                        <div class="mr-3">
-                                            <div class="icon-circle bg-primary">
-                                                <i class="fas fa-shopping-cart text-white"></i>
+                                    <?php foreach ($orders as $order): ?>
+                                        <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
+                                            <div class="mr-3">
+                                                <div class="icon-circle bg-primary">
+                                                    <i class="fas fa-shopping-cart text-white"></i>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
-                                            <span class="font-weight-bold"><?php echo $totalQueue; ?> new order(s) to
-                                                approve</span>
-                                        </div>
-                                    </a>
+                                            <div>
+                                                <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                                <span class="font-weight-bold">[Order ID: <?php echo $order['orderID']; ?>] New Order - <?php echo $order['productName']; ?></span>
+                                            </div>
+                                        </a>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
                                 <?php endif; ?>
 
                                 <?php if ($newPayment > 0): ?>
-                                    <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
-                                        <div class="mr-3">
-                                            <div class="icon-circle bg-success">
-                                                <i class="fas fa-receipt text-white"></i>
+                                    <?php foreach ($pendingPayments as $payment): ?>
+                                        <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
+                                            <div class="mr-3">
+                                                <div class="icon-circle bg-success">
+                                                    <i class="fas fa-receipt text-white"></i>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
-                                            <span class="font-weight-bold"><?php echo $newPayment; ?> new payment(s) to
-                                                review</span>
-                                        </div>
-                                    </a>
+                                            <div>
+                                                <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                                <span class="font-weight-bold">
+                                                    [Order ID: <?php echo $payment['orderID']; ?>] Pending Payment - <?php echo $payment['productName']; ?>
+                                                </span>
+                                            </div>
+                                        </a>
+                                    <?php endforeach; ?>
                                 <?php endif; ?>
+
 
                                 <?php if ($totalNotifications == 0): ?>
                                     <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
