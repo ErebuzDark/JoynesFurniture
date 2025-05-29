@@ -1066,6 +1066,21 @@ if (mysqli_num_rows($checkResult) > 0) {
                     <h5 class="modal-title" id="balancePaymentModalLabel">Upload Payment Receipt</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
+                <div class="mx-auto payment-method mt-5 p-3 rounded shadow-sm border" style="max-width: auto;">
+                    <h6 class="text-primary mb-3">Payment Method</h6>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="img/gcash.png" width="30" height="30" alt="GCash Logo" class="me-2">
+                        <span class="fw-bold text-primary">GCash</span>
+                    </div>
+
+                    <div class="qr-container text-center">
+                        <img src="img/qr.jpg" width="250" height="250" alt="GCash QR Code"
+                            class="img-fluid rounded border">
+                        <p class="text-muted small mt-2">Scan this QR code to pay</p>
+                    </div>
+                </div>
+
                 <form method="POST" action="upload_balance_payment.php" enctype="multipart/form-data">
                     <div class="modal-body">
                         <p><strong>Remaining Balance:</strong> ₱<span id="balanceAmountDisplay"></span></p>
