@@ -24,21 +24,37 @@ if ($result->num_rows > 0) {
 }
 
 $sql1 = "
-        (SELECT COUNT(*) as totalQueue FROM checkout 
-        WHERE status = 'On Queue')
-        UNION
-        (SELECT COUNT(*) as totalQueue FROM checkoutcustom 
-        WHERE status = 'Pending Approval')
-    ";
+    SELECT orderID, prodName AS productName, status FROM checkout 
+    WHERE status = 'On Queue'
+    UNION ALL
+    SELECT orderID, pName AS productName, status FROM checkoutcustom 
+    WHERE status = 'Pending Approval'
+";
 $result1 = $conn->query($sql1);
-$totalQueue = 0;
+
+$orders = [];
 if ($result1->num_rows > 0) {
     while ($row = $result1->fetch_assoc()) {
-        $totalQueue += $row['totalQueue'];
+        $orders[] = $row;
     }
-} else {
-    $totalQueue = 0;
 }
+$totalQueue = count($orders);
+
+$sql2 = "
+    SELECT orderID, productName
+    FROM payment_receipts 
+    WHERE payment_status = 'Pending'
+";
+
+$result2 = $conn->query($sql2);
+
+$pendingPayments = [];
+if ($result2->num_rows > 0) {
+    while ($row = $result2->fetch_assoc()) {
+        $pendingPayments[] = $row;
+    }
+}
+$newPayment = count($pendingPayments);
 
 
 $sqlGo = "
@@ -198,6 +214,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                 newWin.print();
             }
         }
+
         function openForm() {
             document.getElementById("myForm").style.display = "block";
         }
@@ -320,8 +337,11 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-bell fa-fw"></i>
-                                <?php if ($totalQueue > 0): ?>
-                                <span class="badge badge-danger badge-counter"><?php echo $totalQueue; ?></span>
+                                <?php
+                                $totalNotifications = $totalQueue + $newPayment;
+                                if ($totalNotifications > 0):
+                                ?>
+                                    <span class="badge badge-danger badge-counter"><?php echo $totalNotifications; ?></span>
                                 <?php endif; ?>
                             </a>
                             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -329,23 +349,50 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 <h6 class="dropdown-header">
                                     Notifications
                                 </h6>
+
                                 <?php if ($totalQueue > 0): ?>
-                                <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-primary">
-                                            <i class="fas fa-shopping-cart text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
-                                        <span class="font-weight-bold"><?php echo $totalQueue; ?> new order(s) to approve</span>
-                                    </div>
-                                </a>
+                                    <?php foreach ($orders as $order): ?>
+                                        <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
+                                            <div class="mr-3">
+                                                <div class="icon-circle bg-primary">
+                                                    <i class="fas fa-shopping-cart text-white"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                                <span class="font-weight-bold">[Order ID: <?php echo $order['orderID']; ?>] New Order - <?php echo $order['productName']; ?></span>
+                                            </div>
+                                        </a>
+                                    <?php endforeach; ?>
                                 <?php else: ?>
-                                <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
+                                    <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
+                                <?php endif; ?>
+
+                                <?php if ($newPayment > 0): ?>
+                                    <?php foreach ($pendingPayments as $payment): ?>
+                                        <a class="dropdown-item d-flex align-items-center" href="adminOrder.php">
+                                            <div class="mr-3">
+                                                <div class="icon-circle bg-success">
+                                                    <i class="fas fa-receipt text-white"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
+                                                <span class="font-weight-bold">
+                                                    [Order ID: <?php echo $payment['orderID']; ?>] Pending Payment - <?php echo $payment['productName']; ?>
+                                                </span>
+                                            </div>
+                                        </a>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+
+
+                                <?php if ($totalNotifications == 0): ?>
+                                    <div class="dropdown-item text-center small text-gray-500">No new notifications</div>
                                 <?php endif; ?>
                             </div>
                         </li>
+
 
                         <!-- Nav Item - Messages -->
                         <div class="topbar-divider d-none d-sm-block"></div>
@@ -485,7 +532,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 </div>
                             </div>
                         </div>
- 
+
 
                         <!-- <div class="col-5">
                             <div class="border border-dark border-5 bg-white p-3">
@@ -671,7 +718,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
                 xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-                xhr.onreadystatechange = function () {
+                xhr.onreadystatechange = function() {
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         if (xhr.responseText === "Status updated successfully.") {
                             document.getElementById("st_" + orderID).innerHTML = status;
@@ -706,7 +753,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                 var iframe = document.getElementById('reportFrame');
                 iframe.src = 'report.php?period=' + period;
 
-                iframe.onload = function () {
+                iframe.onload = function() {
                     iframe.contentWindow.focus();
                     iframe.contentWindow.print();
                 };
