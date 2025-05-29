@@ -1190,9 +1190,12 @@ WHERE userID = '$userID' AND status IN ('Pending Approval', 'On Queue')
                                             <p class="fw-bold mb-3">Invoice Details</p>
                                             <p><strong>Date:</strong> ${invoice.created_at}</p>
                                             <p><strong>Order ID:</strong> ${invoice.orderID}</p>
-                                            <p class="mb-0"><strong>Amount Paid:</strong> <span class="text-success fw-semibold">${invoice.totalPaid}</span></p>
+                                            <p class=""><strong>Amount Paid:</strong> PHP <span class="text-success fw-semibold">${invoice.totalPaid}</span></p>
                                             <p class="mb-0"><strong>Payment Method:</strong> <span class="text-white badge bg-info">Gcash</span></p>
                                             <p><strong>Ref. Number:</strong> <span class="text-secondary">${invoice.reference_number}</span></p>
+                                            ${invoice.variant === 'full'
+                                            ? ''
+                                            : `<p class="mb-0"><strong>Balance:</strong> PHP <span class="text-success fw-semibold">${invoice.balance}</span></p>`}
                                         </div>
                                                                     <div class="col-md-6 mb-3 text-end">
                                     <p class="fw-bold mb-3">Billed / Issued To</p>

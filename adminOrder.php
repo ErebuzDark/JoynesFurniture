@@ -518,12 +518,12 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             <div class="table-responsive">
                                 <?php
                                 $sql = "
-                                    SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity, 
+                                    SELECT 'checkout' AS source, payment, proofPay, balance, fullName, address, cpNum, prodName, image, quantity,variant, 
                                         cost AS totalCost, date, status, orderID, width, length, height 
                                     FROM checkout
                                     UNION
                                     SELECT 'checkoutcustom' AS source, payment, proofPay, balance, fullName, address, cpNum, pName AS prodName, image, 
-                                        quantity, totalCost, date, status, orderID, width, length, height 
+                                        quantity,variant, totalCost, date, status, orderID, width, length, height 
                                     FROM checkoutcustom
                                 ORDER BY 
                                 CASE 
@@ -559,6 +559,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                             <th>Cellphone Number</th>
                                             <th>Image</th>
                                             <th>Product Name</th>
+                                            <th>Source</th>
                                             <th>Dimension</th>
                                             <th>Quantity</th>
                                             <th>Price</th>
@@ -602,7 +603,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                                     </div>
                                                 </div>
                                             </div>';
-                                                                                endforeach;
+                                        endforeach;
                                         echo '</td>';
 
                                         echo '<td class="align-middle">';
@@ -611,6 +612,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                             echo '<h6>' . htmlspecialchars($prodName) . '</h6>';
                                         }
                                         echo '</td>';
+                                        echo '<td>' . ($row['variant'] === 'full' ? 'Checkout' : 'Checkoutcustom') . '</td>';
 
                                         echo '<td class="align-middle">';
                                         // Dimension column
@@ -1095,6 +1097,19 @@ $ordersData = json_encode(array_values($ordersPerMonth));
     </div>
 
     <script>
+        function validateAmountPaid(input, index) {
+            const errorElement = document.getElementById(`amountPaidError_${index}`);
+            const value = parseFloat(input.value);
+
+            if (isNaN(value) || value < 1000) {
+                errorElement.classList.remove('d-none');
+                input.setCustomValidity("Amount must be at least 1000.");
+            } else {
+                errorElement.classList.add('d-none');
+                input.setCustomValidity("");
+            }
+        }
+
         function viewProofPayAll(receiptsJson, orderID, senderName, balance, totalPaid, totalCost) {
             const receipts = JSON.parse(receiptsJson);
             const imgContainer = document.getElementById('paymentProofImage');
@@ -1164,12 +1179,13 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             <input type="hidden" name="currentBalance" value="${balance}">
                             <input type="hidden" name="totalCost" value="${totalCost}">
 
-                            <div class="mb-2">
-                                <label for="amountPaid_${index}" class="form-label"><strong>Amount Paid:</strong></label>
-                                <input type="number" step="0.01" min="0" id="amountPaid_${index}" name="amountPaid"
-                                    class="form-control form-control-sm" 
-                                    value="${r.amountPaid !== undefined ? parseFloat(r.amountPaid).toFixed(2) : ''}" >
-                            </div>
+                            <input type="number" step="0.01" min="1000" id="amountPaid_${index}" name="amountPaid"
+                                class="form-control form-control-sm" 
+                                value="${r.amountPaid !== undefined ? parseFloat(r.amountPaid).toFixed(2) : ''}" 
+                                required
+                                oninput="validateAmountPaid(this, ${index})">
+                            <small id="amountPaidError_${index}" class="text-danger d-none">Amount must be at least ₱1,000.00</small>
+
                             
                             <div class="mb-2">
                                 <label for="refNo_${index}" class="form-label"><strong>Reference No:</strong></label>
