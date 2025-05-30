@@ -844,7 +844,9 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                 const tWidth = woodCost * width;
                 const tLength = woodCost * length;
                 const tHeight = woodCost * height;
-                const totalCost = (tWidth + tLength + tHeight + lit + laborFee) * quantity;
+                const totalCost = ((tWidth + tLength + tHeight) * quantity) + (varnishCost * quantity) + (laborFee * quantity);
+
+
                 const unitcost = (tWidth + tLength + tHeight + lit + laborFee);
 
                 const orderPreviewList = document.getElementById('orderPreview');
@@ -977,10 +979,12 @@ $furResultnew = mysqli_query($conn, $furniturenew);
             const tWidth = woodCost * width;
             const tLength = woodCost * length;
             const tHeight = woodCost * height;
+            const totalCost = ((tWidth + tLength + tHeight) * quantity) + (varnishCost * quantity) + (laborFee * quantity);
+
             const dWoodCost = (tWidth + tLength + tHeight) * quantity;
             const dLit = lit * quantity;
             const dLaborFee = laborFee * quantity;
-            const totalCost = (tWidth + tLength + tHeight + lit + laborFee) * quantity.toLocaleString('en-US');
+
 
             document.getElementById('furnitureName').textContent = document.getElementById('prodName').value;
             document.getElementById('selectedImage').src = document.getElementById('input-file').files[0] ? URL.createObjectURL(document.getElementById('input-file').files[0]) : '';
