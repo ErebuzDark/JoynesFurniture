@@ -24,7 +24,7 @@ if ($result->num_rows > 0) {
             case 'pending':
                 $badgeClass = 'warning';
                 break;
-            case 'rejected':
+            case 'refunded':
                 $badgeClass = 'danger';
                 break;
         }
