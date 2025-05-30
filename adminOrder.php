@@ -677,6 +677,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                             <option value="In Progress" class="bg-white text-dark">IN PROGRESS</option>
                                             <option value="Completed" ' . $notcom . ' class="bg-white text-dark">COMPLETED</option>';
                                             echo '<option value="Cancelled" class="bg-white text-dark">CANCELLED</option>';
+                                            echo '<option value="Rejected" class="bg-white text-dark">REJECT</option>';
                                             echo '</select>';
                                         }
                                         echo '</td>';
@@ -1108,25 +1109,25 @@ $ordersData = json_encode(array_values($ordersPerMonth));
     </div>
 
     <script>
-     function viewProofPayAll(receiptsJson, orderID, senderName, balance, totalPaid, totalCost) {
-    const receipts = JSON.parse(receiptsJson);
-    const imgContainer = document.getElementById('paymentProofImage');
-    const details = document.querySelector('.receipt-details');
+        function viewProofPayAll(receiptsJson, orderID, senderName, balance, totalPaid, totalCost) {
+            const receipts = JSON.parse(receiptsJson);
+            const imgContainer = document.getElementById('paymentProofImage');
+            const details = document.querySelector('.receipt-details');
 
-    // Clear previous content
-    imgContainer.innerHTML = '';
-    details.innerHTML = '';
+            // Clear previous content
+            imgContainer.innerHTML = '';
+            details.innerHTML = '';
 
-    // Calculate total paid (excluding 'Invalid' payments)
-    let calculatedTotalPaid = 0;
-    receipts.forEach(r => {
-        if (r.payment_status !== 'Invalid' && !isNaN(parseFloat(r.amountPaid))) {
-            calculatedTotalPaid += parseFloat(r.amountPaid);
-        }
-    });
+            // Calculate total paid (excluding 'Invalid' payments)
+            let calculatedTotalPaid = 0;
+            receipts.forEach(r => {
+                if (r.payment_status !== 'Invalid' && !isNaN(parseFloat(r.amountPaid))) {
+                    calculatedTotalPaid += parseFloat(r.amountPaid);
+                }
+            });
 
-    // Order summary
-    details.innerHTML += `
+            // Order summary
+            details.innerHTML += `
         <div class="mb-4">
             <h6 class="text-uppercase text-muted">Order Details</h6>
             <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
@@ -1143,36 +1144,36 @@ $ordersData = json_encode(array_values($ordersPerMonth));
         <hr class="border border-1 border-dark border-dashed">
     `;
 
-    if (receipts.length === 0) {
-        imgContainer.innerHTML = `<div class="text-muted"><p class="mt-3 mb-0">No receipt image found.</p></div>`;
-        details.innerHTML += '<p class="text-muted">No receipts found.</p>';
-    } else {
-        usedRefNumbers = receipts.map(r => r.ref_no).filter(ref => ref && ref.trim() !== '');
+            if (receipts.length === 0) {
+                imgContainer.innerHTML = `<div class="text-muted"><p class="mt-3 mb-0">No receipt image found.</p></div>`;
+                details.innerHTML += '<p class="text-muted">No receipts found.</p>';
+            } else {
+                usedRefNumbers = receipts.map(r => r.ref_no).filter(ref => ref && ref.trim() !== '');
 
-        receipts.forEach((r, index) => {
-            const row = document.createElement('div');
-            row.className = 'row mb-4 align-items-center';
+                receipts.forEach((r, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'row mb-4 align-items-center';
 
-            const colImg = document.createElement('div');
-            colImg.className = 'col-md-4 text-center';
-            const img = document.createElement('img');
-            img.src = r.proofImage;
-            img.alt = 'Receipt Image';
-            img.style = "box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15); max-width: 100%; max-height: 200px; cursor: pointer;";
-            img.className = 'img-thumbnail mb-2';
+                    const colImg = document.createElement('div');
+                    colImg.className = 'col-md-4 text-center';
+                    const img = document.createElement('img');
+                    img.src = r.proofImage;
+                    img.alt = 'Receipt Image';
+                    img.style = "box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15); max-width: 100%; max-height: 200px; cursor: pointer;";
+                    img.className = 'img-thumbnail mb-2';
 
-            img.addEventListener('click', () => {
-                document.getElementById('modalImage').src = r.proofImage;
-                $('#imagePreviewModal').modal('show');
-            });
+                    img.addEventListener('click', () => {
+                        document.getElementById('modalImage').src = r.proofImage;
+                        $('#imagePreviewModal').modal('show');
+                    });
 
-            colImg.appendChild(img);
-            row.appendChild(colImg);
+                    colImg.appendChild(img);
+                    row.appendChild(colImg);
 
-            const colDetails = document.createElement('div');
-            colDetails.className = 'col-md-8';
+                    const colDetails = document.createElement('div');
+                    colDetails.className = 'col-md-8';
 
-            colDetails.innerHTML = `
+                    colDetails.innerHTML = `
                 <div class="p-3 bg-light rounded shadow-sm">
                     <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
                     <form action="updatePayment.php" method="POST" onsubmit="return validateReceiptForm(this);">
@@ -1222,19 +1223,19 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                 </div>
             `;
 
-            row.appendChild(colDetails);
-            details.appendChild(row);
+                    row.appendChild(colDetails);
+                    details.appendChild(row);
 
-            if (index < receipts.length - 1) {
-                const divider = document.createElement('hr');
-                divider.className = 'border border-1 border-dark border-dashed my-4';
-                details.appendChild(divider);
+                    if (index < receipts.length - 1) {
+                        const divider = document.createElement('hr');
+                        divider.className = 'border border-1 border-dark border-dashed my-4';
+                        details.appendChild(divider);
+                    }
+                });
             }
-        });
-    }
 
-    $('#paymentProofModal').modal('show');
-}
+            $('#paymentProofModal').modal('show');
+        }
 
     </script>
 
