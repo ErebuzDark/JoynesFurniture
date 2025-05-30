@@ -25,6 +25,9 @@ if ($result->num_rows > 0) {
                 $badgeClass = 'warning';
                 break;
             case 'refunded':
+                $badgeClass = 'secondary';
+                break;
+            case 'invalid':
                 $badgeClass = 'danger';
                 break;
         }
