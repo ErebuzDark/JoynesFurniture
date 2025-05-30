@@ -839,8 +839,8 @@ if (mysqli_num_rows($checkResult) > 0) {
     <script src="js/main.js"></script>
 
     <script>
-        $(document).ready(function() {
-            $("button[name='complete']").click(function() {
+        $(document).ready(function () {
+            $("button[name='complete']").click(function () {
                 var orderID = $(this).data("orderid");
                 var source = $(this).data("source");
                 var status = $(this).data("status");
@@ -855,7 +855,7 @@ if (mysqli_num_rows($checkResult) > 0) {
                         source: source,
                         status: status
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response === 'success') {
                             alert("Order status updated to Delivered!");
                             button.text('Delivered').prop('disabled', true);
@@ -863,13 +863,13 @@ if (mysqli_num_rows($checkResult) > 0) {
                             alert("Error updating order status.");
                         }
                     },
-                    error: function() {
+                    error: function () {
                         alert("Error with AJAX request.");
                     }
                 });
             });
 
-            $("button[name='cancel']").click(function() {
+            $("button[name='cancel']").click(function () {
                 var orderID = $(this).data("orderid");
                 var source = $(this).data("source");
                 var status = $(this).data("status");
@@ -884,7 +884,7 @@ if (mysqli_num_rows($checkResult) > 0) {
                         source: source,
                         status: status
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response === 'success') {
                             alert("Order cancelled!");
                             button.text('Cancelled').prop('disabled', true);
@@ -893,7 +893,7 @@ if (mysqli_num_rows($checkResult) > 0) {
                             alert("Error updating order status.");
                         }
                     },
-                    error: function() {
+                    error: function () {
                         alert("Error with AJAX request.");
                     }
                 });
@@ -905,11 +905,11 @@ if (mysqli_num_rows($checkResult) > 0) {
         const imageText = document.getElementById('image-text');
         const imageSizeText = document.getElementById('image-size-text');
 
-        dropArea.addEventListener('click', function() {
+        dropArea.addEventListener('click', function () {
             inputFile.click();
         });
 
-        inputFile.addEventListener('change', function() {
+        inputFile.addEventListener('change', function () {
             const file = this.files[0];
 
             if (file.type.startsWith('image/')) {
@@ -924,14 +924,14 @@ if (mysqli_num_rows($checkResult) > 0) {
             }
         });
 
-        dropArea.addEventListener('dragover', function(e) {
+        dropArea.addEventListener('dragover', function (e) {
             e.preventDefault();
             this.style.borderStyle = 'solid';
             const h3 = this.querySelector('h3');
             h3.textContent = 'Release here to upload image';
         });
 
-        dropArea.addEventListener('drop', function(e) {
+        dropArea.addEventListener('drop', function (e) {
             e.preventDefault();
             inputFile.files = e.dataTransfer.files;
             const file = e.dataTransfer.files[0];
@@ -950,7 +950,7 @@ if (mysqli_num_rows($checkResult) > 0) {
 
         const command = ['dragleave', 'dragend'];
         command.forEach(item => {
-            dropArea.addEventListener(item, function() {
+            dropArea.addEventListener(item, function () {
                 this.style.borderStyle = 'dashed';
                 const h3 = this.querySelector('h3');
                 h3.textContent = 'Drag and drop or click here to select image';
@@ -959,7 +959,7 @@ if (mysqli_num_rows($checkResult) > 0) {
 
         function updatePreview(file) {
             const reader = new FileReader();
-            reader.onload = function() {
+            reader.onload = function () {
                 const url = reader.result;
                 const preview = document.getElementById('image-preview');
                 preview.src = url;
@@ -978,14 +978,14 @@ if (mysqli_num_rows($checkResult) > 0) {
         }
 
 
-        document.getElementById('updateImageBtn').addEventListener('click', function() {
+        document.getElementById('updateImageBtn').addEventListener('click', function () {
             const formData = new FormData(document.getElementById('updateProfileForm'));
             formData.append('updateType', 'image');
 
             fetch('profileUpdate.php', {
-                    method: 'POST',
-                    body: formData
-                })
+                method: 'POST',
+                body: formData
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -1000,14 +1000,14 @@ if (mysqli_num_rows($checkResult) > 0) {
                 });
         });
 
-        document.getElementById('updateDetailsBtn').addEventListener('click', function() {
+        document.getElementById('updateDetailsBtn').addEventListener('click', function () {
             const formData = new FormData(document.getElementById('updateProfileForm'));
             formData.append('updateType', 'details');
 
             fetch('profileUpdate.php', {
-                    method: 'POST',
-                    body: formData
-                })
+                method: 'POST',
+                body: formData
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -1165,9 +1165,9 @@ if (mysqli_num_rows($checkResult) > 0) {
         }
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll('.view-invoice-btn').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     const orderId = this.getAttribute('data-orderid');
                     const prodName = this.getAttribute('data-prodname');
                     const userId = this.getAttribute('data-userid');
@@ -1204,12 +1204,13 @@ if (mysqli_num_rows($checkResult) > 0) {
                                                     <p class="fw-bold mb-3">Invoice Details</p>
                                                     <p><strong>Date:</strong> ${invoice.created_at}</p>
                                                     <p><strong>Order ID:</strong> ${invoice.orderID}</p>
-                                                    <p><strong>Amount Paid:</strong> PHP <span class="text-success fw-semibold">${invoice.totalPaid}</span></p>
+                                                    <p><strong>Amount Paid:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.totalPaid).toLocaleString()}</span></p>
                                                     <p><strong>Payment Method:</strong> <span class="text-white badge bg-info">Gcash</span></p>
                                                     <p><strong>Ref. Number:</strong> <span class="text-secondary">${invoice.reference_number}</span></p>
-                                                    ${invoice.variant === 'full'
-                                                        ? ''
-                                                        : `<p><strong>Balance:</strong> PHP <span class="text-success fw-semibold">${invoice.balance}</span></p>`}
+                                                   ${invoice.variant === 'full'
+                                            ? ''
+                                            : `<p><strong>Balance:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.balance).toLocaleString()}</span></p>`}
+
                                                 </div>
                                                 <div class="col-md-6 mb-3 text-end">
                                                     <p class="fw-bold mb-3">Billed / Issued To</p>
@@ -1295,8 +1296,8 @@ if (mysqli_num_rows($checkResult) > 0) {
 
 
     <script>
-        $(document).ready(function() {
-            $('.pay-balance-btn').click(function() {
+        $(document).ready(function () {
+            $('.pay-balance-btn').click(function () {
                 var balance = $(this).data('balance');
                 var orderid = $(this).data('orderid');
                 var source = $(this).data('source');
@@ -1315,9 +1316,9 @@ if (mysqli_num_rows($checkResult) > 0) {
 
     <!-- new script for displaying resibo -->
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // See all payment images for an order
-            $('.see-payment-images-btn').click(function() {
+            $('.see-payment-images-btn').click(function () {
                 var orderID = $(this).data('orderid');
                 var source = $(this).data('source');
 
@@ -1328,12 +1329,12 @@ if (mysqli_num_rows($checkResult) > 0) {
                         orderID: orderID,
                         source: source
                     },
-                    success: function(response) {
+                    success: function (response) {
                         $('#paymentImagesContainer').html(response);
                         var modal = new bootstrap.Modal(document.getElementById('paymentImagesModal'));
                         modal.show();
                     },
-                    error: function() {
+                    error: function () {
                         $('#paymentImagesContainer').html('<p class="text-danger">Failed to load payment images.</p>');
                     }
                 });
@@ -1356,7 +1357,7 @@ if (mysqli_num_rows($checkResult) > 0) {
         });
     </script> -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const payBtns = document.querySelectorAll('.pay-balance-btn');
 
             payBtns.forEach(button => {

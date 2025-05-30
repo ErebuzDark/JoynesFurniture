@@ -415,7 +415,8 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                             </div>
                                             <div>
                                                 <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
-                                                <span class="font-weight-bold">[Order ID: <?php echo $order['orderID']; ?>] New Order - <?php echo $order['productName']; ?></span>
+                                                <span class="font-weight-bold">[Order ID: <?php echo $order['orderID']; ?>] New
+                                                    Order - <?php echo $order['productName']; ?></span>
                                             </div>
                                         </a>
                                     <?php endforeach; ?>
@@ -434,7 +435,8 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                             <div>
                                                 <div class="small text-gray-500"><?php echo date('F j, Y'); ?></div>
                                                 <span class="font-weight-bold">
-                                                    [Order ID: <?php echo $payment['orderID']; ?>] Pending Payment - <?php echo $payment['productName']; ?>
+                                                    [Order ID: <?php echo $payment['orderID']; ?>] Pending Payment -
+                                                    <?php echo $payment['productName']; ?>
                                                 </span>
                                             </div>
                                         </a>
@@ -675,7 +677,6 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                             <option value="In Progress" class="bg-white text-dark">IN PROGRESS</option>
                                             <option value="Completed" ' . $notcom . ' class="bg-white text-dark">COMPLETED</option>';
                                             echo '<option value="Cancelled" class="bg-white text-dark">CANCELLED</option>';
-                                            echo '<option value="Rejected" class="bg-white text-dark">REJECT</option>';
                                             echo '</select>';
                                         }
                                         echo '</td>';
@@ -1107,143 +1108,134 @@ $ordersData = json_encode(array_values($ordersPerMonth));
     </div>
 
     <script>
-        function validateAmountPaid(input, index) {
-            const errorElement = document.getElementById(`amountPaidError_${index}`);
-            const value = parseFloat(input.value);
+     function viewProofPayAll(receiptsJson, orderID, senderName, balance, totalPaid, totalCost) {
+    const receipts = JSON.parse(receiptsJson);
+    const imgContainer = document.getElementById('paymentProofImage');
+    const details = document.querySelector('.receipt-details');
 
-            if (isNaN(value) || value < 1000) {
-                errorElement.classList.remove('d-none');
-                input.setCustomValidity("Amount must be at least 1000.");
-            } else {
-                errorElement.classList.add('d-none');
-                input.setCustomValidity("");
-            }
+    // Clear previous content
+    imgContainer.innerHTML = '';
+    details.innerHTML = '';
+
+    // Calculate total paid (excluding 'Invalid' payments)
+    let calculatedTotalPaid = 0;
+    receipts.forEach(r => {
+        if (r.payment_status !== 'Invalid' && !isNaN(parseFloat(r.amountPaid))) {
+            calculatedTotalPaid += parseFloat(r.amountPaid);
         }
+    });
 
-        function viewProofPayAll(receiptsJson, orderID, senderName, balance, totalPaid, totalCost) {
-            const receipts = JSON.parse(receiptsJson);
-            const imgContainer = document.getElementById('paymentProofImage');
-            const details = document.querySelector('.receipt-details');
-
-            // Clear previous content
-            imgContainer.innerHTML = '';
-            details.innerHTML = '';
-
-            details.innerHTML += `
-            <div class="mb-4">
-                <h6 class="text-uppercase text-muted">Order Details</h6>
-                <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
-                <div class="mb-2">
-                    <p><strong>Total Cost:</strong> <span class="text-muted">&#8369; ${Number(totalCost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
-                </div>
-                <div class="mb-2">
-                    <p><strong>Total Payment:</strong> <span class="text-muted">&#8369; ${Number(totalPaid).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
-                </div>
-                <div class="mb-2">
-                    <p><strong>Balance:</strong> <span class="text-muted">&#8369; ${Number(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
-                </div>
-               
+    // Order summary
+    details.innerHTML += `
+        <div class="mb-4">
+            <h6 class="text-uppercase text-muted">Order Details</h6>
+            <p><strong>Order No:</strong> <span class="text-muted">${orderID}</span></p>
+            <div class="mb-2">
+                <p><strong>Total Cost:</strong> <span class="text-muted">&#8369; ${Number(totalCost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
             </div>
-            <hr class="border border-1 border-dark border-dashed">
-        `;
+            <div class="mb-2">
+                <p><strong>Total Payment:</strong> <span class="text-muted">&#8369; ${Number(calculatedTotalPaid).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
+            </div>
+            <div class="mb-2">
+                <p><strong>Balance:</strong> <span class="text-muted">&#8369; ${Number(totalCost - calculatedTotalPaid).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
+            </div>
+        </div>
+        <hr class="border border-1 border-dark border-dashed">
+    `;
 
-            if (receipts.length === 0) {
-                imgContainer.innerHTML = `<div class="text-muted"><p class="mt-3 mb-0">No receipt image found.</p></div>`;
-                details.innerHTML += '<p class="text-muted">No receipts found.</p>';
-            } else {
-                // Initialize usedRefNumbers from receipts on load
-                usedRefNumbers = receipts.map(r => r.ref_no).filter(ref => ref && ref.trim() !== '');
+    if (receipts.length === 0) {
+        imgContainer.innerHTML = `<div class="text-muted"><p class="mt-3 mb-0">No receipt image found.</p></div>`;
+        details.innerHTML += '<p class="text-muted">No receipts found.</p>';
+    } else {
+        usedRefNumbers = receipts.map(r => r.ref_no).filter(ref => ref && ref.trim() !== '');
 
-                receipts.forEach((r, index) => {
-                    const row = document.createElement('div');
-                    row.className = 'row mb-4 align-items-center';
+        receipts.forEach((r, index) => {
+            const row = document.createElement('div');
+            row.className = 'row mb-4 align-items-center';
 
-                    // Image column
-                    const colImg = document.createElement('div');
-                    colImg.className = 'col-md-4 text-center';
-                    const img = document.createElement('img');
-                    img.src = r.proofImage;
-                    img.alt = 'Receipt Image';
-                    img.style = "box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15); max-width: 100%; max-height: 200px; cursor: pointer;";
-                    img.className = 'img-thumbnail mb-2';
+            const colImg = document.createElement('div');
+            colImg.className = 'col-md-4 text-center';
+            const img = document.createElement('img');
+            img.src = r.proofImage;
+            img.alt = 'Receipt Image';
+            img.style = "box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15); max-width: 100%; max-height: 200px; cursor: pointer;";
+            img.className = 'img-thumbnail mb-2';
 
-                    img.addEventListener('click', () => {
-                        document.getElementById('modalImage').src = r.proofImage;
-                        $('#imagePreviewModal').modal('show');
-                    });
+            img.addEventListener('click', () => {
+                document.getElementById('modalImage').src = r.proofImage;
+                $('#imagePreviewModal').modal('show');
+            });
 
-                    colImg.appendChild(img);
-                    row.appendChild(colImg);
+            colImg.appendChild(img);
+            row.appendChild(colImg);
 
-                    // Details column
-                    const colDetails = document.createElement('div');
-                    colDetails.className = 'col-md-8';
+            const colDetails = document.createElement('div');
+            colDetails.className = 'col-md-8';
 
-                    colDetails.innerHTML = `
-                    <div class="p-3 bg-light rounded shadow-sm">
-                        <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
-                        <form action="updatePayment.php" method="POST" onsubmit="return validateReceiptForm(this);">
-                            <input type="hidden" name="receiptID" value="${r.id}">
-                            <input type="hidden" name="orderID" value="${orderID}">
-                            <input type="hidden" name="source" value="${r.source || ''}">
-                            <input type="hidden" name="currentBalance" value="${balance}">
-                            <input type="hidden" name="totalCost" value="${totalCost}">
+            colDetails.innerHTML = `
+                <div class="p-3 bg-light rounded shadow-sm">
+                    <h6 class="text-muted mb-3">Receipt #${index + 1}</h6>
+                    <form action="updatePayment.php" method="POST" onsubmit="return validateReceiptForm(this);">
+                        <input type="hidden" name="receiptID" value="${r.id}">
+                        <input type="hidden" name="orderID" value="${orderID}">
+                        <input type="hidden" name="source" value="${r.source || ''}">
+                        <input type="hidden" name="currentBalance" value="${balance}">
+                        <input type="hidden" name="totalCost" value="${totalCost}">
 
-                            <label for="" class="form-label"><strong>Amount Paid:</strong></label>
-                            <input type="number" step="0.01" min="1000" id="amountPaid_${index}" name="amountPaid"
+                        <label for="" class="form-label"><strong>Amount Paid:</strong></label>
+                        <input type="number" step="0.01" min="1000" id="amountPaid_${index}" name="amountPaid"
+                            class="form-control form-control-sm" 
+                            value="${r.amountPaid !== undefined ? parseFloat(r.amountPaid).toFixed(2) : ''}" 
+                            required
+                            oninput="validateAmountPaid(this, ${index})">
+                        <small id="amountPaidError_${index}" class="text-danger d-none">Amount must be at least ₱1,000.00</small>
+
+                        <div class="mb-2">
+                            <label for="refNo_${index}" class="form-label"><strong>Reference No:</strong></label>
+                            <input type="text" 
+                                id="refNo_${index}" 
+                                name="ref_no" 
                                 class="form-control form-control-sm" 
-                                value="${r.amountPaid !== undefined ? parseFloat(r.amountPaid).toFixed(2) : ''}" 
-                                required
-                                oninput="validateAmountPaid(this, ${index})">
-                            <small id="amountPaidError_${index}" class="text-danger d-none">Amount must be at least ₱1,000.00</small>
-
-                            
-                            <div class="mb-2">
-                                <label for="refNo_${index}" class="form-label"><strong>Reference No:</strong></label>
-                                <input type="text" 
-                                    id="refNo_${index}" 
-                                    name="ref_no" 
-                                    class="form-control form-control-sm" 
-                                    placeholder="Enter Reference No." 
-                                    value="${r.ref_no || ''}" 
-                                    oninput="validateRefNo(this, ${index})">
-                                <small id="refNoError_${index}" class="text-danger d-none">This reference number is already used.</small>
-                            </div>
-
-                            <div class="mb-2">
-                                <label for="paymentStatus_${index}" class="form-label"><strong>Payment Status:</strong></label>
-                                <select id="paymentStatus_${index}" name="payment_status" class="form-select form-select-sm" required>
-                                    <option value="Pending" ${r.payment_status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                    <option value="Confirmed" ${r.payment_status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                                    <option value="Invalid" ${r.payment_status === 'Invalid' ? 'selected' : ''}>Invalid</option>
-                                    <option value="Refunded" ${r.payment_status === 'Refunded' ? 'selected' : ''}>Refunded</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-sm btn-success mt-2">
-                                Update Payment
-                            </button>
-                        </form>
-                        <div class="mt-2">
-                            <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate || ''}</span></p>
-                            <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName}</span></p>
+                                placeholder="Enter Reference No." 
+                                value="${r.ref_no || ''}" 
+                                oninput="validateRefNo(this, ${index})">
+                            <small id="refNoError_${index}" class="text-danger d-none">This reference number is already used.</small>
                         </div>
+
+                        <div class="mb-2">
+                            <label for="paymentStatus_${index}" class="form-label"><strong>Payment Status:</strong></label>
+                            <select id="paymentStatus_${index}" name="payment_status" class="form-select form-select-sm" required onchange="toggleAmountEditable(${index})">
+                                <option value="Pending" ${r.payment_status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="Confirmed" ${r.payment_status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                                <option value="Invalid" ${r.payment_status === 'Invalid' ? 'selected' : ''}>Invalid</option>
+                                <option value="Refunded" ${r.payment_status === 'Refunded' ? 'selected' : ''}>Refunded</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-success mt-2">
+                            Update Payment
+                        </button>
+                    </form>
+                    <div class="mt-2">
+                        <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate || ''}</span></p>
+                        <p class="mb-2"><strong>Sender Name:</strong> <span class="text-muted">${senderName}</span></p>
                     </div>
-                `;
+                </div>
+            `;
 
-                    row.appendChild(colDetails);
-                    details.appendChild(row);
+            row.appendChild(colDetails);
+            details.appendChild(row);
 
-                    // Dashed divider
-                    if (index < receipts.length - 1) {
-                        const divider = document.createElement('hr');
-                        divider.className = 'border border-1 border-dark border-dashed my-4';
-                        details.appendChild(divider);
-                    }
-                });
+            if (index < receipts.length - 1) {
+                const divider = document.createElement('hr');
+                divider.className = 'border border-1 border-dark border-dashed my-4';
+                details.appendChild(divider);
             }
+        });
+    }
 
-            $('#paymentProofModal').modal('show');
-        }
+    $('#paymentProofModal').modal('show');
+}
+
     </script>
 
     <!-- <p class="mb-2"><strong>Payment Method:</strong> <span class="text-muted">Gcash</span></p>

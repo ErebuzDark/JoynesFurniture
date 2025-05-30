@@ -18,7 +18,7 @@ try {
         $_POST['source'],
         $_POST['totalCost'],
         $_POST['currentBalance'],
-        $_POST['receiptID']  // <-- new required input
+        $_POST['receiptID']
     )
     ) {
         $orderID = $_POST['orderID'];
@@ -28,26 +28,32 @@ try {
         $source = $_POST['source'];
         $totalCost = (float) $_POST['totalCost'];
         $currentBalance = (float) $_POST['currentBalance'];
-        $receiptID = (int) $_POST['receiptID']; // Unique receipt to update
+        $receiptID = (int) $_POST['receiptID'];
 
-        $balance = $currentBalance - $amountPaid;
+        $statusLower = strtolower($paymentStatusPost);
 
-        if ($amountPaid <= 0) {
+        // If Invalid or Refunded — don’t touch balance or create receipt
+        if ($statusLower === 'invalid' || $statusLower === 'refunded') {
             $payment = "Not Paid Yet";
             $balance = $currentBalance;
-        } elseif ($balance <= 0) {
-            $balance = 0;
-            $payment = "Full Payment";
         } else {
-            $payment = "Partial Paid";
-        }
+            $balance = $currentBalance - $amountPaid;
 
-        $receiptID = (int) $_POST['receiptID'];
+            if ($amountPaid <= 0) {
+                $payment = "Not Paid Yet";
+                $balance = $currentBalance;
+            } elseif ($balance <= 0) {
+                $balance = 0;
+                $payment = "Full Payment";
+            } else {
+                $payment = "Partial Paid";
+            }
+        }
 
         // Check for duplicate reference number
         if (!empty($refNo)) {
             $checkRef = $conn->prepare("SELECT ref_no FROM payment_receipts WHERE ref_no = ? AND id != ?");
-            $checkRef->bind_param("ii", $refNo, $receiptID);
+            $checkRef->bind_param("si", $refNo, $receiptID);
             $checkRef->execute();
             $checkRef->bind_result($countRef);
             $checkRef->fetch();
@@ -57,18 +63,14 @@ try {
                 $msg = "Error: Reference number already exists.";
                 $url = "adminOrder.php";
                 echo "<script>
-        alert(" . json_encode($msg) . ");
-        setTimeout(function() {
-            window.location.href = " . json_encode($url) . ";
-        }, 100); // 100ms delay before redirecting
-    </script>";
+                    alert(" . json_encode($msg) . ");
+                    setTimeout(function() {
+                        window.location.href = " . json_encode($url) . ";
+                    }, 100);
+                </script>";
                 exit();
             }
-
-
         }
-
-        // Continue with balance calculations and updates...
 
         // Update checkout or checkoutcustom table
         $updateSQL = ($source === "checkout") ?
@@ -83,7 +85,7 @@ try {
         }
         $stmt->close();
 
-        // Get userID for receipt if needed
+        // Get userID for receipt
         $getUserID = $conn->prepare("SELECT userID FROM payment_receipts WHERE id = ?");
         $getUserID->bind_param("i", $receiptID);
         $getUserID->execute();
@@ -93,10 +95,8 @@ try {
         }
         $getUserID->close();
 
-        // Insert official_receipts if amountPaid > 0
-        // Insert official_receipts if amountPaid > 0, regardless of the source
-        if ($amountPaid > 0) {
-            // Check if official receipt exists for this payment_receipt_id
+        // Only insert/update official_receipts if payment is valid and not refunded
+        if ($amountPaid > 0 && !in_array($statusLower, ['invalid', 'refunded'])) {
             $checkOfficial = $conn->prepare("SELECT OFC_ID FROM official_receipts WHERE payment_receipt_id = ?");
             $checkOfficial->bind_param("i", $receiptID);
             $checkOfficial->execute();
@@ -105,11 +105,10 @@ try {
             $checkOfficial->close();
 
             if ($exists) {
-                // Update the existing official_receipts record
                 $updateOfficial = $conn->prepare(
                     "UPDATE official_receipts 
-             SET userID = ?, orderID = ?, totalPaid = ?, reference_number = ?, update_at = NOW()
-             WHERE OFC_ID = ?"
+                     SET userID = ?, orderID = ?, totalPaid = ?, reference_number = ?, update_at = NOW()
+                     WHERE OFC_ID = ?"
                 );
                 $updateOfficial->bind_param("iidsi", $userID, $orderID, $amountPaid, $refNo, $officialID);
                 if (!$updateOfficial->execute()) {
@@ -117,10 +116,9 @@ try {
                 }
                 $updateOfficial->close();
             } else {
-                // Insert new official_receipts record
                 $insertOfficial = $conn->prepare(
                     "INSERT INTO official_receipts (userID, orderID, payment_receipt_id, totalPaid, reference_number, created_at, update_at) 
-             VALUES (?, ?, ?, ?, ?, NOW(), NOW())"
+                     VALUES (?, ?, ?, ?, ?, NOW(), NOW())"
                 );
                 $insertOfficial->bind_param("iiids", $userID, $orderID, $receiptID, $amountPaid, $refNo);
                 if (!$insertOfficial->execute()) {
@@ -130,8 +128,7 @@ try {
             }
         }
 
-
-        // Update payment_receipts using receiptID to avoid affecting others
+        // Update payment_receipts
         $updateReceipt = $conn->prepare(
             "UPDATE payment_receipts SET amountPaid = ?, ref_no = ?, payment_status = ?, paymentDate = NOW() WHERE id = ?"
         );
