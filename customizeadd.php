@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 include("database.php");
 
@@ -100,10 +101,10 @@ if (isset($_POST['add'])) {
         $minusVSql = "SELECT * FROM varnishtbl WHERE vName = '$vName'";
         $minusVResult = mysqli_query($conn, $minusVSql);
         $minusVRow = mysqli_fetch_assoc($minusVResult);
- 
+
         $vQty2 = $minusVRow['vQuantity'];
 
-        $totVQty = (int) $vQty2-$quantity;
+        $totVQty = (int) $vQty2 - $quantity;
 
         $updateVSql = "UPDATE varnishtbl SET vQuantity = '$totVQty' WHERE vName = '$vName'";
 
@@ -114,7 +115,7 @@ if (isset($_POST['add'])) {
 
             $pQty2 = $minusPRow['pQuantity'];
 
-            $totPQty = (int) $pQty2-$quantity;
+            $totPQty = (int) $pQty2 - $quantity;
 
             $updatePSql = "UPDATE rawmtbl SET pQuantity = '$totPQty' WHERE pName = '$pName'";
 
@@ -136,7 +137,15 @@ if (isset($_POST['add'])) {
 
 
 
-if (isset($_POST['checkout'])) {
+
+
+ob_start();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // Uncomment below lines to debug POST data if needed
+    // var_dump($_POST);
+    // exit;
 
     $cpNum = $_SESSION['cpNum'];
     $fullName = $_SESSION['fullName'];
@@ -146,89 +155,83 @@ if (isset($_POST['checkout'])) {
     $pName = $_POST['products'];
     $prodDetails = $_POST['productDetails'];
     $totalCost = $_POST['totalCost'];
-    $balance = $_POST['totalCost'];
+    $balance = $totalCost;
     $quantity = $_POST['quantities'];
     $width = $_POST['width'];
     $length = $_POST['length'];
     $height = $_POST['height'];
     $payment = $_POST['payment'];
+    $amountPaid = $_POST['amountPaid'];
+    $refNo = $_POST['refNo'];
 
-
-    $qrImageFile = $_FILES['qrImage'];
     $qrImagePath = '';
+    $image = '';
 
-    if ($qrImageFile['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = 'up/';
-        $fileName = uniqid('qr_', true) . '.' . pathinfo($qrImageFile['name'], PATHINFO_EXTENSION);
-        $filePath = $uploadDir . $fileName;
+    $uploadDir = 'up/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
 
-        if (move_uploaded_file($qrImageFile['tmp_name'], $filePath)) {
-            // Store the path of the uploaded file
-            $qrImagePath = $filePath;
+    // QR Image upload
+    if (isset($_FILES['qrImage']) && $_FILES['qrImage']['error'] === UPLOAD_ERR_OK) {
+        $qrExt = pathinfo($_FILES['qrImage']['name'], PATHINFO_EXTENSION);
+        $qrFileName = uniqid('qr_', true) . '.' . $qrExt;
+        $qrFilePath = $uploadDir . $qrFileName;
+
+        if (move_uploaded_file($_FILES['qrImage']['tmp_name'], $qrFilePath)) {
+            $qrImagePath = $qrFilePath;
         } else {
-            echo "Error uploading image.";
+            echo "Error uploading QR image.";
+            exit;
         }
     }
 
+    // Main image upload
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        // Define the upload folder
-        $uploadDir = 'up/';  // Make sure this folder exists and is writable
+        $mainExt = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+        $mainFileName = uniqid('img_', true) . '.' . $mainExt;
+        $mainFilePath = $uploadDir . $mainFileName;
 
-        // Get the file name and extension
-        $fileName = basename($_FILES['image']['name']);
-        $filePath = $uploadDir . $fileName;
-
-        // Check if the upload directory exists and is writable
-        if (!is_dir($uploadDir)) {
-            echo "Upload directory does not exist.";
-            exit;
-        }
-
-        if (!is_writable($uploadDir)) {
-            echo "Upload directory is not writable.";
-            exit;
-        }
-
-        // Move the uploaded file to the "uploads" folder
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $filePath)) {
-            $image = $filePath; // Store the file path for database insertion
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $mainFilePath)) {
+            $image = $mainFilePath;
         } else {
-            echo "Error uploading the image.";
+            echo "Error uploading the main image.";
             exit;
         }
     } else {
-        echo "No image uploaded or there was an error with the upload.";
+        echo "No main image uploaded or an error occurred.";
         exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO checkoutcustom (userID, pName, image, prodDetails, totalCost, fullName, address, cpNum, quantity, balance, proofPay, width, length, height, payment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?)");
-
-    $stmt->bind_param("sssssssssssssss", $userID, $pName, $image, $prodDetails, $totalCost, $fullName, $address, $cpNum, $quantity, $balance,$qrImagePath, $width, $length, $height, $payment);
+    // Insert into checkoutcustom
+    $stmt = $conn->prepare("INSERT INTO checkoutcustom (userID, pName, image, prodDetails, totalCost, fullName, address, cpNum, quantity, balance, proofPay, width, length, height, payment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssssssssss", $userID, $pName, $image, $prodDetails, $totalCost, $fullName, $address, $cpNum, $quantity, $balance, $qrImagePath, $width, $length, $height, $payment);
 
     if ($stmt->execute()) {
-
-         // Get the last inserted order ID
         $orderID = $conn->insert_id;
-        // Save payment receipt in payment_receipts table
-        $paymentSource = 'checkoutcustom'; // or whatever label you want
+        $paymentSource = 'checkoutcustom';
         $paymentDate = date("Y-m-d H:i:s");
 
-        $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $receiptStmt->bind_param("iisssss", $orderID, $userID, $paymentSource, $pName, $payment, $qrImagePath, $paymentDate);
+        $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, ref_no, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $receiptStmt->bind_param("iissssss", $orderID, $userID, $paymentSource, $pName, $amountPaid, $qrImagePath, $refNo, $paymentDate);
         $receiptStmt->execute();
         $receiptStmt->close();
 
-        echo "<script>
-                alert('Order successfully placed!');
-                window.location.href = 'profile.php';
-              </script>";
+        $_SESSION['order_success'] = true;
+
+        header("Location: profile.php");
+        exit;
     } else {
         echo "Error: " . $stmt->error;
     }
 
     $stmt->close();
     $conn->close();
+
 } else {
     echo "Checkout button not clicked.";
 }
+
+ob_end_flush();
+
 ?>

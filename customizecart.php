@@ -102,6 +102,19 @@ if ($userresult->num_rows > 0) {
 </head>
 
 <body>
+    <?php if (!empty($_SESSION['cart_success'])): ?>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Item added to cart successfully!',
+                confirmButtonColor: '#0d6efd'
+            });
+        </script>
+        <?php
+        unset($_SESSION['cart_success']);
+    endif;
+    ?>
 
     <!-- Spinner Start -->
     <div id="spinner"
@@ -116,6 +129,34 @@ if ($userresult->num_rows > 0) {
     include("cartNav.php");
     ?>
     <!-- Navbar End -->
+
+    <?php if (!empty($_SESSION['cart_success'])): ?>
+        <!-- Toast container -->
+        <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1055;">
+            <div id="cartToast" class="toast show bg-success text-white border-0" role="alert" aria-live="assertive"
+                aria-atomic="true" style="min-width: 250px;">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <?= $_SESSION['cart_success']; ?>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                        aria-label="Close" style="filter: invert(1);"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auto-dismiss script -->
+        <script>
+            setTimeout(() => {
+                var toastEl = document.getElementById('cartToast');
+                if (toastEl) {
+                    toastEl.classList.remove('show');
+                }
+            }, 3000); // 3 seconds
+        </script>
+
+        <?php unset($_SESSION['cart_success']); ?>
+    <?php endif; ?>
 
     <!-- Single Page Header start -->
     <div class="container-fluid page-header py-5">
@@ -281,8 +322,9 @@ if ($userresult->num_rows > 0) {
 
                                 <h6 class="mt-5">Payment Method:</h6>
 
-                                <p class="fw-bold d-flex align-items-center" style="color:#0d6efd;"><img
-                                        src="img/gcash.png" width="25px" height="25px"> GCash</p>
+                                <p class="fw-bold d-flex align-items-center" style="color:#0d6efd;">
+                                    <img src="img/gcash.png" width="25px" height="25px"> GCash
+                                </p>
 
                                 <!-- QR code image shown by default -->
                                 <div class="qr-container" style="display:block; margin-left:60px;">
@@ -293,9 +335,7 @@ if ($userresult->num_rows > 0) {
 
                                 <select class="form-control form-control-sm w-50" name="payment" id="payment" required>
                                     <option value="" hidden disabled>Select Payment</option>
-
                                     <option value="Full Payment">Full Payment</option>
-
                                     <option value="Down Payment">Down Payment</option>
                                 </select>
 
@@ -310,42 +350,42 @@ if ($userresult->num_rows > 0) {
                                     <img id="imagePreview" src="#" alt="Image Preview"
                                         style="max-width: 150px; display: none;">
                                 </div>
+                                <!-- Reference Number input -->
+                                <div class="mb-3">
+                                    <label for="referenceNumber" class="form-label">Reference Number</label>
+                                    <input type="text" class="form-control" id="referenceNumber" name="referenceNumber"
+                                        placeholder="Enter reference number" required>
+                                </div>
+
+                                <!-- Amount input -->
+                                <div class="mb-3">
+                                    <label for="amountInput" class="form-label">Amount</label>
+                                    <input type="number" step="0.01" class="form-control" id="amountInput"
+                                        name="amountInput" placeholder="Enter amount" required>
+                                </div>
 
                                 <hr>
                                 <div class="d-flex justify-content-between px-3">
                                     <h5>Total Cost:</h5>
-
                                     <p class="fs-5 fw-bold" id="totalCost"></p>
                                 </div>
                                 <hr>
 
                                 <input type="hidden" id="cartIds" name="cartIds">
-
                                 <input type="hidden" id="products" name="products">
-
                                 <input type="hidden" id="quantities" name="quantities">
-
                                 <input type="hidden" id="images" name="images">
-
                                 <input type="hidden" id="totalCostField" name="totalCost">
-
                                 <input type="hidden" id="fullNameField" name="fullName">
-
                                 <input type="hidden" id="addressField" name="address">
-
                                 <input type="hidden" id="cpNumField" name="cpNum">
-
                                 <input type="hidden" id="displayWidth" name="width">
-
                                 <input type="hidden" id="displayLength" name="length">
-
                                 <input type="hidden" id="displayHeight" name="height">
-
                                 <input type="hidden" value="<?php echo $userID ?>" name="userID">
-
                                 <input type="hidden" id="productDetails" name="productDetails">
-
                             </form>
+
                         </div>
 
                         <div class="modal-footer d-flex justify-content-between">
@@ -595,18 +635,18 @@ if ($userresult->num_rows > 0) {
 
                     selectedItems.forEach(item => {
                         orderPreview.append(`
-                    <li>
-                        <h5>${item.productName}</h5>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="ms-2" style="font-size:14px; line-height:5px;">
-                                <p>Qt: ${item.quantity}</p>
-                                <p>Price: &#8369; ${item.unitCost.toLocaleString('en-US')}</p>
-                                <p>Total: &#8369; ${item.totalCost.toLocaleString('en-US')}</p>
-                            </div>
-                            <img src="${item.image}" class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;" alt="">
+                <li>
+                    <h5>${item.productName}</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="ms-2" style="font-size:14px; line-height:5px;">
+                            <p>Qt: ${item.quantity}</p>
+                            <p>Price: &#8369; ${item.unitCost.toLocaleString('en-US')}</p>
+                            <p>Total: &#8369; ${item.totalCost.toLocaleString('en-US')}</p>
                         </div>
-                    </li>
-                `);
+                        <img src="${item.image}" class="img-fluid me-5 rounded-circle" style="width: 80px; height: 80px;" alt="">
+                    </div>
+                </li>
+            `);
                     });
 
                     // Show total cost in the modal
@@ -630,12 +670,36 @@ if ($userresult->num_rows > 0) {
                     $("#addressField").val($("#userAddress").text());
                     $("#cpNumField").val($("#userPhone").text());
 
+                    $("#referenceNumber").on('blur', function () {
+                        var refNum = $(this).val();
+                        if (refNum.length > 0) {
+                            $.post('check_reference.php', { referenceNumber: refNum }, function (data) {
+                                if (data.exists) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Oops...',
+                                        text: 'Reference Number already exists! Please enter a different one.',
+                                        confirmButtonColor: '#0d6efd'
+                                    }).then(() => {
+                                        $("#referenceNumber").val('').focus();
+                                    });
+                                }
+                            }, 'json');
+                        }
+                    });
+
+
+
+                    // Set amount input default value to totalCost
+                    $("#amountInput").val(totalCost.toFixed(2));
+
                     // Show the modal
                     $('#checkoutModal').modal('show');
                 } else {
                     alert("Please select at least one item to proceed.");
                 }
             });
+
 
             // Add form submission validation for image file type and presence
             $("#checkoutForm").submit(function (e) {

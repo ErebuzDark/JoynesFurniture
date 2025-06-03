@@ -30,6 +30,16 @@ try {
         $currentBalance = (float) $_POST['currentBalance'];
         $receiptID = (int) $_POST['receiptID'];
 
+        // Reject payment status "Rejected" if amountPaid >= half totalCost
+        if (strtolower($paymentStatusPost) === 'rejected' && $amountPaid >= ($totalCost / 2)) {
+            $_SESSION['toast'] = [
+                'type' => 'error',
+                'message' => 'Cannot reject payment because at least half of the total cost is already paid.'
+            ];
+            header("Location: adminOrder.php");
+            exit;
+        }
+
         $statusLower = strtolower($paymentStatusPost);
 
         // If Invalid or Refunded — don’t touch balance or create receipt
@@ -55,21 +65,19 @@ try {
             $checkRef = $conn->prepare("SELECT ref_no FROM payment_receipts WHERE ref_no = ? AND id != ?");
             $checkRef->bind_param("si", $refNo, $receiptID);
             $checkRef->execute();
-            $checkRef->bind_result($countRef);
-            $checkRef->fetch();
-            $checkRef->close();
+            $checkRef->store_result();
 
-            if ($countRef > 0) {
-                $msg = "Error: Reference number already exists.";
-                $url = "adminOrder.php";
-                echo "<script>
-                    alert(" . json_encode($msg) . ");
-                    setTimeout(function() {
-                        window.location.href = " . json_encode($url) . ";
-                    }, 100);
-                </script>";
-                exit();
+            if ($checkRef->num_rows > 0) {
+                $checkRef->close();
+
+                $_SESSION['toast'] = [
+                    'type' => 'error',
+                    'message' => 'Error: Reference number already exists.'
+                ];
+                header("Location: adminOrder.php");
+                exit;
             }
+            $checkRef->close();
         }
 
         // Update checkout or checkoutcustom table
@@ -156,6 +164,7 @@ try {
         throw new Exception("Required POST data missing.");
     }
 } catch (Exception $e) {
-    echo "Error: " . $e->getMessage();
+    $_SESSION['toast'] = ['type' => 'error', 'message' => 'Error: ' . $e->getMessage()];
+    header("Location: adminOrder.php");
     exit;
 }

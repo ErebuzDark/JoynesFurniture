@@ -10,108 +10,128 @@ if (isset($_POST['place'])) {
     $cpNum = $_POST['cpNum'];
     $prodName = $_POST['prodName'];
     $prodImage = "up/" . $_POST['prodImage'];
-    $date = $_POST['date'];
     $status = $_POST['status'];
     $quantity = $_POST['quantity'];
     $width = $_POST['width'];
     $length = $_POST['length'];
     $height = $_POST['height'];
 
-    // Corrected filename and temp file path
-    $filename = "up/" . uniqid('qr_', true) . '.' . pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-    $tempname = $_FILES['image']['tmp_name'];  // Fix: Correctly getting the temporary file path
-    $folder = $filename;  // Fix: Ensure file is moved to the correct destination
+    $amountPaid = $_POST['amountPaid'];
+    $refNo = trim($_POST['refNo']);
 
-    $sql_selectimg = "SELECT * FROM furnituretbl WHERE fID = ?";
-    $stmt_selectimg = $conn->prepare($sql_selectimg);
-    $stmt_selectimg->bind_param("i", $orderID);
-    $stmt_selectimg->execute();
-    $result2 = $stmt_selectimg->get_result();
-    $row = $result2->fetch_assoc();
-    $img = "up/" . $row['image']; // Keeping for reference, but not used in the insert statement
-    $variant = "full";
+    // Check if refNo already used in payment_receipts table
+    $checkRef = $conn->prepare("SELECT COUNT(*) FROM payment_receipts WHERE ref_no = ?");
+    $checkRef->bind_param("s", $refNo);
+    $checkRef->execute();
+    $checkRef->bind_result($refCount);
+    $checkRef->fetch();
+    $checkRef->close();
 
-    $sql_select = "SELECT cost FROM furnituretbl WHERE fID = ?";
+    if ($refCount > 0) {
+        // Duplicate refNo found - send error back to shop.php with toast
+        $_SESSION['error_refNo'] = "This reference number has already been used. Please check and try again.";
+        header("Location: shop.php");
+        exit();
+    } else {
+        // Proceed with insert only if no duplicate refNo found
 
-    if ($stmt_select = $conn->prepare($sql_select)) {
-        $stmt_select->bind_param("i", $orderID);
-        $stmt_select->execute();
-        $stmt_select->bind_result($cost);
+        // Upload file handling
+        $filename = "up/" . uniqid('qr_', true) . '.' . pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+        $tempname = $_FILES['image']['tmp_name'];
+        $folder = $filename;
 
-        if ($stmt_select->fetch()) {
-            $stmt_select->close();
+        $sql_select = "SELECT cost FROM furnituretbl WHERE fID = ?";
 
-            $sql_insert = "INSERT INTO checkout (userID, fullName, address, cpNum, image, prodName, cost, date, status, balance, proofPay, quantity, variant, width, length, height) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        if ($stmt_select = $conn->prepare($sql_select)) {
+            $stmt_select->bind_param("i", $orderID);
+            $stmt_select->execute();
+            $stmt_select->bind_result($cost);
 
-            if ($stmt_insert = $conn->prepare($sql_insert)) {
-                $stmt_insert->bind_param(
-                "isssssssssdissss", // Corrected type string: 15 types
-                $userID,
-                $fullName,
-                $address,
-                $cpNum,
-                $prodImage,
-                $prodName,
-                $cost,
-                $date,
-                $status,
-                $cost,          // balance
-                $filename,      // proofPay
-                $quantity,
-                $variant,
-                $width,
-                $length,
-                $height
-            );
+            if ($stmt_select->fetch()) {
+                $stmt_select->close();
 
-                if ($stmt_insert->execute()) {
-                    // Fix: Use correct temp file path and destination
-                    move_uploaded_file($tempname, $folder);
+                $sql_insert = "INSERT INTO checkout (userID, fullName, address, cpNum, image, prodName, cost, date, status, balance, proofPay, quantity, variant, width, length, height) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?)";
 
-                    // NEW: Insert proof into payment_receipts
-                    $orderID = $conn->insert_id;
-                    $source = 'checkout';
-                    $paymentDate = date("Y-m-d H:i:s");
+                if ($stmt_insert = $conn->prepare($sql_insert)) {
+                    $variant = "full";
+                    $stmt_insert->bind_param(
+                        "isssssdsissssss",
+                        $userID,
+                        $fullName,
+                        $address,
+                        $cpNum,
+                        $prodImage,
+                        $prodName,
+                        $cost,
+                        $status,
+                        $cost,
+                        $filename,
+                        $quantity,
+                        $variant,
+                        $width,
+                        $length,
+                        $height
+                    );
 
-                    $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    $receiptStmt->bind_param("iisssss", $orderID, $userID, $source, $prodName, $cost, $filename, $paymentDate);
-                    $receiptStmt->execute();
-                    $receiptStmt->close();
+                    if ($stmt_insert->execute()) {
+                        move_uploaded_file($tempname, $folder);
 
-                    $minusQuantitySql = "SELECT * FROM furnituretbl WHERE fID = '$orderID'";
-                    $minusQuantityResult = mysqli_query($conn, $minusQuantitySql);
-                    $minusQuantityRow = mysqli_fetch_assoc($minusQuantityResult);
+                        $checkoutOrderID = $conn->insert_id;
+                        $source = 'checkout';
+                        $paymentDate = date("Y-m-d H:i:s");
 
-                    $qty2 = $minusQuantityRow['fQuantity'];
+                        $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate, ref_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                        $receiptStmt->bind_param("iissdsss", $checkoutOrderID, $userID, $source, $prodName, $amountPaid, $filename, $paymentDate, $refNo);
+                        $receiptStmt->execute();
+                        $receiptStmt->close();
 
-                    $totQty = (int) $qty2 - 1;
+                        $minusQuantitySql = "SELECT fQuantity FROM furnituretbl WHERE fID = ?";
+                        $stmtQty = $conn->prepare($minusQuantitySql);
+                        $stmtQty->bind_param("i", $orderID);
+                        $stmtQty->execute();
+                        $stmtQty->bind_result($qty2);
+                        $stmtQty->fetch();
+                        $stmtQty->close();
 
-                    $updateQuantitySql = "UPDATE furnituretbl SET fQuantity = '$totQty' WHERE fID = '$orderID'";
+                        $totQty = max(0, (int) $qty2 - 1);
 
-                    if (mysqli_query($conn, $updateQuantitySql)) {
-                        echo "<script>alert('Order placed successfully!');</script>";
+                        $updateQuantitySql = "UPDATE furnituretbl SET fQuantity = ? WHERE fID = ?";
+                        $stmtUpdate = $conn->prepare($updateQuantitySql);
+                        $stmtUpdate->bind_param("ii", $totQty, $orderID);
+                        $stmtUpdate->execute();
+                        $stmtUpdate->close();
+
+                        $_SESSION['success'] = "Order placed successfully!";
                         header("Location: profile.php");
                         exit();
+                    } else {
+                        $_SESSION['error'] = "Error placing order: " . $stmt_insert->error;
+                        header("Location: shop.php");
+                        exit();
                     }
-                } else {
-                    echo "Error: " . $stmt_insert->error;
-                }
 
-                $stmt_insert->close();
+                    $stmt_insert->close();
+                } else {
+                    $_SESSION['error'] = "Prepare failed: " . $conn->error;
+                    header("Location: shop.php");
+                    exit();
+                }
             } else {
-                echo "Error: " . $conn->error;
+                $_SESSION['error'] = "Order not found or invalid order ID.";
+                header("Location: shop.php");
+                exit();
             }
         } else {
-            echo "Error: Order not found or invalid order ID.";
+            $_SESSION['error'] = "Prepare failed: " . $conn->error;
+            header("Location: shop.php");
+            exit();
         }
-
-        $stmt_select->close();
-    } else {
-        echo "Error: " . $conn->error;
     }
 }
 
 if (isset($_POST['cancel'])) {
-    echo "<script>window.location.href='./shop.php';</script>";
+    header("Location: shop.php");
+    exit();
 }
+?>

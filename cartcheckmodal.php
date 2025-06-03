@@ -91,7 +91,16 @@ if (isset($_POST['selected_products'])) {
         </div>';
 
   echo '<input type="hidden" name="balance" value="' . $totalCost . '">';
+  echo '<div class="mt-4">';
+  echo '<label for="amountPaid">Amount Paid (₱):</label>';
+  echo '<input type="number" step="0.01" name="amountPaid" id="amountPaid" class="form-control" value="' . $totalCost . '" required readonly>';
+  echo '</div>';
 
+  // ✅ NEW: Reference Number input
+  echo '<div class="mt-3">';
+  echo '<label for="referenceNumber">Reference Number:</label>';
+  echo '<input type="text" name="referenceNumber" id="referenceNumber" class="form-control" placeholder="Enter GCash reference number" required>';
+  echo '</div>';
   echo '</div>';
 
   echo '<div class="card-footer">';
@@ -110,11 +119,13 @@ if (isset($_POST['selected_products'])) {
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
   function updateTotals() {
     let totalCost = 0;
     const quantities = document.querySelectorAll('input[name="quantity[]"]');
     const productTotals = document.querySelectorAll('.product-total');
     const prodCosts = document.querySelectorAll('input[name="prodCosts[]"]');
+    const amountPaidInput = document.getElementById('amountPaid');
 
     quantities.forEach((qtyInput, index) => {
       let qty = parseInt(qtyInput.value) || 1;
@@ -130,6 +141,9 @@ if (isset($_POST['selected_products'])) {
     // Also update hidden balance input value
     const balanceInput = document.querySelector('input[name="balance"]');
     if (balanceInput) balanceInput.value = totalCost.toFixed(2);
+
+    // Update the Amount Paid input field
+    if (amountPaidInput) amountPaidInput.value = totalCost.toFixed(2);
   }
 
   // Run once on page load to ensure totals are correct
@@ -163,6 +177,8 @@ if (isset($_POST['selected_products'])) {
   function validateAndSubmit() {
     const fileInput = document.getElementById('qrImage');
     const file = fileInput.files[0];
+    const amountPaid = document.getElementById('amountPaid').value.trim();
+    const referenceNumber = document.getElementById('referenceNumber').value.trim();
 
     if (!file) {
       Swal.fire({
@@ -183,6 +199,50 @@ if (isset($_POST['selected_products'])) {
       return;
     }
 
-    fileInput.form.submit(); // manually submit the form
+    if (!amountPaid || isNaN(amountPaid) || parseFloat(amountPaid) <= 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Amount',
+        text: 'Please enter a valid amount paid.',
+      });
+      return;
+    }
+
+    if (!referenceNumber) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Missing Reference Number',
+        text: 'Please enter the GCash reference number.',
+      });
+      return;
+    }
+
+    // Check reference number uniqueness via AJAX
+    fetch('check_ref_no.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'referenceNumber=' + encodeURIComponent(referenceNumber)
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.exists) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Reference Number Exists',
+            text: 'This GCash reference number has already been used. Please check and enter a valid one.',
+          });
+        } else {
+          // Submit form only if ref no is unique
+          fileInput.form.submit();
+        }
+      })
+      .catch(() => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Server Error',
+          text: 'Unable to verify reference number. Please try again later.',
+        });
+      });
   }
+
 </script>

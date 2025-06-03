@@ -1,5 +1,9 @@
 <?php
-session_start();
+if (!defined('DISABLE_SESSION_START') || DISABLE_SESSION_START !== true) {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
 include("database.php");
 
 $userID = $_SESSION['userID'];

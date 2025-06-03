@@ -21,6 +21,7 @@ $salaResult = mysqli_query($conn, $salaSql);
     <link
         href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Raleway:wght@600;800&display=swap"
         rel="stylesheet">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Icon Font Stylesheet -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
@@ -178,6 +179,53 @@ $totalNotifications = array_sum(array_filter($notifications));
 ?>
 
 <body id="<?php echo $id; ?>">
+    <?php if (isset($_SESSION['success'])): ?>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '<?php echo addslashes($_SESSION['success']); ?>',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        </script>
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['error'])): ?>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '<?php echo addslashes($_SESSION['error']); ?>',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timerProgressBar: true,
+                timer: 3000
+            });
+        </script>
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['error_refNo'])): ?>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Duplicate Reference',
+                text: '<?php echo addslashes($_SESSION['error_refNo']); ?>',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        </script>
+        <?php unset($_SESSION['error_refNo']); ?>
+    <?php endif; ?>
 
     <!-- Spinner Start -->
     <div id="spinner"

@@ -1,7 +1,10 @@
 <?php
+session_start();
 require_once 'database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // Validate required POST fields here if needed (optional)
 
     $qrImageFile = $_FILES['qrImage'];
     $qrImagePath = '';
@@ -14,7 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (move_uploaded_file($qrImageFile['tmp_name'], $filePath)) {
             $qrImagePath = $filePath;
         } else {
-            echo "Error uploading image.";
+            // Instead of echoing, you can handle error here or throw exception
+            throw new Exception("Error uploading image.");
         }
     }
 
@@ -34,6 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prodLength = $_POST['prodLength'];
     $prodHeight = $_POST['prodHeight'];
     $variant = "full";
+
+    $referenceNumber = $_POST['referenceNumber'];  // Added
+    $amountPaid = $_POST['amountPaid'];            // Added
 
     $totalCost = array_sum($prodCosts);
     $imagesString = 'up/' . implode(', up/', $images);
@@ -56,18 +63,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Error preparing statement: " . mysqli_error($conn));
         }
 
-        mysqli_stmt_bind_param($stmt, 'sssssssssssiissss', $userID, $imagesString, $prodIDsString, $fullName, $prodNamesString, $address, $cpNum, $totalCost, $status, $qrImagePath, $payment, $balance, $quantityString, $variant, $prodWidthString, $prodLengthString, $prodHeightString);
+        mysqli_stmt_bind_param(
+            $stmt,
+            'sssssssssssiissss',
+            $userID,
+            $imagesString,
+            $prodIDsString,
+            $fullName,
+            $prodNamesString,
+            $address,
+            $cpNum,
+            $totalCost,
+            $status,
+            $qrImagePath,
+            $payment,
+            $balance,
+            $quantityString,
+            $variant,
+            $prodWidthString,
+            $prodLengthString,
+            $prodHeightString
+        );
         mysqli_stmt_execute($stmt);
 
-        // NEW: Insert into payment_receipts
+        // Insert into payment_receipts including referenceNumber and amountPaid
         $orderID = $conn->insert_id;
         $source = 'checkout';
         $paymentDate = date("Y-m-d H:i:s");
         $prodName = implode(', ', $prodNames);
-        $cost = $totalCost;
 
-        $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $receiptStmt->bind_param("iisssss", $orderID, $userID, $source, $prodName, $cost, $qrImagePath, $paymentDate);
+        $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate, ref_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($receiptStmt === false) {
+            throw new Exception("Error preparing payment_receipts statement: " . $conn->error);
+        }
+
+        // Note: used "isssssss" because orderID (int), userID (string), source (string), productName(string),
+        // amountPaid(string or decimal - use string for safety), proofImage(string), paymentDate(string), ref_no(string)
+        $receiptStmt->bind_param(
+            "isssssss",
+            $orderID,
+            $userID,
+            $source,
+            $prodName,
+            $amountPaid,
+            $qrImagePath,
+            $paymentDate,
+            $referenceNumber
+        );
         $receiptStmt->execute();
         $receiptStmt->close();
 
@@ -85,13 +127,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Deduct stock quantities
         foreach ($prodIDs as $index => $prodID) {
-            $orderedQty = (int) $quantity[$index];
+            $orderedQty = (int)$quantity[$index];
 
             $minusQuantitySql = "SELECT fQuantity FROM furnituretbl WHERE fID = '$prodID'";
             $minusQuantityResult = mysqli_query($conn, $minusQuantitySql);
             $minusQuantityRow = mysqli_fetch_assoc($minusQuantityResult);
 
-            $qty2 = (int) $minusQuantityRow['fQuantity'];
+            $qty2 = (int)$minusQuantityRow['fQuantity'];
             $totQty = $qty2 - $orderedQty;
 
             $updateQuantitySql = "UPDATE furnituretbl SET fQuantity = '$totQty' WHERE fID = '$prodID'";
@@ -100,14 +142,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         mysqli_commit($conn);
 
-        echo "<script>
-                alert('Order successfully placed!');
-                window.location.href = 'profile.php';
-              </script>";
+        $_SESSION['cart_success'] = true;
+        header('Location: profile.php');
         exit();
+
     } catch (Exception $e) {
         mysqli_rollback($conn);
         echo "Error: " . $e->getMessage();
     }
 }
-?>

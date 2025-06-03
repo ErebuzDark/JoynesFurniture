@@ -203,8 +203,124 @@ if (mysqli_num_rows($checkResult) > 0) {
     <?php
     include("nav.php");
     ?>
+    <?php session_start(); ?>
+
+    <?php if (isset($_SESSION['toast_message'])): ?>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    toast: true,
+                    icon: 'success',
+                    title: <?php echo json_encode($_SESSION['toast_message']); ?>,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            });
+        </script>
+        <?php unset($_SESSION['toast_message']); endif; ?>
+    <?php if (isset($_SESSION['order_success'])): ?>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Order has been placed successfully!',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        </script>
+        <?php unset($_SESSION['order_success']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['cart_success'])): ?>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Order has been placed successfully!',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        </script>
+        <?php unset($_SESSION['cart_success']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['success_message'])): ?>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Order has been placed successfully!',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        </script>
+        <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
+    <?php if (isset($_SESSION['success'])): ?>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '<?php echo addslashes($_SESSION['success']); ?>',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+
+            });
+        </script>
+        <?php unset($_SESSION['success']); endif; ?>
+
+    <?php if (isset($_SESSION['error'])): ?>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '<?php echo addslashes($_SESSION['error']); ?>',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timerProgressBar: true,
+                timer: 3000
+            });
+        </script>
+        <?php unset($_SESSION['error']); endif; ?>
 
 
+
+    <?php if (isset($_SESSION['swal_status'])): ?>
+        <script>
+            Swal.fire({
+                icon: "<?php echo $_SESSION['swal_status']; ?>",
+                title: "<?php echo $_SESSION['swal_title']; ?>",
+                text: "<?php echo $_SESSION['swal_text']; ?>",
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        </script>
+        <?php
+        // Clear session message after showing it
+        unset($_SESSION['swal_status']);
+        unset($_SESSION['swal_title']);
+        unset($_SESSION['swal_text']);
+    endif;
+    ?>
     <!-- Single Product Start -->
     <br>
     <div class="container-fluid py-5">
@@ -1086,8 +1202,16 @@ if (mysqli_num_rows($checkResult) > 0) {
                         <p><strong>Remaining Balance:</strong> ₱<span id="balanceAmountDisplay"></span></p>
 
                         <label for="paymentImage">Upload Payment Receipt</label>
-                        <input type="file" name="paymentImage" class="form-control" required>
+                        <input type="file" name="paymentImage" class="form-control mb-3" required>
 
+                        <label for="refNo">Reference Number</label>
+                        <input type="text" name="refNo" class="form-control " required>
+
+                        <label for="amountPaid">Amount Paid</label>
+                        <input type="number" name="amountPaid" class="form-control" step="0.01" required>
+
+
+                        <!-- Hidden fields -->
                         <input type="hidden" name="orderID" id="orderid">
                         <input type="hidden" name="userID" value="<?php echo $userID; ?>">
                         <input type="hidden" name="source" id="paymentSource">
@@ -1099,6 +1223,7 @@ if (mysqli_num_rows($checkResult) > 0) {
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>
@@ -1200,26 +1325,31 @@ if (mysqli_num_rows($checkResult) > 0) {
                                             <hr>
 
                                             <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <p class="fw-bold mb-3">Invoice Details</p>
-                                                    <p><strong>Date:</strong> ${invoice.created_at}</p>
-                                                    <p><strong>Order ID:</strong> ${invoice.orderID}</p>
-                                                    <p><strong>Amount Paid:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.totalPaid).toLocaleString()}</span></p>
-                                                    <p><strong>Payment Method:</strong> <span class="text-white badge bg-info">Gcash</span></p>
-                                                    <p><strong>Ref. Number:</strong> <span class="text-secondary">${invoice.reference_number}</span></p>
-                                                   ${invoice.variant === 'full'
-                                            ? ''
-                                            : `<p><strong>Balance:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.balance).toLocaleString()}</span></p>`}
+                                              <div class="col-md-6 mb-3">
+  <p class="fw-bold mb-3">Invoice Details</p>
+  <p><strong>Date:</strong> ${invoice.created_at}</p>
+  <p><strong>Order ID:</strong> ${invoice.orderID}</p>
+  <p class="mb-0"><strong>Payment Method:</strong> <span class="text-white badge bg-info">Gcash</span></p>
 
-                                                </div>
-                                                <div class="col-md-6 mb-3 text-end">
-                                                    <p class="fw-bold mb-3">Billed / Issued To</p>
-                                                    <p><strong>Name:</strong> ${invoice.fullName}</p>
-                                                    <p><strong>Address:</strong> ${invoice.address}</p>
-                                                    <p><strong>Contact:</strong> ${invoice.cpNum}</p>
-                                                    <p><strong>Status:</strong> <span class="text-white badge bg-info">${invoice.payment_status}</span></p>
-                                                </div>
-                                            </div>
+  ${invoice.source === 'checkout'
+                                            ? `<p><strong>Total Paid:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.totalPaid).toLocaleString()}</span></p>`
+                                            : `
+      <p><strong>First Payment:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.firstPayment).toLocaleString()}</span></p>
+      <p><strong>Second Payment:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.secondPayment).toLocaleString()}</span></p>
+      <p><strong>Third Payment:</strong> PHP <span class="text-success fw-semibold mb-0">${Number(invoice.thirdPayment).toLocaleString()}</span></p>
+      <p><strong>Balance:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.balance).toLocaleString()}</span></p>
+    `
+                                        }
+</div>
+
+<div class="col-md-6 mb-3 text-end">
+  <p class="fw-bold mb-3">Billed / Issued To</p>
+  <p><strong>Name:</strong> ${invoice.fullName}</p>
+  <p><strong>Address:</strong> ${invoice.address}</p>
+  <p><strong>Contact:</strong> ${invoice.cpNum}</p>
+  <p><strong>Status:</strong> <span class="text-white badge bg-info">${invoice.payment_status}</span></p>
+</div>
+
 
                                             <hr>
 
@@ -1235,21 +1365,21 @@ if (mysqli_num_rows($checkResult) > 0) {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        ${invoice.items.map(item => `
-                                                            <tr>
-                                                                <td>${item.item}</td>
-                                                                <td class="text-center">${item.quantity}</td>
-                                                                <td class="text-end">${item.price}</td>
-                                                                <td class="text-end">${item.total}</td>
-                                                            </tr>
-                                                        `).join('')}
-                                                    </tbody>
-                                                    <tfoot>
-                                                        <tr>
-                                                            <th colspan="3" class="text-end">Total</th>
-                                                            <th class="text-end text-success">${invoice.invoiceTotal}</th>
-                                                        </tr>
-                                                    </tfoot>
+                                                       ${invoice.items.map(item => `
+            <tr>
+                <td>${item.item}</td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-end">₱${item.price}</td>
+                <td class="text-end">₱${item.total}</td>
+            </tr>
+        `).join('')}
+    </tbody>
+    <tfoot>
+        <tr>
+            <th colspan="3" class="text-end">Total</th>
+            <th class="text-end text-success">₱${invoice.invoiceTotal}</th>
+        </tr>
+    </tfoot>
                                                 </table>
                                             </div>
 

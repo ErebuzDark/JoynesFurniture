@@ -1,4 +1,7 @@
 <?php
+session_start(); // Start session here only once
+
+define('DISABLE_SESSION_START', true);
 require './css/dropcss.php';
 include("database.php");
 include("functions.php");
@@ -62,7 +65,7 @@ if ($row['category'] == 'chair') {
     $lit = 500;
 } elseif ($row['category'] == 'tv') {
     $lit = 400;
-}elseif ($row['category'] == 'sala') {
+} elseif ($row['category'] == 'sala') {
     $lit = 500;
 } else {
     $lit = 0;
@@ -108,7 +111,6 @@ include("viewcostModal.php");
     <style type="text/css">
         a {
             color: black;
-            !important;
 
         }
 
@@ -178,7 +180,8 @@ include("viewcostModal.php");
 <body>
 
     <!-- Spinner Start -->
-    <div id="spinner" class="show w-100 vh-100 bg-white position-fixed translate-middle top-50 start-50  d-flex align-items-center justify-content-center">
+    <div id="spinner"
+        class="show w-100 vh-100 bg-white position-fixed translate-middle top-50 start-50  d-flex align-items-center justify-content-center">
         <div class="spinner-grow text-primary" role="status"></div>
     </div>
     <!-- Spinner End -->
@@ -191,25 +194,30 @@ include("viewcostModal.php");
 
         <div class="container px-0">
             <nav class="navbar navbar-light bg-white navbar-expand-xl">
-                <a href="./shop.php" class="navbar-brand"><img class="logo" src="./img/logo1.png" alt="Bootstrap" style="width: 200px"></a>
+                <a href="./shop.php" class="navbar-brand"><img class="logo" src="./img/logo1.png" alt="Bootstrap"
+                        style="width: 200px"></a>
 
-                <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarCollapse">
                     <span class="fa fa-bars text-primary"></span>
                 </button>
-                
+
                 <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
                     <div class="navbar-nav mx-auto">
                     </div>
 
                     <div class="d-flex m-3 me-0">
                         <a href="customize.php" class="position-relative me-3 my-auto">
-                            <img width="40" height="40" src="https://img.icons8.com/ios-filled/50/737373/hammer.png" alt="hammer" />
+                            <img width="40" height="40" src="https://img.icons8.com/ios-filled/50/737373/hammer.png"
+                                alt="hammer" />
                         </a>
 
                         <a href="cart.php" class="position-relative me-4 my-auto text-muted">
                             <i class="fa fa-shopping-bag fa-2x"></i>
-                            
-                            <span class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1" style="top: -5px; left: 15px; height: 20px; min-width: 20px;"><?php echo $i; ?></span>
+
+                            <span
+                                class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
+                                style="top: -5px; left: 15px; height: 20px; min-width: 20px;"><?php echo $i; ?></span>
                         </a>
 
                     </div>
@@ -267,7 +275,8 @@ include("viewcostModal.php");
 
                             <p class="mb-2">Available: (<?php echo $row['fQuantity']; ?>)</p>
 
-                            <p class="mb-3">Category: <span class="text-uppercase"><?php echo $row['category']; ?></span></p>
+                            <p class="mb-3">Category: <span
+                                    class="text-uppercase"><?php echo $row['category']; ?></span></p>
 
                             <div class="d-flex mb-2"></div>
 
@@ -281,7 +290,9 @@ include("viewcostModal.php");
                                     </a>
                                 </div>
 
-                                <input type="text" name="quantity" id="quantity" class="form-control form-control-sm text-center border-0 bg-transparent" readonly value="1">
+                                <input type="text" name="quantity" id="quantity"
+                                    class="form-control form-control-sm text-center border-0 bg-transparent" readonly
+                                    value="1">
 
                                 <div class="input-group-btn">
                                     <a class="btn btn-sm btn-plus rounded-circle bg-light border">
@@ -298,14 +309,17 @@ include("viewcostModal.php");
 
                                 <?php while ($rows = mysqli_fetch_assoc($varresult)) { ?>
                                     <label for="<?php echo $rows['ID']; ?>" class="input_var hover-text">
-                                        <input class="input_hidden" type="radio" name="vName[]" value="<?php echo $rows['vName']; ?>" id="<?php echo $rows['ID']; ?>" required>
+                                        <input class="input_hidden" type="radio" name="vName[]"
+                                            value="<?php echo $rows['vName']; ?>" id="<?php echo $rows['ID']; ?>" required>
 
-                                        <img class="img1" src="./up/<?php echo $rows['image']; ?>" alt="" width="40" height="40">
+                                        <img class="img1" src="./up/<?php echo $rows['image']; ?>" alt="" width="40"
+                                            height="40">
 
-                                        <span class="tooltip-text top" id="top" value="">Product Name: &nbsp;<?php echo $rows['vName']; ?></span>
+                                        <span class="tooltip-text top" id="top" value="">Product Name:
+                                            &nbsp;<?php echo $rows['vName']; ?></span>
                                     </label>
                                 <?php } ?>
-                                
+
                             </div>
 
                             <!-- Wood Selection -->
@@ -315,13 +329,15 @@ include("viewcostModal.php");
 
                                 <?php while ($rows = mysqli_fetch_assoc($rawresult)) { ?>
                                     <label for="<?php echo $rows['pID']; ?>" class="input_var hover-text">
-                                        <input class="input_hidden" type="radio" name="pName[]" value="<?php echo $rows['pName']; ?>" id="<?php echo $rows['pID']; ?>" required>
+                                        <input class="input_hidden" type="radio" name="pName[]"
+                                            value="<?php echo $rows['pName']; ?>" id="<?php echo $rows['pID']; ?>" required>
 
-                                        <img class="img1" src="./up/<?php echo $rows['image']; ?>" alt="" width="40" height="40">
+                                        <img class="img1" src="./up/<?php echo $rows['image']; ?>" alt="" width="40"
+                                            height="40">
 
                                         <span class="tooltip-text mt-3 bot" id="bottom" value="">Product Name:
                                             &nbsp;<?php echo $rows['pName']; ?></span>
-                                            
+
                                     </label>
                                 <?php } ?>
 
@@ -335,19 +351,22 @@ include("viewcostModal.php");
                                     <div class="d-flex">
                                         <label for="width" class="form-label mt-2">Width:</label>
 
-                                        <input type="number" id="width" name="width" class="form-control form-control-sm w-50 mx-1" min="1" required>
+                                        <input type="number" id="width" name="width"
+                                            class="form-control form-control-sm w-50 mx-1" min="1" required>
                                     </div>
 
                                     <div class="d-flex">
                                         <label for="length" class="form-label mt-2">Length:</label>
 
-                                        <input type="number" id="length" name="length" class="form-control form-control-sm w-50 mx-1" min="1" required>
+                                        <input type="number" id="length" name="length"
+                                            class="form-control form-control-sm w-50 mx-1" min="1" required>
                                     </div>
 
                                     <div class="d-flex">
                                         <label for="length" class="form-label mt-2">Height:</label>
 
-                                        <input type="number" id="height" name="height" class="form-control form-control-sm w-50 mx-1" min="1" required>
+                                        <input type="number" id="height" name="height"
+                                            class="form-control form-control-sm w-50 mx-1" min="1" required>
                                     </div>
 
                                 </div>
@@ -373,10 +392,14 @@ include("viewcostModal.php");
                                 </div> -->
 
                             <div>
-                                <button type="submit" class="btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4 mb-4" name="add"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</button>
+                                <button type="submit"
+                                    class="btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4 mb-4"
+                                    name="add"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</button>
 
                                 <div style="display: none;">
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#costModal" class="position-relative me-4 my-auto btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4 mb-4" id="viewCostButton" onclick="checkFields()">View Cost</a>
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#costModal"
+                                        class="position-relative me-4 my-auto btn border border-secondary rounded-pill px-4 py-2 text-primary mt-4 mb-4"
+                                        id="viewCostButton" onclick="checkFields()">View Cost</a>
                                 </div>
                                 <!-- <a href="customize.php" type="submit" class="btn border border-secondary rounded-pill px-4 py-2 text-primary mb-4">Customize</a> -->
                             </div>
@@ -400,7 +423,8 @@ include("viewcostModal.php");
                         <div class="border border-dark rounded position-relative vesitable-item">
                             <div class="vesitable-img">
                                 <a href="?id=<?php echo $rowcat['fID']; ?>">
-                                    <img src="./up/<?php echo $rowcat['image']; ?>" class="img-fluid w-100 rounded-top" alt="">
+                                    <img src="./up/<?php echo $rowcat['image']; ?>" class="img-fluid w-100 rounded-top"
+                                        alt="">
                                 </a>
                             </div>
 
@@ -411,12 +435,14 @@ include("viewcostModal.php");
                                 <div class="d-flex justify-content-between flex-lg-wrap">
                                     <p class="text-dark fs-5 fw-bold">&#8369;<?php echo $costt; ?></p>
 
-                                    <a href="#" class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
+                                    <a href="#"
+                                        class="btn border border-secondary rounded-pill px-3 py-1 mb-4 text-primary"><i
+                                            class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
                                 </div>
 
                             </div>
                         </div>
-                    <?php
+                        <?php
                     }
                     ?>
                 </div>
@@ -425,14 +451,17 @@ include("viewcostModal.php");
             <div class="col-lg-12">
                 <nav>
                     <div class="nav nav-tabs mb-3">
-                        <button class="nav-link active border-white border-bottom-0" type="button" role="tab" id="nav-mission-tab" data-bs-toggle="tab" data-bs-target="#nav-mission" aria-controls="nav-mission" aria-selected="false">Reviews</button>
+                        <button class="nav-link active border-white border-bottom-0" type="button" role="tab"
+                            id="nav-mission-tab" data-bs-toggle="tab" data-bs-target="#nav-mission"
+                            aria-controls="nav-mission" aria-selected="false">Reviews</button>
                     </div>
                 </nav>
 
                 <div class="tab-content mb-5">
                     <div class="tab-pane active" id="nav-mission" role="tabpanel" aria-labelledby="nav-mission-tab">
                         <div class="d-flex">
-                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
+                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3"
+                                style="width: 100px; height: 100px;" alt="">
 
                             <div class="">
                                 <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
@@ -446,10 +475,11 @@ include("viewcostModal.php");
                                     words etc. Susp endisse ultricies nisi vel quam suscipit </p>
                             </div>
                         </div>
-                        
+
                         <div class="d-flex">
-                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3" style="width: 100px; height: 100px;" alt="">
-                            
+                            <img src="img/avatar.jpg" class="img-fluid rounded-circle p-3"
+                                style="width: 100px; height: 100px;" alt="">
+
                             <div class="">
                                 <p class="mb-2" style="font-size: 14px;">April 12, 2024</p>
 
@@ -492,13 +522,15 @@ include("viewcostModal.php");
 
                     <div class="col-lg-12">
                         <div class="border-bottom rounded my-4">
-                            <textarea name="" id="" class="form-control border-0" cols="30" rows="8" placeholder="Your Review *" spellcheck="false"></textarea>
+                            <textarea name="" id="" class="form-control border-0" cols="30" rows="8"
+                                placeholder="Your Review *" spellcheck="false"></textarea>
                         </div>
                     </div>
 
                     <div class="col-lg-12">
                         <div class="d-flex justify-content-between py-3 mb-5">
-                            <a href="#" class="btn border border-secondary text-primary rounded-pill px-4 py-3"> Post Comment</a>
+                            <a href="#" class="btn border border-secondary text-primary rounded-pill px-4 py-3"> Post
+                                Comment</a>
                         </div>
                     </div>
                 </div>
@@ -571,7 +603,8 @@ include("viewcostModal.php");
             <div class="row">
                 <center>
                     <div class="col-md-6 text-center  mb-3 mb-md-0">
-                        <span class="text-light"><a href="#"><i class="fas fa-copyright text-light me-2"></i>Your Site Name</a>, All right reserved.</span>
+                        <span class="text-light"><a href="#"><i class="fas fa-copyright text-light me-2"></i>Your Site
+                                Name</a>, All right reserved.</span>
                     </div>
                 </center>
             </div>
@@ -582,7 +615,8 @@ include("viewcostModal.php");
 
 
     <!-- Back to Top -->
-    <a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top"><i class="fa fa-arrow-up"></i></a>
+    <a href="#" class="btn btn-primary border-3 border-primary rounded-circle back-to-top"><i
+            class="fa fa-arrow-up"></i></a>
 
 
     <!-- JavaScript Libraries -->
@@ -683,14 +717,14 @@ include("viewcostModal.php");
             }
         });
 
-btnPlus.addEventListener('click', function () {
-    let currentValue = parseInt(inputField.value, 10);
-    let maxQuantity = <?php echo $row['fQuantity']; ?>;
-    if (currentValue < maxQuantity) {
-        inputField.value = currentValue + 1;
-        triggerAutoViewCost();
-    }
-});
+        btnPlus.addEventListener('click', function () {
+            let currentValue = parseInt(inputField.value, 10);
+            let maxQuantity = <?php echo $row['fQuantity']; ?>;
+            if (currentValue < maxQuantity) {
+                inputField.value = currentValue + 1;
+                triggerAutoViewCost();
+            }
+        });
 
         // Add event listeners to other inputs to trigger auto view cost
         const varnishRadios = document.querySelectorAll('input[name="vName[]"]');

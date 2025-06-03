@@ -1,9 +1,9 @@
 <?php
+session_start();
 include("database.php");
 
+if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POST['quantities'], $_POST['images'], $_POST['totalCost'], $_POST['fullName'], $_POST['address'], $_POST['cpNum'], $_POST['userID'], $_POST['payment'], $_POST['referenceNumber'], $_POST['amountInput'])) {
 
-
-if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POST['quantities'], $_POST['images'], $_POST['totalCost'], $_POST['fullName'], $_POST['address'], $_POST['cpNum'], $_POST['userID'], $_POST['payment'])) {
     $cartIds = $_POST['cartIds'];
     $productDetails = $_POST['productDetails'];
     $products = $_POST['products'];
@@ -20,6 +20,9 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
     $length = $_POST['length'];
     $height = $_POST['height'];
 
+    $referenceNumber = $_POST['referenceNumber'];
+    $amountInput = $_POST['amountInput'];
+
     $qrImageFile = $_FILES['qrImage'];
     $qrImagePath = '';
 
@@ -29,7 +32,6 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
         $filePath = $uploadDir . $fileName;
 
         if (move_uploaded_file($qrImageFile['tmp_name'], $filePath)) {
-            // Store the path of the uploaded file
             $qrImagePath = $filePath;
         } else {
             echo "Error uploading image.";
@@ -43,12 +45,25 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
 
     if ($stmt->execute()) {
         $orderID = $conn->insert_id; // Get the inserted order ID
-        $source = 'checkoutcustom'; // Table source
-        $paymentDate = date("Y-m-d H:i:s");
+        $orderID = $conn->insert_id; // Get the inserted order ID
+        $source = 'checkoutcustom';
 
-        $receiptStmt = $conn->prepare("INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $zeroAmount = 0.00;
-        $receiptStmt->bind_param("isssdss", $orderID, $userID, $source, $products, $zeroAmount, $qrImagePath, $paymentDate);
+        $receiptSql = "INSERT INTO payment_receipts (orderID, userID, source, productName, amountPaid, proofImage, ref_no, paymentDate) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+        $receiptStmt = $conn->prepare($receiptSql);
+
+        $receiptStmt->bind_param(
+            "isssdss",
+            $orderID,
+            $userID,
+            $source,
+            $products,
+            $amountInput,
+            $qrImagePath,
+            $referenceNumber
+        );
+
+
+
         $receiptStmt->execute();
         $receiptStmt->close();
 
@@ -59,16 +74,14 @@ if (isset($_POST['cartIds'], $_POST['productDetails'], $_POST['products'], $_POS
         $deleteStmt = $conn->prepare($deleteSql);
 
         $types = str_repeat('i', count($cartIdsArray));
-
-
         $deleteStmt->bind_param($types, ...$cartIdsArray);
         $deleteStmt->execute();
 
-        echo "<script>
-                alert('Order successfully placed!');
-                window.location.href = 'profile.php';
-              </script>";
+        $_SESSION['success_message'] = "Order successfully placed!";
+        header("Location: profile.php");
+        exit();
     } else {
         echo "Error: " . $stmt->error;
     }
 }
+?>

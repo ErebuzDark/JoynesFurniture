@@ -579,85 +579,95 @@ $furResultnew = mysqli_query($conn, $furniturenew);
                 </div>
 
                 <form id="checkoutForm" method="POST" action="customizeadd.php" enctype="multipart/form-data">
-
                     <div class="modal-body">
-                        <div class="d-flex justify-content-between align-items-center px-5">
+
+                        <div class="d-flex justify-content-between align-items-center px-5 mb-4">
                             <ul id="orderPreview" class="list-unstyled">
                                 <!-- Items will be dynamically inserted here -->
                             </ul>
                         </div>
 
+                        <h6 class="mt-4 mb-2 text-primary fw-bold">Payment Method:</h6>
 
-                        <h6 class="mt-5">Payment Method:</h6>
+                        <p class="fw-bold d-flex align-items-center text-primary">
+                            <img src="img/gcash.png" class="me-2" width="25px" height="25px"> GCash
+                        </p>
 
-                        <p class="fw-bold d-flex align-items-center" style="color:#0d6efd;"><img src="img/gcash.png"
-                                width="25px" height="25px"> GCash</p>
-
-                        <!-- Removed SCAN TO PAY text and toggle -->
-                        <!-- Show QR code image directly -->
-                        <div class="qr-container" style="margin-left:60px;">
-                            <img src="img/qr.jpg" width="150px" height="150px" alt="QR Code">
+                        <div class="qr-container my-3 text-center">
+                            <img src="img/qr.jpg" width="150px" height="150px" alt="QR Code"
+                                class="border rounded shadow-sm">
                         </div>
 
-                        <label for="payment">Select Payment:</label>
+                        <div class="mb-3">
+                            <label for="payment" class="form-label fw-semibold">Select Payment:</label>
+                            <select class="form-control form-control-sm w-50" name="payment" id="payment" required>
+                                <option value="" hidden disabled>Select Payment</option>
+                                <option value="Full Payment">Full Payment</option>
+                                <option value="Down Payment">Down Payment</option>
+                            </select>
 
-                        <select class="form-control form-control-sm w-50" name="payment" id="payment" required>
-                            <option value="" hidden disabled>Select Payment</option>
-
-                            <option value="Full Payment">Full Payment</option>
-
-                            <option value="Down Payment">Down Payment</option>
-                        </select>
-
-                        <label for="qrImage" class="mt-4">Upload Proof of Payment:</label>
-
-                        <input type="file" name="qrImage" class="form-control form-control-sm w-50" id="qrImage"
-                            onchange="previewImage(event)">
-
-                        <!-- image preview -->
-                        <div id="imagePreviewContainer" style="margin-top: 10px;">
-                            <img id="imagePreview" src="#" alt="Image Preview" style="max-width: 150px; display: none;">
+                            <small id="downPaymentNote" class="d-block mt-2" style=" font-style: italic;">
+                                Note: Choosing "Down Payment" means the total amount will be paid in 3 installments.
+                            </small>
                         </div>
 
-
-                        <div class="d-flex justify-content-between px-3 mt-4">
-                            <h5>Total Cost:</h5>
-
-                            <p class="fs-5 fw-bold" id="totalCost"></p>
+                        <div class="mb-3">
+                            <label for="qrImage" class="form-label mt-3 fw-semibold">Upload Proof of Payment:</label>
+                            <input type="file" name="qrImage" class="form-control form-control-sm w-50" id="qrImage"
+                                onchange="previewImage(event)">
                         </div>
 
+                        <div class="mb-3">
+                            <label for="referenceNumber" class="form-label fw-semibold">Reference Number:</label>
+                            <input type="text" name="refNo" class="form-control form-control-sm w-50"
+                                id="referenceNumber" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="amount" class="form-label fw-semibold">Amount Paid:</label>
+                            <input type="number" step="0.01" name="amountPaid" class="form-control form-control-sm w-50"
+                                id="amount" required>
+
+                            <small id="downPaymentNote" class="d-block mt-2 "
+                                style="font-style: italic;">
+                                Note: Pay at least ₱1,000 for down payment.
+                            </small>
+                        </div>
+
+                        <div id="imagePreviewContainer" class="mb-3 text-center">
+                            <img id="imagePreview" src="#" alt="Image Preview" style="max-width: 150px; display: none;"
+                                class="img-thumbnail mt-2">
+                        </div>
+
+                        <div class="d-flex justify-content-between px-3 mt-4 border-top pt-3">
+                            <h5 class="mb-0">Total Cost:</h5>
+                            <p class="fs-5 fw-bold mb-0 text-success" id="totalCost"></p>
+                        </div>
+
+                        <!-- Hidden inputs -->
+                        <input type="hidden" id="paymentHidden" name="paymentHidden">
                         <input type="hidden" id="products" name="products">
-
                         <input type="hidden" id="quantities" name="quantities">
-
                         <input type="hidden" id="totalCostField" name="totalCost">
-
                         <input type="hidden" id="fullNameField" name="fullName">
-
                         <input type="hidden" id="addressField" name="address">
-
                         <input type="hidden" id="cpNumField" name="cpNum">
-
                         <input type="hidden" id="productDetails" name="productDetails">
-
                         <input type="hidden" id="displayWidth" name="width">
-
                         <input type="hidden" id="displayLength" name="length">
-
                         <input type="hidden" id="displayHeight" name="height">
-
-                        <input type="hidden" id="displayPayment" name="payment">
-
                         <input type="file" id="modalImageInput" name="image" hidden>
                     </div>
 
                     <div class="modal-footer d-flex justify-content-between">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-
-                        <button type="submit" form="checkoutForm" name="checkout"
-                            class="btn btn-secondary">Checkout</button>
+                        <button type="submit" name="checkout" class="btn btn-primary">Checkout</button>
                     </div>
                 </form>
+
+
+
+
             </div>
         </div>
     </div>
@@ -686,6 +696,8 @@ $furResultnew = mysqli_query($conn, $furniturenew);
     <script src="lib/waypoints/waypoints.min.js"></script>
     <script src="lib/lightbox/js/lightbox.min.js"></script>
     <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 
     <!-- Template Javascript -->
     <script src="js/main.js"></script>
@@ -693,6 +705,74 @@ $furResultnew = mysqli_query($conn, $furniturenew);
 
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.getElementById("checkoutForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // prevent default submit until checks pass
+
+            const amount = parseFloat(document.getElementById("amount").value);
+            const refNo = document.getElementById("referenceNumber").value.trim();
+            const paymentType = document.getElementById("payment").value;
+
+            // Validate amount
+            if (isNaN(amount) || amount <= 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Amount',
+                    text: 'Please enter a valid payment amount above 0.'
+                });
+                return;
+            }
+
+            // Validate ref number length
+            if (refNo === "" || refNo.length < 5) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Reference Number Missing',
+                    text: 'Please enter a valid reference number (at least 5 characters).'
+                });
+                return;
+            }
+
+            // Validate down payment minimum
+            if (paymentType === "Down Payment" && amount < 1000) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Down Payment',
+                    text: 'Minimum down payment is ₱1,000.'
+                });
+                return;
+            }
+
+            fetch('check_ref.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'refNo=' + encodeURIComponent(refNo)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Reference Number Exists',
+                            text: 'This reference number has already been used.'
+                        });
+                    } else {
+                        // If all validations pass, submit the form
+                        event.target.submit();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Could not validate reference number. Please try again later.'
+                    });
+                });
+        });
+    </script>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

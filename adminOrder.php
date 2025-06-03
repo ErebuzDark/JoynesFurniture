@@ -178,6 +178,8 @@ $ordersData = json_encode(array_values($ordersPerMonth));
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="vendor/chart.js/Chart.js"></script>
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.css" rel="stylesheet">
@@ -284,6 +286,37 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 </head>
 
 <body id="page-top">
+    <?php
+    $toast = null;
+    if (isset($_SESSION['toast'])) {
+        $toast = $_SESSION['toast'];
+        unset($_SESSION['toast']);
+    }
+    ?>
+
+    <?php if ($toast): ?>
+        <!-- Load SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <style>
+            .swal2-container {
+                z-index: 99999 !important;
+                /* Force on top of everything */
+            }
+        </style>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: <?= json_encode($toast['type']) ?>,
+                    title: <?= json_encode($toast['message']) ?>,
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            });
+        </script>
+    <?php endif; ?>
 
     <!-- Page Wrapper -->
     <div id="wrapper">
@@ -345,6 +378,9 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             </div>
 
         </ul>
+
+
+
         <!-- End of Sidebar -->
 
         <!-- Content Wrapper -->
@@ -478,6 +514,8 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                 </nav>
                 <!-- End of Topbar -->
 
+
+
                 <!-- DataTales Example -->
                 <div class=" px-0">
                     <div class="card shadow mb-4">
@@ -553,12 +591,13 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
                                 $receiptsByOrder = [];
                                 while ($row = $receiptResult->fetch_assoc()) {
-                                    $key = $row['orderID'] . '|' . $row['source']; // combine orderID + source
+                                    $key = $row['orderID'] . '|' . $row['source'];
                                     if (!isset($receiptsByOrder[$key])) {
                                         $receiptsByOrder[$key] = [];
                                     }
                                     $receiptsByOrder[$key][] = $row;
                                 }
+
 
                                 $result = $conn->query($sql);
                                 if ($result->num_rows > 0) {
@@ -595,7 +634,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         echo '<td>' . $row['orderID'] . '</td>';
                                         echo '<td>' . $row['fullName'] . '</td>';
                                         echo '<td>' . $row['address'] . '</td>';
-                                        echo '<td>' . $row['cpNum'] . '</td>';
+                                        echo '<td>' . $row['cpNum'] . ' </td>';
                                         echo '<td>';
                                         foreach ($images as $index => $image):
                                             $modalId = 'imageModal' . $index;
@@ -661,7 +700,8 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         }
                                         echo '</td>';
 
-                                        echo '<td class="align-middle">' . '&#8369;' . number_format($row['totalCost'], 0, '.', ',') . '</td>';
+                                        $totalCost = isset($row['totalCost']) && is_numeric($row['totalCost']) ? (float) $row['totalCost'] : 0;
+                                        echo '<td class="align-middle">' . '&#8369;' . number_format($totalCost, 2, '.', ',') . '</td>';
                                         echo '<td class="align-middle">' . $row['date'] . '</td>';
 
                                         if ($row['payment'] != 'Full Payment') {
@@ -671,15 +711,37 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         }
 
                                         echo '<td class="align-middle"><span id="st_' . $row['orderID'] . '">' . $row['status'] . '</span><hr>';
+                                        // Count all similar receipts (same userID, orderID, productName, source)
+                                
+                                        $querySimilar = "SELECT COUNT(*) as similarCount FROM payment_receipts WHERE orderID = ? AND source = ?";
+                                        $stmtSimilar = $conn->prepare($querySimilar);
+                                        $stmtSimilar->bind_param("is", $row['orderID'], $row['source']);
+                                        $stmtSimilar->execute();
+                                        $resultSimilar = $stmtSimilar->get_result();
+
+                                        // Fetch the count from the result
+                                        $similarCount = 0;
+                                        if ($resultSimilar) {
+                                            $rowSimilar = $resultSimilar->fetch_assoc();
+                                            $similarCount = $rowSimilar['similarCount'];
+                                        }
+
                                         if ($row['status'] != 'Completed' && $row['status'] != 'Delivered') {
-                                            echo '<select name="stats" id="stats_' . $row['orderID'] . '" class="btn btn-sm btn-primary px-0" onchange="updateStatus(' . $row['orderID'] . ', \'' . $row['source'] . '\')">
-                                            <option value="" hidden>Edit Status</option>
-                                            <option value="In Progress" class="bg-white text-dark">IN PROGRESS</option>
-                                            <option value="Completed" ' . $notcom . ' class="bg-white text-dark">COMPLETED</option>';
+                                            echo '<select name="stats" id="stats_' . $row['orderID'] . '" class="btn btn-sm btn-primary px-0" onchange="updateStatus(' . $row['orderID'] . ', \'' . $row['source'] . '\')">';
+                                            echo '<option value="" hidden>Edit Status</option>';
+                                            echo '<option value="In Progress" class="bg-white text-dark">IN PROGRESS</option>';
+                                            echo '<option value="Completed" class="bg-white text-dark">COMPLETED</option>';
                                             echo '<option value="Cancelled" class="bg-white text-dark">CANCELLED</option>';
-                                            echo '<option value="Rejected" class="bg-white text-dark">REJECT</option>';
+
+                                            if ($similarCount <= 1) {
+                                                echo '<option value="Rejected" class="bg-white text-dark">REJECT</option>';
+                                            }
+
                                             echo '</select>';
                                         }
+
+
+
                                         echo '</td>';
                                         if ($row['payment'] == 'Full Payment') {
                                             $selectedFullPayment = 'selected';
@@ -1188,6 +1250,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             class="form-control form-control-sm" 
                             value="${r.amountPaid !== undefined ? parseFloat(r.amountPaid).toFixed(2) : ''}" 
                             required
+                            readonly
                             oninput="validateAmountPaid(this, ${index})">
                         <small id="amountPaidError_${index}" class="text-danger d-none">Amount must be at least ₱1,000.00</small>
 
@@ -1198,20 +1261,25 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                 name="ref_no" 
                                 class="form-control form-control-sm" 
                                 placeholder="Enter Reference No." 
+                                readonly
                                 value="${r.ref_no || ''}" 
                                 oninput="validateRefNo(this, ${index})">
                             <small id="refNoError_${index}" class="text-danger d-none">This reference number is already used.</small>
                         </div>
 
-                        <div class="mb-2">
-                            <label for="paymentStatus_${index}" class="form-label"><strong>Payment Status:</strong></label>
-                            <select id="paymentStatus_${index}" name="payment_status" class="form-select form-select-sm" required onchange="toggleAmountEditable(${index})">
-                                <option value="Pending" ${r.payment_status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <div class="mb-3 d-flex flex-column">
+                            <label for="paymentStatus_${index}" class="form-label ">
+                            <strong>Payment Status:</strong>
+                            </label>
+                            <select id="paymentStatus_${index}" name="payment_status" class="form-select form-select-sm mt-1 shadow-sm rounded text-dark fw-semibold" required onchange="toggleAmountEditable(${index})">
+                                <option value="Pending" ${r.payment_status === 'Pending' ? 'selected' : ''}> Pending</option>
                                 <option value="Confirmed" ${r.payment_status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                                <option value="Invalid" ${r.payment_status === 'Invalid' ? 'selected' : ''}>Invalid</option>
-                                <option value="Refunded" ${r.payment_status === 'Refunded' ? 'selected' : ''}>Refunded</option>
+                                <option value="Invalid" ${r.payment_status === 'Invalid' ? 'selected' : ''}> Invalid</option>
+                                <option value="Refunded" ${r.payment_status === 'Refunded' ? 'selected' : ''}> Refunded</option>
                             </select>
                         </div>
+
+                        
                         <button type="submit" class="btn btn-sm btn-success mt-2">
                             Update Payment
                         </button>
