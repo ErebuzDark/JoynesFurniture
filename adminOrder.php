@@ -713,7 +713,11 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         echo '<td class="align-middle"><span id="st_' . $row['orderID'] . '">' . $row['status'] . '</span><hr>';
                                         // Count all similar receipts (same userID, orderID, productName, source)
                                 
-                                        $querySimilar = "SELECT COUNT(*) as similarCount FROM payment_receipts WHERE orderID = ? AND source = ?";
+                                        $querySimilar = "SELECT COUNT(*) as similarCount 
+                 FROM payment_receipts 
+                 WHERE orderID = ? 
+                   AND source = ? 
+                   AND payment_status NOT IN ('invalid', 'refunded')";
                                         $stmtSimilar = $conn->prepare($querySimilar);
                                         $stmtSimilar->bind_param("is", $row['orderID'], $row['source']);
                                         $stmtSimilar->execute();
@@ -739,6 +743,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
                                             echo '</select>';
                                         }
+
 
 
 
