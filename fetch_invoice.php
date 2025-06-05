@@ -50,45 +50,75 @@ if (isset($_GET['orderID'], $_GET['source'])) {
 
     $row = $result->fetch_assoc();
 
-    // ✅ Hide invoice if payment is still pending
     if (strtolower($row['payment_status']) === 'pending') {
         echo json_encode(['success' => false, 'message' => 'Invoice not available. Payment is still pending.']);
         exit;
     }
 
-    // ✅ Fetch payments for this order (specific to source)
     $payments = [];
 
     if ($source === 'checkout') {
-        // Only 1 payment expected
-        $paymentStmt = $conn->prepare("SELECT amountPaid FROM payment_receipts WHERE orderID = ? AND source = 'checkout' LIMIT 1");
+        $paymentStmt = $conn->prepare("SELECT amountPaid, paymentDate FROM payment_receipts WHERE orderID = ? AND source = 'checkout' LIMIT 1");
         $paymentStmt->bind_param("i", $orderID);
         $paymentStmt->execute();
         $paymentResult = $paymentStmt->get_result();
         $payment = $paymentResult->fetch_assoc();
         $paymentStmt->close();
 
-        $row['amountPaid'] = $payment ? (float)$payment['amountPaid'] : 0;
+        $row['amountPaid'] = $payment ? (float) $payment['amountPaid'] : 0;
+        $row['paymentDate'] = $payment ? $payment['paymentDate'] : null;
         $row['totalPaid'] = $row['amountPaid'];
+        $balanceRemaining = (float) $row['cost'] - $row['totalPaid'];
+        $row['balanceRemaining'] = max($balanceRemaining, 0);
     } else {
-        // Up to 3 partial payments
-        $paymentStmt = $conn->prepare("SELECT amountPaid FROM payment_receipts WHERE orderID = ? AND source = 'checkoutcustom' ORDER BY id ASC");
+        $paymentStmt = $conn->prepare("SELECT amountPaid, paymentDate
+            FROM payment_receipts
+            WHERE orderID = ? AND source = 'checkoutcustom'
+            AND payment_status = 'confirmed'
+            ORDER BY id ASC
+        ");
         $paymentStmt->bind_param("i", $orderID);
         $paymentStmt->execute();
         $paymentResult = $paymentStmt->get_result();
 
+        $index = 0;
         while ($p = $paymentResult->fetch_assoc()) {
-            $payments[] = (float)$p['amountPaid'];
+            $payments[$index] = [
+                'amountPaid' => (float) $p['amountPaid'],
+                'paymentDate' => $p['paymentDate'],
+            ];
+            $index++;
         }
+
         $paymentStmt->close();
 
-        $row['firstPayment'] = $payments[0] ?? 0;
-        $row['secondPayment'] = $payments[1] ?? 0;
-        $row['thirdPayment'] = $payments[2] ?? 0;
-        $row['totalPaid'] = array_sum($payments);
+        $totalCost = (float) $row['cost'];
+        $balanceRemaining = $totalCost;
+        $row['totalPaid'] = 0;
+
+        for ($i = 0; $i < 3; $i++) {
+            $amountPaid = isset($payments[$i]['amountPaid']) ? (float) $payments[$i]['amountPaid'] : 0;
+            $paymentDate = $payments[$i]['paymentDate'] ?? null;
+
+            $balanceRemaining -= $amountPaid;
+            $row['totalPaid'] += $amountPaid;
+
+            if ($i === 0) {
+                $row['firstPayment'] = $amountPaid;
+                $row['firstPaymentDate'] = $paymentDate;
+                $row['firstBalance'] = max($balanceRemaining, 0);
+            } elseif ($i === 1) {
+                $row['secondPayment'] = $amountPaid;
+                $row['secondPaymentDate'] = $paymentDate;
+                $row['secondBalance'] = max($balanceRemaining, 0);
+            } elseif ($i === 2) {
+                $row['thirdPayment'] = $amountPaid;
+                $row['thirdPaymentDate'] = $paymentDate;
+                $row['thirdBalance'] = max($balanceRemaining, 0);
+            }
+        }
     }
 
-    // ✅ Prepare purchase items
     $prodNames = isset($row['prodName']) ? explode(',', $row['prodName']) : [];
     $quantities = isset($row['quantity']) ? explode(',', $row['quantity']) : [];
 
@@ -101,20 +131,18 @@ if (isset($_GET['orderID'], $_GET['source'])) {
         $price = 0;
 
         if ($row['source'] === 'checkout') {
-            // ✅ Correctly get cost from furnituretbl
             $stmtPrice = $conn->prepare("SELECT cost FROM furnituretbl WHERE fName = ? LIMIT 1");
             if ($stmtPrice) {
                 $stmtPrice->bind_param("s", $itemName);
                 $stmtPrice->execute();
                 $priceResult = $stmtPrice->get_result();
                 if ($priceRow = $priceResult->fetch_assoc()) {
-                    $price = (float)$priceRow['cost'];
+                    $price = (float) $priceRow['cost'];
                 }
                 $stmtPrice->close();
             }
         } else {
-            // Divide total cost evenly
-            $totalCost = (float)$row['cost'];
+            $totalCost = (float) $row['cost'];
             $price = $totalCost / max(count($prodNames), 1);
         }
 

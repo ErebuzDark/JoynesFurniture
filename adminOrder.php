@@ -379,6 +379,14 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
         </ul>
 
+        <?php if (isset($_SESSION['auto_refresh'])): ?>
+            <script>
+                setTimeout(function () {
+                    location.reload();
+                }, 1500); // Delay before auto-refresh (1.5 seconds)
+            </script>
+            <?php unset($_SESSION['auto_refresh']); ?>
+        <?php endif; ?>
 
 
         <!-- End of Sidebar -->
@@ -711,38 +719,54 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                                         }
 
                                         echo '<td class="align-middle"><span id="st_' . $row['orderID'] . '">' . $row['status'] . '</span><hr>';
-                                        // Count all similar receipts (same userID, orderID, productName, source)
+                                        $queryStatus = "SELECT payment_status 
+                FROM payment_receipts 
+                WHERE orderID = ? 
+                AND source = ? 
+                AND payment_status NOT IN ('invalid', 'refunded') 
+                ORDER BY id ASC"; // Assuming 'id' orders oldest first
                                 
-                                        $querySimilar = "SELECT COUNT(*) as similarCount 
-                 FROM payment_receipts 
-                 WHERE orderID = ? 
-                   AND source = ? 
-                   AND payment_status NOT IN ('invalid', 'refunded')";
-                                        $stmtSimilar = $conn->prepare($querySimilar);
-                                        $stmtSimilar->bind_param("is", $row['orderID'], $row['source']);
-                                        $stmtSimilar->execute();
-                                        $resultSimilar = $stmtSimilar->get_result();
+                                        $stmtStatus = $conn->prepare($queryStatus);
+                                        $stmtStatus->bind_param("is", $row['orderID'], $row['source']);
+                                        $stmtStatus->execute();
+                                        $resultStatus = $stmtStatus->get_result();
 
-                                        // Fetch the count from the result
-                                        $similarCount = 0;
-                                        if ($resultSimilar) {
-                                            $rowSimilar = $resultSimilar->fetch_assoc();
-                                            $similarCount = $rowSimilar['similarCount'];
-                                        }
+                                        $statuses = [];
+                                        $validCount = 0;
+                                        $firstStatus = null;
 
-                                        if ($row['status'] != 'Completed' && $row['status'] != 'Delivered') {
-                                            echo '<select name="stats" id="stats_' . $row['orderID'] . '" class="btn btn-sm btn-primary px-0" onchange="updateStatus(' . $row['orderID'] . ', \'' . $row['source'] . '\')">';
-                                            echo '<option value="" hidden>Edit Status</option>';
-                                            echo '<option value="In Progress" class="bg-white text-dark">IN PROGRESS</option>';
-                                            echo '<option value="Completed" class="bg-white text-dark">COMPLETED</option>';
-                                            echo '<option value="Cancelled" class="bg-white text-dark">CANCELLED</option>';
-
-                                            if ($similarCount <= 1) {
-                                                echo '<option value="Rejected" class="bg-white text-dark">REJECT</option>';
+                                        if ($resultStatus && $resultStatus->num_rows > 0) {
+                                            $isFirst = true;
+                                            while ($rowStatus = $resultStatus->fetch_assoc()) {
+                                                if ($isFirst) {
+                                                    $firstStatus = $rowStatus['payment_status'];
+                                                    $isFirst = false;
+                                                }
+                                                $statuses[] = $rowStatus['payment_status'];
+                                                $validCount++;
                                             }
-
-                                            echo '</select>';
                                         }
+
+                                        // CASE 1: If any status is pending and NOT eligible to override
+                                        if (in_array("Pending", $statuses) && !($row['source'] == "checkoutcustom" && $firstStatus == "Confirmed")) {
+                                        } else {
+                                            // Render dropdown only if not Completed or Delivered
+                                            if ($row['status'] != 'Completed' && $row['status'] != 'Delivered') {
+                                                echo '<select name="stats" id="stats_' . $row['orderID'] . '" class="btn btn-sm btn-primary px-0" onchange="updateStatus(' . $row['orderID'] . ', \'' . $row['source'] . '\')">';
+                                                echo '<option value="" hidden>Edit Status</option>';
+                                                echo '<option value="In Progress" class="bg-white text-dark">IN PROGRESS</option>';
+                                                echo '<option value="Completed" class="bg-white text-dark">COMPLETED</option>';
+                                                echo '<option value="Cancelled" class="bg-white text-dark">CANCELLED</option>';
+
+                                                // Show REJECT only if valid count <= 1
+                                                if ($validCount <= 1) {
+                                                    echo '<option value="Rejected" class="bg-white text-dark">REJECT</option>';
+                                                }
+
+                                                echo '</select>';
+                                            }
+                                        }
+
 
 
 
@@ -1133,7 +1157,6 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             border-style: dashed !important;
         }
     </style>
-    <!-- Modal HTML remains the same -->
     <!-- Payment Proof Modal -->
     <div class="modal fade" id="paymentProofModal" tabindex="-1" role="dialog" aria-labelledby="paymentProofModalLabel"
         aria-hidden="true" data-backdrop="static" data-keyboard="false">
@@ -1174,6 +1197,30 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             </div>
         </div>
     </div>
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="statusConfirmModal" tabindex="-1" role="dialog"
+        aria-labelledby="statusConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="statusConfirmModalLabel">Confirm Status Change</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span> <!-- Bootstrap 4 close icon -->
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to set the status to <span id="statusToConfirm" class="fw-bold"></span>?<br>
+                    <small class="text-danger">This action cannot be undone and will lock the fields.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="confirmStatusChangeBtn">Yes,
+                        Update Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         function viewProofPayAll(receiptsJson, orderID, senderName, balance, totalPaid, totalCost) {
@@ -1201,12 +1248,13 @@ $ordersData = json_encode(array_values($ordersPerMonth));
             <div class="mb-2">
                 <p><strong>Total Cost:</strong> <span class="text-muted">&#8369; ${Number(totalCost).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
             </div>
-            <div class="mb-2">
+          <div class="mb-2">
                 <p><strong>Total Payment:</strong> <span class="text-muted">&#8369; ${Number(calculatedTotalPaid).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
             </div>
             <div class="mb-2">
                 <p><strong>Balance:</strong> <span class="text-muted">&#8369; ${Number(totalCost - calculatedTotalPaid).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></p>
             </div>
+
         </div>
         <hr class="border border-1 border-dark border-dashed">
     `;
@@ -1276,7 +1324,15 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                             <label for="paymentStatus_${index}" class="form-label ">
                             <strong>Payment Status:</strong>
                             </label>
-                            <select id="paymentStatus_${index}" name="payment_status" class="form-select form-select-sm mt-1 shadow-sm rounded text-dark fw-semibold" required onchange="toggleAmountEditable(${index})">
+                              <select 
+    id="paymentStatus_${index}" 
+    name="payment_status" 
+    class="form-select form-select-sm mt-1 shadow-sm rounded text-dark fw-semibold" 
+    required 
+    onchange="toggleAmountEditable(${index})"
+    ${['Confirmed', 'Invalid', 'Refunded'].includes(r.payment_status) ? 'disabled' : ''}
+>
+
                                 <option value="Pending" ${r.payment_status === 'Pending' ? 'selected' : ''}> Pending</option>
                                 <option value="Confirmed" ${r.payment_status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                                 <option value="Invalid" ${r.payment_status === 'Invalid' ? 'selected' : ''}> Invalid</option>
@@ -1285,9 +1341,7 @@ $ordersData = json_encode(array_values($ordersPerMonth));
                         </div>
 
                         
-                        <button type="submit" class="btn btn-sm btn-success mt-2">
-                            Update Payment
-                        </button>
+                       
                     </form>
                     <div class="mt-2">
                         <p class="mb-2"><strong>Payment Date:</strong> <span class="text-muted">${r.paymentDate || ''}</span></p>
@@ -1309,6 +1363,80 @@ $ordersData = json_encode(array_values($ordersPerMonth));
 
             $('#paymentProofModal').modal('show');
         }
+
+    </script>
+
+    <script>
+        const previousStatusMap = {};
+        let pendingStatusChange = { index: null, value: null, selectEl: null, formEl: null };
+
+        function toggleAmountEditable(index) {
+            const selectEl = document.getElementById(`paymentStatus_${index}`);
+            const newStatus = selectEl.value;
+            const formEl = selectEl.closest('form');
+
+            // Save the previous status if not yet saved
+            if (!previousStatusMap.hasOwnProperty(index)) {
+                previousStatusMap[index] = selectEl.value;
+            }
+
+            if (['Confirmed', 'Invalid', 'Refunded'].includes(newStatus)) {
+                // Open confirmation modal
+                document.getElementById('statusToConfirm').textContent = newStatus;
+                const modal = new bootstrap.Modal(document.getElementById('statusConfirmModal'));
+                modal.show();
+
+                // Save context for action
+                pendingStatusChange = { index, value: newStatus, selectEl, formEl };
+
+                // On confirmation button click
+                document.getElementById('confirmStatusChangeBtn').onclick = function () {
+                    modal.hide();
+
+                    // Lock fields
+                    document.getElementById(`amountPaid_${index}`).setAttribute('readonly', true);
+                    document.getElementById(`refNo_${index}`).setAttribute('readonly', true);
+                    previousStatusMap[index] = newStatus;
+
+                    // Prepare form data
+                    const formData = new FormData(formEl);
+
+                    // Submit via fetch (AJAX)
+                    fetch(formEl.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network error');
+                            return response.text(); // Or JSON if your server returns JSON
+                        })
+                        .then(data => {
+                            // Optionally check server response here
+                            location.reload(); // ✅ Auto-refresh the page after status change
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Failed to update status. Please try again.');
+                        });
+                };
+
+                // Cancel and revert selection if modal closes without confirming
+                document.getElementById('statusConfirmModal').addEventListener('hidden.bs.modal', () => {
+                    if (selectEl.value !== previousStatusMap[index]) {
+                        selectEl.value = previousStatusMap[index];
+                    }
+                }, { once: true });
+
+            } else {
+                // Make fields editable again
+                document.getElementById(`amountPaid_${index}`).removeAttribute('readonly');
+                document.getElementById(`refNo_${index}`).removeAttribute('readonly');
+                previousStatusMap[index] = newStatus;
+            }
+        }
+    </script>
+
+    <script>
 
     </script>
 

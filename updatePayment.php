@@ -42,6 +42,17 @@ try {
 
         $statusLower = strtolower($paymentStatusPost);
 
+        // Cancel order in checkout if payment is invalid or refunded
+        if ($source === "checkout" && in_array($statusLower, ['invalid', 'refunded'])) {
+            $cancelSQL = "UPDATE checkout SET status = 'Cancelled' WHERE orderID = ?";
+            $cancelStmt = $conn->prepare($cancelSQL);
+            $cancelStmt->bind_param("i", $orderID);
+            if (!$cancelStmt->execute()) {
+                throw new Exception("Failed to cancel checkout order due to invalid/refunded payment: " . $cancelStmt->error);
+            }
+            $cancelStmt->close();
+        }
+
         // If Invalid or Refunded — don’t touch balance or create receipt
         if ($statusLower === 'invalid' || $statusLower === 'refunded') {
             $payment = "Not Paid Yet";
@@ -80,18 +91,43 @@ try {
             $checkRef->close();
         }
 
-        // Update checkout or checkoutcustom table
+        // Update payment and balance
         $updateSQL = ($source === "checkout") ?
             "UPDATE checkout SET payment = ?, balance = ? WHERE orderID = ?" :
             "UPDATE checkoutcustom SET payment = ?, balance = ? WHERE orderID = ?";
 
         $stmt = $conn->prepare($updateSQL);
         $stmt->bind_param("sds", $payment, $balance, $orderID);
-
         if (!$stmt->execute()) {
             throw new Exception("Failed to update payment status and balance: " . $stmt->error);
         }
         $stmt->close();
+
+        if ($statusLower === 'confirmed') {
+            if ($balance > 0) {
+                $statusUpdateSQL = ($source === "checkout") ?
+                    "UPDATE checkout SET status = 'In Progress' WHERE orderID = ?" :
+                    "UPDATE checkoutcustom SET status = 'In Progress' WHERE orderID = ?";
+
+                $statusStmt = $conn->prepare($statusUpdateSQL);
+                $statusStmt->bind_param("i", $orderID);
+                if (!$statusStmt->execute()) {
+                    throw new Exception("Failed to update order status to In Progress: " . $statusStmt->error);
+                }
+                $statusStmt->close();
+            } else {
+                $completedSQL = ($source === "checkout") ?
+                    "UPDATE checkout SET status = 'Completed' WHERE orderID = ?" :
+                    "UPDATE checkoutcustom SET status = 'Completed' WHERE orderID = ?";
+
+                $completedStmt = $conn->prepare($completedSQL);
+                $completedStmt->bind_param("i", $orderID);
+                if (!$completedStmt->execute()) {
+                    throw new Exception("Failed to update order status to Completed: " . $completedStmt->error);
+                }
+                $completedStmt->close();
+            }
+        }
 
         // Get userID for receipt
         $getUserID = $conn->prepare("SELECT userID FROM payment_receipts WHERE id = ?");
@@ -141,6 +177,7 @@ try {
             "UPDATE payment_receipts SET amountPaid = ?, ref_no = ?, payment_status = ?, paymentDate = NOW() WHERE id = ?"
         );
         $updateReceipt->bind_param("dssi", $amountPaid, $refNo, $paymentStatusPost, $receiptID);
+
         if (!$updateReceipt->execute()) {
             throw new Exception("Failed to update payment_receipts: " . $updateReceipt->error);
         }
@@ -157,6 +194,8 @@ try {
             'source' => $source
         ];
 
+        $_SESSION['auto_refresh'] = true;
+
         $_SESSION['toast'] = ['type' => 'success', 'message' => 'Payment updated successfully!'];
         header("Location: adminOrder.php");
         exit;
@@ -168,3 +207,4 @@ try {
     header("Location: adminOrder.php");
     exit;
 }
+?>

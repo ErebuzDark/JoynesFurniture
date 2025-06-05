@@ -643,6 +643,7 @@ if (mysqli_num_rows($checkResult) > 0) {
                     data-source="' . htmlspecialchars($row['source']) . '" 
                     data-prodname="' . htmlspecialchars($row['prodName']) . '" 
                     data-orderid="' . htmlspecialchars($row['orderID']) . '" 
+                    data-userid="' . htmlspecialchars($row['userID']) . '"
                     data-bs-toggle="modal" 
                     data-bs-target="#balancePaymentModal">
                     Upload Another Payment
@@ -973,15 +974,40 @@ if (mysqli_num_rows($checkResult) > 0) {
                     },
                     success: function (response) {
                         if (response === 'success') {
-                            alert("Order status updated to Delivered!");
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: 'Order status updated to Delivered!',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
                             button.text('Delivered').prop('disabled', true);
                         } else {
-                            alert("Error updating order status.");
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'Error updating order status.',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
                         }
                     },
                     error: function () {
-                        alert("Error with AJAX request.");
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: 'Error with AJAX request.',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
                     }
+
                 });
             });
 
@@ -1172,7 +1198,6 @@ if (mysqli_num_rows($checkResult) > 0) {
         </div>
     </div>
 
-
     <!-- Balance Payment Modal -->
     <div class="modal fade" id="balancePaymentModal" tabindex="-1" aria-labelledby="balancePaymentModalLabel"
         aria-hidden="true">
@@ -1199,27 +1224,39 @@ if (mysqli_num_rows($checkResult) > 0) {
 
                 <form method="POST" action="upload_balance_payment.php" enctype="multipart/form-data">
                     <div class="modal-body">
-                        <p><strong>Remaining Balance:</strong> ₱<span id="balanceAmountDisplay"></span></p>
+                        <p class="mb-2">
+                            <strong>Remaining Balance:</strong>
+                            <span class="text-primary">₱<span id="balanceAmountDisplay"></span></span>
+                        </p>
 
-                        <label for="paymentImage">Upload Payment Receipt</label>
+                        <p class="mb-3">
+                            <strong>You are now at:</strong>
+                            <span class="badge bg-info text-dark" id="paymentCountDisplay">0/3</span>
+                            payments
+                        </p>
+                        <p id="paymentSuccessMessage" class="text-success fw-bold" style="display:none;"></p>
+                        <p id="paymentNoteMessage" class="text-danger fw-bold" style="display:none;"></p>
+
+
+                        <label for="paymentImage" class="form-label">Upload Payment Receipt</label>
                         <input type="file" name="paymentImage" class="form-control mb-3" required>
 
-                        <label for="refNo">Reference Number</label>
-                        <input type="text" name="refNo" class="form-control " required>
+                        <label for="refNo" class="form-label">Reference Number</label>
+                        <input type="text" name="refNo" class="form-control mb-3" required>
 
-                        <label for="amountPaid">Amount Paid</label>
-                        <input type="number" name="amountPaid" class="form-control" step="0.01" required>
+                        <label for="amountPaid" class="form-label">Amount Paid</label>
+                        <input type="number" id="amountPaid" name="amountPaid" class="form-control mb-3" step="0.01"
+                            required>
 
-
-                        <!-- Hidden fields -->
-                        <input type="hidden" name="orderID" id="orderid">
-                        <input type="hidden" name="userID" value="<?php echo $userID; ?>">
+                        <input type="hidden" name="orderID" value="<?php echo $orderID; ?>" id="orderid">
+                        <input type="hidden" id="userIDField" name="userID" value="">
                         <input type="hidden" name="source" id="paymentSource">
                         <input type="hidden" name="prodName" id="paymentProdName">
                         <input type="hidden" name="balanceAmount" id="balanceAmountField">
                     </div>
+
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Submit Payment</button>
+                        <button type="submit" id="submitPaymentButton" class="btn btn-primary">Submit Payment</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </form>
@@ -1289,6 +1326,7 @@ if (mysqli_num_rows($checkResult) > 0) {
             });
         }
     </script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll('.view-invoice-btn').forEach(button => {
@@ -1297,6 +1335,20 @@ if (mysqli_num_rows($checkResult) > 0) {
                     const prodName = this.getAttribute('data-prodname');
                     const userId = this.getAttribute('data-userid');
                     const source = this.getAttribute('data-source');
+
+                    function formatDate(dateStr) {
+                        if (!dateStr) return '';
+                        const date = new Date(dateStr);
+                        const options = {
+                            year: 'numeric',
+                            month: 'long',
+                            day: '2-digit',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                        };
+                        return date.toLocaleString('en-US', options);
+                    }
 
                     fetch(`fetch_invoice.php?source=${source}&orderID=${orderId}&userID=${userId}&prodName=${encodeURIComponent(prodName)}`)
                         .then(response => response.json())
@@ -1309,89 +1361,140 @@ if (mysqli_num_rows($checkResult) > 0) {
                             if (data.success && data.invoices && data.invoices.length > 0) {
                                 data.invoices.forEach((invoice, index) => {
                                     const invoiceId = `invoice${index}`;
+                                    const isCustom = invoice.source !== 'checkout';
+
+                                    const paymentTable = isCustom ? `
+                                <p><strong>Payment Details:</strong> </p>
+                                <table class="table table-bordered mt-2">
+                                    <thead class="" style="background-color: orange;">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Amount (PHP) </th>
+                                            <th>Balance (PHP) </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${invoice.firstPayment > 0 ? `
+                                        <tr>
+                                            <td>${formatDate(invoice.firstPaymentDate)}</td>
+                                            <td>₱ ${Number(invoice.firstPayment).toLocaleString()}</td>
+                                            <td>₱ ${Number(invoice.firstBalance).toLocaleString()}</td>
+                                        </tr>` : ''}
+                                        ${invoice.secondPayment > 0 ? `
+                                        <tr>
+                                            <td>${formatDate(invoice.secondPaymentDate)}</td>
+                                            <td>₱ ${Number(invoice.secondPayment).toLocaleString()}</td>
+                                            <td>₱ ${Number(invoice.secondBalance).toLocaleString()}</td>
+                                        </tr>` : ''}
+                                        ${invoice.thirdPayment > 0 ? `
+                                        <tr>
+                                            <td>${formatDate(invoice.thirdPaymentDate)}</td>
+                                            <td>₱ ${Number(invoice.thirdPayment).toLocaleString()}</td>
+                                            <td>₱ ${Number(invoice.thirdBalance).toLocaleString()}</td>
+                                        </tr>` : ''}
+                                    </tbody>
+                                </table>
+                                <div class="d-flex justify-content-between mt-3" style="display:flex;">
+                                <p><strong>Balance:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.balance).toLocaleString()}</span></p>
+                                <p><strong>Total Paid:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.totalPaid).toLocaleString()}</span></p>
+                                </div>
+                            ` :
+                                        `
+                                <p><strong>Payment Details:</strong> </p>
+
+                                <table class="table table-bordered mt-2">
+                                    <thead class="" style="background-color: orange;">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Amount (PHP) </th>
+                                            <th>Balance (PHP) </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                       
+                                        <tr>
+                                            <td>${formatDate(invoice.paymentDate)}</td>
+                                            <td>₱ ${Number(invoice.amountPaid).toLocaleString()}</td>
+                                            <td>₱ ${Number(invoice.balanceRemaining).toLocaleString()}</td>
+                                        </tr>
+                                    
+                                    </tbody>
+                                </table>
+
+                                <p class="text-end"><strong>Total Paid:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.totalPaid).toLocaleString()}</span></p>
+                            `;
+
                                     const invoiceHTML = `
-                                        <div class="invoice mb-4 p-4 border rounded shadow-sm" id="${invoiceId}" style="max-width: 600px; background: #fff;">
-                                            <div class="row align-items-center mb-4">
-                                                <div class="col-8">
-                                                    <h1 class="fw-bold text-primary mb-1" style="letter-spacing: 2px;">INVOICE</h1>
-                                                    <p class="mb-0">Joynes Furniture</p>
-                                                    <small class="text-muted">Quality furniture for your home</small>
-                                                </div>
-                                                <div class="col-4 text-end">
-                                                    <img src="./img/logo1.png" alt="Joynes Furniture Logo" style="max-height: 70px; object-fit: contain;">
-                                                </div>
-                                            </div>
+  <div class="invoice mb-4 p-4 border rounded shadow-sm" id="${invoiceId}" style="max-width: 700px; background: #fff;">
+    <div class="row align-items-center border-bottom pb-3 mb-4">
+      <div class="col-8">
+        <h2 class="fw-bold text-primary text-uppercase mb-1">Invoice</h2>
+        <p class="mb-0">Joynes Furniture</p>
+        <small class="text-muted">Quality furniture for your home</small>
+      </div>
+      <div class="col-4 text-end">
+        <img src="./img/logo1.png" alt="Joynes Furniture Logo" class="img-fluid" style="max-height: 70px;">
+      </div>
+    </div>
 
-                                            <hr>
+    <div class="row ">
+      <div class="col-md-6">
+        <h6 class="fw-semibold mb-2">Invoice Details</h6>
+        <p class="mb-1"><strong>Date of Order:</strong> ${formatDate(invoice.date)}</p>
+        <p class="mb-1"><strong>Order ID:</strong> ${invoice.orderID}</p>
+        <p class="mb-1"><strong>Payment Method:</strong> <span class="badge bg-info text-white">Gcash</span></p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <h6 class="fw-semibold mb-2">Customer Info</h6>
+        <p class="mb-1"><strong>Name:</strong> ${invoice.fullName}</p>
+        <p class="mb-1"><strong>Address:</strong> ${invoice.address}</p>
+        <p class="mb-1"><strong>Contact:</strong> ${invoice.cpNum}</p>
+      </div>
+    </div>
 
-                                            <div class="row">
-                                              <div class="col-md-6 mb-3">
-  <p class="fw-bold mb-3">Invoice Details</p>
-  <p><strong>Date:</strong> ${invoice.created_at}</p>
-  <p><strong>Order ID:</strong> ${invoice.orderID}</p>
-  <p class="mb-0"><strong>Payment Method:</strong> <span class="text-white badge bg-info">Gcash</span></p>
+    ${paymentTable}
 
-  ${invoice.source === 'checkout'
-                                            ? `<p><strong>Total Paid:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.totalPaid).toLocaleString()}</span></p>`
-                                            : `
-      <p><strong>First Payment:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.firstPayment).toLocaleString()}</span></p>
-      <p><strong>Second Payment:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.secondPayment).toLocaleString()}</span></p>
-      <p><strong>Third Payment:</strong> PHP <span class="text-success fw-semibold mb-0">${Number(invoice.thirdPayment).toLocaleString()}</span></p>
-      <p><strong>Balance:</strong> PHP <span class="text-success fw-semibold">${Number(invoice.balance).toLocaleString()}</span></p>
-    `
-                                        }
-</div>
-
-<div class="col-md-6 mb-3 text-end">
-  <p class="fw-bold mb-3">Billed / Issued To</p>
-  <p><strong>Name:</strong> ${invoice.fullName}</p>
-  <p><strong>Address:</strong> ${invoice.address}</p>
-  <p><strong>Contact:</strong> ${invoice.cpNum}</p>
-  <p><strong>Status:</strong> <span class="text-white badge bg-info">${invoice.payment_status}</span></p>
-</div>
-
-
-                                            <hr>
-
-                                            <h5 class="mb-3">Purchase Details</h5>
-                                            <div class="table-responsive">
-                                                <table class="table table-striped table-bordered">
-                                                    <thead class="table-primary">
-                                                        <tr>
-                                                            <th>Item</th>
-                                                            <th class="text-center">Quantity</th>
-                                                            <th class="text-end">Price</th>
-                                                            <th class="text-end">Total</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                       ${invoice.items.map(item => `
+    <div class="border-top pt-3 mt-4">
+      <h5 class="fw-bold mb-3">Purchase Details</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+          <thead class="table-primary text-center">
             <tr>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoice.items.map(item => `
+              <tr>
                 <td>${item.item}</td>
                 <td class="text-center">${item.quantity}</td>
                 <td class="text-end">₱${item.price}</td>
                 <td class="text-end">₱${item.total}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="3" class="text-end">Total</th>
+              <th class="text-end text-success">₱${invoice.invoiceTotal}</th>
             </tr>
-        `).join('')}
-    </tbody>
-    <tfoot>
-        <tr>
-            <th colspan="3" class="text-end">Total</th>
-            <th class="text-end text-success">₱${invoice.invoiceTotal}</th>
-        </tr>
-    </tfoot>
-                                                </table>
-                                            </div>
+          </tfoot>
+        </table>
+      </div>
+    </div>
 
-                                            <hr>
+    <div class="text-end mt-3">
+      <button class="btn btn-sm btn-outline-primary" onclick="downloadInvoice('${invoiceId}')">
+        <i class="bi bi-download me-1"></i> Download
+      </button>
+    </div>
+  </div>
+`;
 
-                                            <div class="text-end">
-                                                <button class="btn btn-sm btn-outline-primary" onclick="downloadInvoice('${invoiceId}')">
-                                                    <i class="bi bi-download me-1"></i> Download
-                                                </button>
-                                            </div>
-                                        </div>
-                                    `;
+
                                     container.insertAdjacentHTML('beforeend', invoiceHTML);
                                 });
                             } else {
@@ -1407,6 +1510,7 @@ if (mysqli_num_rows($checkResult) > 0) {
             });
         });
     </script>
+
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
@@ -1432,14 +1536,77 @@ if (mysqli_num_rows($checkResult) > 0) {
                 var orderid = $(this).data('orderid');
                 var source = $(this).data('source');
                 var prodName = $(this).data('prodname');
+                var userID = $(this).data('userid');
 
-                $('#balanceAmountDisplay').text(balance);
+                $('#balanceAmountDisplay').text(parseFloat(balance).toLocaleString());
                 $('#balanceAmountField').val(balance);
-                $('#orderid').val(orderid); // ✅ Set this!
+                $('#orderid').val(orderid);
                 $('#paymentSource').val(source);
                 $('#paymentProdName').val(prodName);
+                $('#userIDField').val(userID);
+
+                $.ajax({
+                    url: 'get_payment_count.php',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        orderID: orderid,
+                        userID: userID,
+                        source: source,
+                        prodName: prodName
+                    },
+                    success: function (response) {
+                        var count = response.count || 0;
+                        var successMessage = response.successMessage || '';
+                        var noteMessage = response.noteMessage || '';
+                        var realCount = response.realCount || 0;
+
+                        $('#paymentCountDisplay').text(count + '/3');
+
+                        if (successMessage) {
+                            $('#paymentSuccessMessage').text(successMessage).show();
+                        } else {
+                            $('#paymentSuccessMessage').hide();
+                        }
+
+                        if (noteMessage) {
+                            $('#paymentNoteMessage').text(noteMessage).show();
+                        } else {
+                            $('#paymentNoteMessage').hide();
+                        }
+
+                        // Disable button if limit is reached
+                        $('#submitPaymentButton').prop('disabled', realCount >= 3);
+
+                        // Attach validation only if it's the third payment
+                        if (realCount === 2) {
+                            $('#amountPaid').off('input').on('input', function () {
+                                const amountPaid = parseFloat($(this).val());
+                                const balanceAmount = parseFloat($('#balanceAmountField').val());
+
+                                if (amountPaid !== balanceAmount) {
+                                    $(this).get(0).setCustomValidity("Final payment must match the remaining balance exactly.");
+                                } else {
+                                    $(this).get(0).setCustomValidity("");
+                                }
+                            });
+                        } else {
+                            $('#amountPaid').off('input').on('input', function () {
+                                // Remove any custom validation when not the final payment
+                                $(this).get(0).setCustomValidity("");
+                            });
+                        }
+                    },
+                    error: function () {
+                        $('#paymentCountDisplay').text('Error');
+                        $('#submitPaymentButton').prop('disabled', true);
+                    }
+                });
+
+                $('#balancePaymentModal').modal('show');
             });
         });
+
     </script>
 
 
@@ -1486,24 +1653,7 @@ if (mysqli_num_rows($checkResult) > 0) {
             });
         });
     </script> -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const payBtns = document.querySelectorAll('.pay-balance-btn');
 
-            payBtns.forEach(button => {
-                button.addEventListener('click', () => {
-                    const balance = button.getAttribute('data-balance');
-                    const source = button.getAttribute('data-source');
-                    const prodName = button.getAttribute('data-prodname');
-
-                    document.getElementById('balanceAmountDisplay').innerText = parseFloat(balance).toLocaleString();
-                    document.getElementById('balanceAmountField').value = balance;
-                    document.getElementById('paymentProdName').value = prodName;
-                    document.getElementById('paymentSource').value = source;
-                });
-            });
-        });
-    </script>
 
 
 </body>
